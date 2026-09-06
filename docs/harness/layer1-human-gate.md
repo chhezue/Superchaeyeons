@@ -17,7 +17,7 @@
 | [`.claude/rules/core-guardrails.md`](../../.claude/rules/core-guardrails.md) | rule (**코어**) | 세션 시작 시 항상 | ⛔ STOP §1~§6 · 금지 요약 |
 | [`.claude/rules/core-workflow.md`](../../.claude/rules/core-workflow.md) | rule (**코어**) | 세션 시작 시 항상 | 3 트랙 × 4 게이트 사이클 · 구현 중 지킬 것 |
 | [`.claude/rules/core-scope.md`](../../.claude/rules/core-scope.md) | rule | 세션 시작 시 항상 | priority(must/could) 단정 금지 · `[미정]` 처리 |
-| [`.claude/rules/tripfit-release.md`](../../.claude/rules/tripfit-release.md) | rule (**저장소 고유**) | 세션 시작 시 항상 | Release Gate · 일정 용어 · 도메인·배포 확정 사항 |
+| [`examples/tripfit/tripfit-release.md`](../../examples/tripfit/tripfit-release.md) | rule (**저장소 고유**) | 세션 시작 시 항상 | Release Gate · 일정 용어 · 도메인·배포 확정 사항 |
 | [`.claude/rules/core-followup.md`](../../.claude/rules/core-followup.md) | rule | 세션 시작 시 항상 | 후속 제안 · Defer · ERD 개선 제안 |
 | [`.claude/rules/core-tools.md`](../../.claude/rules/core-tools.md) | rule | 세션 시작 시 항상 | 도구 우선순위·트랙×게이트→도구 매핑 |
 | [`.claude/rules/core-reporting.md`](../../.claude/rules/core-reporting.md) | rule | 세션 시작 시 항상 | 사용자 보고는 쉬운 말로 (코드 주석은 제외) |
@@ -69,7 +69,7 @@ STOP은 성격이 3가지로 갈립니다. 다이어그램은 가독성을 위�
 | §3 DB | Flyway·`V1__*.sql` 작성 시도 | — | **금지** (Layer 3 훅이 물리적으로도 차단) |
 | §4 레거시 | 경로·상수·API를 교체 | 교체된 구 메서드·상수·테스트 assert | **같은 PR에서 삭제** (호환 레이어 금지) |
 | §5 API 계약 | DTO·enum·ErrorCode·경로 변경 | — | 커밋 본문에 `Breaking-Change-Reason:` 트레일러 |
-| §6 보안·아키텍처 | 토큰·세션·결제·개인정보 저장 방식 변경 | [`docs/how-it-works.md`](../how-it-works.md) | **같은 턴에** 쉬운 말로 갱신 |
+| §6 보안·아키텍처 | 토큰·세션·결제·개인정보 저장 방식 변경 | `{{현재동작 요약}}` | **같은 턴에** 쉬운 말로 갱신 |
 | 별도 | 새 이슈·브랜치·PR 생성 | — | 실행 전 채팅으로 먼저 확인 |
 | 별도 | priority must/could 판단 | 이슈의 `priority:` 라벨 | 에이전트가 임의 부여 금지 |
 

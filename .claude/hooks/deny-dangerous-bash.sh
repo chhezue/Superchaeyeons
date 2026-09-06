@@ -1,5 +1,5 @@
 #!/bin/bash
-# Blocks destructive shell commands for TripFit project hooks.
+# Blocks destructive shell commands. Registered in .claude/settings.json (PreToolUse/Bash).
 # Hook input: JSON with "tool_input.command" field on stdin (Claude Code PreToolUse schema).
 
 input=$(cat)

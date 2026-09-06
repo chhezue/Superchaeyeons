@@ -11,7 +11,7 @@
 ## 배경
 
 - 왜 지금 필요한가
-- 관련 문서: `docs/product/...`, Figma 화면 ID
+- 관련 문서: `{{제품 범위}}` 등, Figma 화면 ID
 
 ## 변경 범위 (기존 Approved 스펙을 amend할 때만 — 신규 스펙이면 이 섹션 삭제)
 
@@ -50,7 +50,7 @@
 |--------|------|------|------|
 | | | | |
 
-요청/응답 예시 — envelope **초안**: [`docs/architecture/api-response.md`](../../../../docs/architecture/api-response.md) (프론트 합의 전)
+요청/응답 예시 — envelope **초안**: [`{{API 응답 규격}}`](../../../../docs/architecture/api-response.md) (프론트 합의 전)
 
 성공 (단순):
 
@@ -71,7 +71,7 @@
 
 ## 데이터 모델
 
-- ERD 참조: `docs/architecture/erd.md`
+- ERD 참조: `{{스키마 SSOT}}`
 - 신규/변경 테이블·컬럼:
 
 ```
@@ -105,8 +105,8 @@
 
 ## 완료 기준
 
-- [ ] `./gradlew test` 통과
-- [ ] `./gradlew build` 성공
+- [ ] `{{테스트 명령}}` 통과
+- [ ] `{{빌드 명령}}` 성공
 - [ ] [기능별 수용 조건]
 - [ ] OpenAPI/Swagger 반영 (API 추가 시)
 - [ ] `REMOVED` 항목 실제 삭제 확인 (amend 스펙만 해당)

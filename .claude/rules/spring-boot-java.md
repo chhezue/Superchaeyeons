@@ -16,7 +16,7 @@ OpenAPI 어노테이션(`@Schema`·`@Operation`·`@Parameter`·`@ApiResponses`) 
 
 **feature 하위 패키지:** 도메인 안 기능이 커지면 `{domain}/{feature}/`에 **동일 레이어 세트**를 둘 수 있다 (예: `user/schedule/`, `user/googlecalendar/`, `trip/membership/`, `trip/recommendation/`, `trip/schedule/`). 최상위 도메인으로 승격하지 않는 한 소유 도메인 안에 둔다. `controller/dto/`처럼 **레이어만 중첩**하는 것은 금지. 여러 feature가 공유하는 코드(`TripServiceSupport` 등)나 크로스 도메인 조회 포트(`{domain}/port/out/`)는 도메인 루트에 둔다 — 상세: `docs/specs/trip/package-structure-refactor.md`(Implemented), `docs/decisions/003-architecture-guide.md` 결정 11·12.
 
-**자동 검증(ArchUnit):** 아래 규칙 중 일부는 prose가 아니라 `src/test/java/com/tripfit/tripfit/architecture/ArchitectureTest.java`가 `./gradlew test`마다 실제로 검증한다 — domain이 controller/service에 의존하지 않음, controller가 repository에 직접 의존하지 않음, repository는 인터페이스만, `@Autowired` 필드 주입 금지(생성자 주입만), `@RestController`에 `@Transactional` 금지, `@Id` 필드는 UUID 타입, `*ErrorCode`는 `ErrorCode` 구현. 새 아키텍처 규칙을 추가할 때 이 테스트에도 반영을 검토할 것.
+**자동 검증(ArchUnit):** 아래 규칙 중 일부는 prose가 아니라 `src/test/java/**/architecture/ArchitectureTest.java`가 `./gradlew test`마다 실제로 검증한다 — domain이 controller/service에 의존하지 않음, controller가 repository에 직접 의존하지 않음, repository는 인터페이스만, `@Autowired` 필드 주입 금지(생성자 주입만), `@RestController`에 `@Transactional` 금지, `@Id` 필드는 UUID 타입, `*ErrorCode`는 `ErrorCode` 구현. 새 아키텍처 규칙을 추가할 때 이 테스트에도 반영을 검토할 것.
 
 ## 레이어 (최소 규칙)
 
@@ -51,7 +51,7 @@ AUTH_INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_INVALID_TOKEN",
         "…");
 ```
 
-Spotless(Eclipse): `alignment_for_enum_constants=48`, enum 상수 인자는 wrap 안 함 (`config/tripfit-java-format.xml`).
+Spotless(Eclipse): `alignment_for_enum_constants=48`, enum 상수 인자는 wrap 안 함 (`config/{프로젝트}-java-format.xml`).
 
 **새 실패 분기 추가 시 (같은 턴):** enum 상수 → Service/Interceptor throw → 스펙 에러 표 → (필요 시) `api-response.md` 예시. Harness: `.claude/rules/core-guardrails.md` ⛔ ErrorCode 절.
 
@@ -200,7 +200,7 @@ FK·UNIQUE 제약으로 표현 가능한 무결성은 DB 제약을 우선한다.
 ### Controller 메서드 파라미터
 
 - 파라미터 어노테이션은 **같은 줄**에 붙인다. 어노테이션만 단독 줄로 쪼개지 않음
-- 기준: `config/tripfit-java-format.xml` — `insert_new_line_after_annotation_on_parameter=do not insert`
+- 기준: `config/{프로젝트}-java-format.xml` — `insert_new_line_after_annotation_on_parameter=do not insert`
 
 ```java
 // ✅

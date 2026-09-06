@@ -7,7 +7,7 @@ paths:
   - ".claude/rules/README.md"
 ---
 
-# TripFit `.claude/rules` — AI 에이전트 규칙
+# `.claude/rules` — AI 에이전트 규칙
 
 Claude Code가 이 저장소에서 작업할 때 참조하는 **프로젝트 전용 AI 설정**입니다.
 루트의 [`CLAUDE.md`](../../CLAUDE.md)(`@AGENTS.md` import)는 전체 프로젝트 지도, `.claude/`는 **에이전트 행동·워크플로·안전장치**를 담습니다.
@@ -37,12 +37,10 @@ Claude Code가 이 저장소에서 작업할 때 참조하는 **프로젝트 전
 │   ├── core-followup.md           # 후속 제안 · Defer · ERD 제안 (always-load)
 │   ├── core-tools.md              # Claude Code 도구 매핑 (always-load)
 │   ├── core-reporting.md          # 비전공자용 쉬운 설명 (보고·채팅만, always-load)
-│   ├── tripfit-release.md         # Release Gate·일정 용어·도메인 배포 (프로젝트 고유, always-load)
+│   ├── harness-map.md             # 슬롯·스택 옵션 — 프로젝트가 채우는 유일한 파일 (always-load)
 │   ├── spring-boot-java.md
 │   ├── openapi-conventions.md
 │   ├── java-comments.md
-│   ├── client-platform.md
-│   ├── deployment.md
 │   ├── testing.md
 │   ├── doc-writing.md             # 문서 작성 (docs/·.claude/ 마크다운, path-scoped)
 └── skills/                ← 반복 워크플로 스킬
@@ -87,7 +85,7 @@ Claude Code가 이 저장소에서 작업할 때 참조하는 **프로젝트 전
 | `core-guardrails.md` | ⛔ 문서 정합 · ErrorCode/AOP · DB 마이그레이션 금지 · **레거시(교체=같은 PR 삭제)** · **API Breaking-Change-Reason 트레일러** · `how-it-works.md` 갱신 + 금지 요약 표 | **하지 말 것 (STOP §1~§6)** |
 | `core-workflow.md` | 진입(트랙 분류) · **3 트랙 × 4 게이트 사이클** · 구현 중 지킬 것 | **어떤 순서로 할 것** |
 | `core-scope.md` | priority(must/could) 단정 금지 · `[미정]` 문서 표기(중앙 트래커 없음) | 범위·우선순위 |
-| `tripfit-release.md` | 🚨 Release Gate(앱 심사) · 릴리즈 축 3개 질문 · 희망기간/조회윈도우/C1 · 도메인·배포 확정 사항 | **이 저장소 고유** — 하네스 이식 시 제외. 폐지 이력은 `docs/product/release-milestones.md` |
+| `{프로젝트}-release.md`(견본: `examples/tripfit/`) | 🚨 Release Gate(앱 심사) · 릴리즈 축 3개 질문 · 희망기간/조회윈도우/C1 · 도메인·배포 확정 사항 | **이 저장소 고유** — 하네스 이식 시 제외. 폐지 이력은 `docs/product/release-milestones.md` |
 | `core-followup.md` | 💡 후속 제안 · ✅ Defer 이슈 분리 · 💡 ERD 적극 제안 | 완료 후·범위 미루기 |
 | `core-tools.md` | **도구 우선순위**(Claude Code 기본 > OMC > Superpowers > 프로젝트 문서) · **트랙 × 게이트 → 도구** 매핑 | 워크플로 도구 연동·채택 판단 |
 | `core-reporting.md` | 사용자 보고(채팅·`refactor-log.md`·완료 요약)는 용어 풀어쓰기·비유 위주로 쉽게. **코드 `//` 주석은 대상 아님**(`spring-boot-java.md` Comments가 SSOT) | 사용자 대상 설명 vs 코드 주석 스타일 분리 |
@@ -101,8 +99,6 @@ Claude Code가 이 저장소에서 작업할 때 참조하는 **프로젝트 전
 | `spring-boot-java.md` | `**/*.java` | 레이어·enum·Entity·**ErrorCode·AOP**·**SOLID/OOP·ACID**·스타일·테스트 |
 | `openapi-conventions.md` | `**/*.java` | `@Schema`·`@Operation`·`@Parameter`·`@ApiResponses`(FE용 섹션 템플릿·JWT) — 2026-08-27 `spring-boot-java.md`에서 분리 |
 | `java-comments.md` | `**/*.java` | `//`·Javadoc 작성 스타일(역할 줄·다단계 Why·레이어별 초점) — 2026-08-27 `spring-boot-java.md`에서 분리 |
-| `client-platform.md` | controller, service, config, specs | React 앱·스토어·API·인증 |
-| `deployment.md` | yml, Docker, deploy | 배포 가드레일 — 절차는 `deploy/README.md` (MySQL 예약어·quoting은 `spring-boot-java.md`로 이동) |
 | `testing.md` | `**/*Test.java`, `src/test/**` | JUnit 5·프로필·테스트 네이밍 |
 | `doc-writing.md` | `docs/**/*.md`, `.claude/**/*.md` | 문서 유형(학습·문제해결·참조·설명) → 정보 구조(개요 필수·가치 먼저·제목) → 문장(한 문장 한 생각·메타 담화 제거·용어 일관). **채팅 보고는 `core-reporting.md`, 코드 주석은 `java-comments.md`** — 독자가 달라 겹치지 않음 |
 | `README.md`(이 파일) | `agents/**`·`skills/**`·`hooks/**`·`settings*.json`·이 파일 | 구조 인덱스 — 사람이 보는 디렉터리 맵이라 행동 규칙이 아님. **구성 요소를 추가·삭제할 때**(아래 유지보수 체크리스트가 실제로 필요할 때)만 로드된다. 계기·실측: [`docs/harness/layer1-human-gate.md`](../../docs/harness/layer1-human-gate.md) §4-1 |
@@ -111,7 +107,7 @@ Claude Code가 이 저장소에서 작업할 때 참조하는 **프로젝트 전
 
 1. **한 규칙 = 한 관심사** (코어 하네스 ~120줄, 형제 ~70줄 권장)
 2. 전역 STOP → `core-guardrails` · 작업 순서 → `core-workflow` (둘 다 frontmatter 없음, always-load)
-3. 우선순위·`[미정]` → `core-scope` · 이 저장소 고유 릴리즈 사실 → `tripfit-release` · 후속/Defer/ERD → `core-followup` (**중복 금지**, 링크만)
+3. 우선순위·`[미정]` → `core-scope` · 이 저장소 고유 릴리즈 사실 → `{프로젝트}-release` · 후속/Defer/ERD → `core-followup` (**중복 금지**, 링크만)
 4. 파일 타입별 → `paths:` frontmatter
 5. 반복 실수 → 해당 규칙에 짧게 추가
 
@@ -122,7 +118,7 @@ Claude Code가 이 저장소에서 작업할 때 참조하는 **프로젝트 전
 | 종류 | 규칙 | 예 |
 |------|------|-----|
 | **스킬** | 짧은 **동사** 하나 | `spec`이 아니라 `specify`, `preflight`, `defer`, `debug` |
-| **규칙** | **적용 시점·대상이 드러나는 명사구.** 프로젝트 무관은 `core-`, 이 저장소 고유는 `tripfit-` 접두사 | `core-guardrails`, `tripfit-release`, `spring-boot-java` |
+| **규칙** | **적용 시점·대상이 드러나는 명사구.** 프로젝트 무관은 `core-`, 이 저장소 고유는 `tripfit-` 접두사 | `core-guardrails`, `harness-map`, `spring-boot-java` |
 | **훅** | 동작을 접두사로 — 차단 `deny-`, 경고 `warn-`, 자동 실행 `auto-` | `deny-db-migration.sh`, `warn-breaking-change.sh`, `auto-format-java.sh` |
 | **에이전트** | 역할 명사, 20자 이내 | `spring-reviewer`, `doc-reviewer`, `researcher` |
 
@@ -186,21 +182,19 @@ deploy/README.md   → Docker·EC2 배포
 .dev/README.md     → 임시 세션 로그 (장기 문서는 docs/로)
 .claude/rules/      → 어떻게 코딩·배포·검증하는지 (행동 규칙)
   core-guardrails / core-workflow / core-scope / core-followup
-  core-tools / core-reporting / tripfit-release
+  core-tools / core-reporting / harness-map
 .claude/skills/    → 큰 작업의 단계별 절차 (specify = 스펙 SSOT)
 docs/specs/        → 기능별 설계 산출물 (specify 스킬 결과)
 ```
 
 ## 유지보수 체크리스트
 
-- [ ] 클라이언트·스토어 전제 변경 시 `docs/product/platform.md` + `client-platform.md` 동기화
 - [ ] 새 도메인 enum·상태 추가 시 `docs/product/glossary.md` 동기화
-- [ ] ddl-auto·프로필 변경 시 `docs/architecture.md` + `deployment.md` 동기화
-- [ ] 우선순위·`[미정]` 규칙 변경 → `core-scope.md`만 · 이 저장소 고유 릴리즈 사실 → `tripfit-release.md`만 (`core-*`에 중복 금지)
+- [ ] 우선순위·`[미정]` 규칙 변경 → `core-scope.md`만 · 이 저장소 고유 릴리즈 사실 → `{프로젝트}-release.md`만 (`core-*`에 중복 금지)
 - [ ] 후속·Defer·ERD 제안 규칙 변경 → `core-followup.md`만
 - [ ] 반복되는 코드 리뷰 코멘트 → 해당 `rules/*.md`에 한 줄 규칙으로 승격
 - [ ] 위험 명령 패턴 추가 필요 시 `hooks/deny-dangerous-bash.sh` + `settings.json` matcher 동시 수정
 - [ ] 훅 추가·삭제 시 이 README **디렉터리 구조 다이어그램 + Hooks 절 표**, [`docs/harness-engineering.md`](../../docs/harness-engineering.md) §5 표, [`docs/harness/layer3-deterministic-hooks.md`](../../docs/harness/layer3-deterministic-hooks.md)의 훅 표·흐름까지 **4곳** 동시 갱신 (이번 감사에서 이 README 자체의 디렉터리 다이어그램이 훅 1개 누락된 채 방치됐던 사례 있음 — 같은 파일 안에서도 표와 다이어그램이 따로 놀 수 있으니 둘 다 확인)
 - [ ] 규칙·스킬 개수가 바뀌면(추가/삭제) 이 README **Always-load 표 + Skills 표**, [`docs/harness-engineering.md`](../../docs/harness-engineering.md) §3·§4의 대응 표, [`docs/harness/layer1-human-gate.md`](../../docs/harness/layer1-human-gate.md)(규칙)·[`docs/harness/layer2-workflow-skills.md`](../../docs/harness/layer2-workflow-skills.md)(스킬)의 파일 표를 함께 갱신 (harness-engineering.md·docs/harness/는 발표·질의 대비용 서술형 문서라 별도 유지되며, 내용이 어긋나면 이 README가 맞음 — 하지만 방치하면 발표 자료가 stale해짐)
 - [ ] 서브에이전트(`agents/*.md`) 추가·삭제 시 이 README **디렉터리 구조 다이어그램 + Agents 절 표**, [`docs/harness-engineering.md`](../../docs/harness-engineering.md) §4, [`docs/harness/layer2-workflow-skills.md`](../../docs/harness/layer2-workflow-skills.md) 서브에이전트 문단을 함께 갱신. **에이전트는 파일을 만들면 같은 세션에서 즉시 등록**된다(2026-09-03 실측 정정 — 이전에는 "세션 시작 시 등록"으로 잘못 기재돼 있었음) — 첫 호출이 드물게 실패하면 잠시 뒤 재시도하거나 새 세션에서 확인
-- [ ] 레이어·PK 등 구조 규칙 변경 시 `src/test/java/com/tripfit/tripfit/architecture/ArchitectureTest.java`(ArchUnit) 반영 검토 — 일부 규칙은 prose가 아니라 `./gradlew test`가 실제로 검증함
+- [ ] 레이어·PK 등 구조 규칙 변경 시 ArchUnit 구조 테스트(ArchUnit) 반영 검토 — 일부 규칙은 prose가 아니라 `./gradlew test`가 실제로 검증함

@@ -5,11 +5,11 @@ Milestone·용어: `core-scope.md`
 
 ## 💡 ERD 적극 제안 (스키마는 고정이 아님)
 
-dev · 마이그레이션 없음 → **`docs/architecture/erd.md`·엔티티는 언제든 바뀔 수 있다.** “ERD에 있으니 못 바꿈”으로 더 나은 모델을 숨기지 않는다.
+dev · 마이그레이션 없음 → **`{{스키마 SSOT}}`·엔티티는 언제든 바뀔 수 있다.** “ERD에 있으니 못 바꿈”으로 더 나은 모델을 숨기지 않는다.
 
 1. **언제:** Entity·API·BR 작업 중, Must Have 완료 후 후속 제안, 또는 사용자가 ERD/스키마를 물을 때
 2. **무엇을:** 컬럼 위치·nullable·상태 표현(enum vs 시각)·인덱스·예약어 rename·파생→저장 전환 등 — **아쉬운 점 → 권장 형태 → (선택) 스펙 amend**를 짧게
-3. **적용:** 사용자 승인 또는 Approved 스펙이 스키마를 바꾸면 **엔티티 + `erd.md`를 최신 하나**로 맞춘다 (Flyway·호환 레이어 금지 — `core-guardrails.md` ⛔ STOP — DB 스키마 절)
+3. **적용:** 사용자 승인 또는 Approved 스펙이 스키마를 바꾸면 **엔티티 + `{{스키마 SSOT}}`를 최신 하나**로 맞춘다 (마이그레이션·호환 레이어 금지 — `core-guardrails.md` ⛔ STOP §3, 단 그 절은 스택 옵션)
 4. **금지:** 제안 없이 임시/중복 컬럼 누적 · ERD drift를 코드 주석으로만 방치
 
 ## 💡 구현 후 후속 제안 (Follow-up)
@@ -20,7 +20,7 @@ dev · 마이그레이션 없음 → **`docs/architecture/erd.md`·엔티티는 
 
 | 조건 | 후속 제안 |
 |------|-----------|
-| 사용자가 「구현 후 최적화/제안 말해줘」 등 **명시 요청** | **필수** — `./gradlew test` 통과 후 응답 |
+| 사용자가 「구현 후 최적화/제안 말해줘」 등 **명시 요청** | **필수** — `{{테스트 명령}}` 통과 후 응답 |
 | API·DB·3파일+ 변경 등 **Must Have급** 구현을 방금 완료 | **권장** — 완료 요약 **뒤**에 § 추가 |
 | 한 줄·단일 파일·버그 핫픽스 | 생략 가능 |
 
@@ -40,7 +40,7 @@ dev · 마이그레이션 없음 → **`docs/architecture/erd.md`·엔티티는 
 | **DTO** | 목록 vs 상세 분리 · fat response · OpenAPI 계약과 프론트 필드 |
 | **쿼리·성능** | N+1 · batch fetch · 목록 pagination |
 | **패키지·레이어** | API 전용 enum 위치 · `*HomeService` 분리 |
-| **인터셉터·필터** | **필요할 때만** — 기존 `TripAuthorizationInterceptor`·`@TripMemberOnly` 패턴 우선. 단일 Controller 파싱·cross-cutting 로깅 정도는 converter/record로 충분하면 **인터셉터 추가 금지** |
+| **인터셉터·필터** | **필요할 때만** — 프로젝트에 이미 있는 권한 인터셉터·어노테이션 패턴 우선. 단일 Controller 파싱·cross-cutting 로깅 정도는 converter/record로 충분하면 **인터셉터 추가 금지** |
 
 **금지**
 

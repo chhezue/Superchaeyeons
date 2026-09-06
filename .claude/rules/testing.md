@@ -10,7 +10,7 @@ paths:
 
 ```bash
 ./gradlew test          # 전체
-./gradlew test --tests com.tripfit.tripfit.auth.service.FooServiceTest
+./gradlew test --tests {루트패키지}.auth.service.FooServiceTest
 ```
 
 ## 프로필

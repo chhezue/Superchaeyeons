@@ -2,7 +2,7 @@
 
 이슈·스펙의 **우선순위 라벨과 미확정 항목**을 다룰 때 지키는 규칙. 판단을 에이전트가 임의로 내리지 않는 것이 핵심이다.
 
-이 저장소 고유의 릴리즈 사실(Release Gate·릴리즈 축·일정 용어)은 `tripfit-release.md`가 담당한다.
+이 저장소 고유의 릴리즈 사실(심사 게이트·릴리즈 축·도메인 일정 용어)은 `{프로젝트}-release.md`가 담당한다 — 견본 `examples/tripfit/tripfit-release.md`.
 
 코어 STOP: `core-guardrails.md` · 작업 순서: `core-workflow.md`
 
@@ -35,4 +35,4 @@
 
 **금지:** `[미정]`을 묻지 않고 임의 확정해 구현·커밋 · 폐지된 `#2` 트래커에 새 `[미정]` 추가
 
-중앙 트래커(`#2`)가 폐지된 경위는 [`release-milestones.md` 부록](../../docs/product/release-milestones.md)에 있다.
+중앙 트래커(`#2`)가 폐지된 경위는 {{우선순위 SSOT}}에 있다.

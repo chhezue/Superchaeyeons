@@ -1,8 +1,8 @@
-# Workflow Tools × TripFit
+# Workflow Tools — 트랙·게이트별 도구 매핑
 
 이 프로젝트는 **Claude Code를 기본 개발 환경**으로 쓴다. 이 문서는 `core-workflow.md`가 정의한 **트랙·게이트의 각 지점에서 어떤 도구를 쓰는지**를 매핑한다. 새 워크플로 도구를 채택할지 판단하는 기준은 문서 뒤쪽 [도구 우선순위](#도구-우선순위) 절에 있다.
 
-Harness 형제: `core-guardrails.md` (⛔ STOP) · `core-scope.md` (priority·`[미정]`) · `core-followup.md` (후속·Defer·ERD) · `tripfit-release.md` (이 저장소 고유)
+Harness 형제: `core-guardrails.md` (⛔ STOP) · `core-scope.md` (priority·`[미정]`) · `core-followup.md` (후속·Defer·ERD) · `harness-map.md` (슬롯·옵션)
 
 ## 진입 (매 턴)
 
@@ -15,19 +15,19 @@ Harness 형제: `core-guardrails.md` (⛔ STOP) · `core-scope.md` (priority·`[
 
 ### 트랙 (택 1 — 진입 시 결정)
 
-| 트랙 | 언제 | Claude Code | TripFit |
+| 트랙 | 언제 | Claude Code | 이 프로젝트 |
 |------|------|-------------|---------|
-| **A. 기능** | 새 기능·API·엔티티·정책 변경 | `EnterPlanMode`(Plan Mode)로 탐색·설계 → 승인 | **`specify`** 스킬 → `docs/specs/` → **Approved 후** 구현. 이미 Approved면 Plan Mode 생략하고 바로 구현 |
-| **B. 감사·리팩터** | 기존 코드 품질 개선 (계약·로직 불변) | `Agent`(`Explore`/`general-purpose`, 읽기 전용)로 신선한 컨텍스트 감사 | **`safe-refactor`** 스킬 → `docs/audits/{domain}/` → 도메인 1개씩, 감사·구현 각각 승인 후 진행 |
-| **C. 버그** | 버그 리포트·`./gradlew test` 실패 | 재현 → 원인 분리 → 수정 | **`debug`** 스킬 → 로컬 재현 절차 + 프로덕션 전용 재현(EC2 로그·DB) |
+| **A. 기능** | 새 기능·API·엔티티·정책 변경 | `EnterPlanMode`(Plan Mode)로 탐색·설계 → 승인 | **`specify`** 스킬 → `{{스펙 저장소}}` → **Approved 후** 구현. 이미 Approved면 Plan Mode 생략하고 바로 구현 |
+| **B. 감사·리팩터** | 기존 코드 품질 개선 (계약·로직 불변) | `Agent`(`Explore`/`general-purpose`, 읽기 전용)로 신선한 컨텍스트 감사 | **`safe-refactor`** 스킬 → `{{감사 로그}}` → 도메인 1개씩, 감사·구현 각각 승인 후 진행 |
+| **C. 버그** | 버그 리포트·`{{테스트 명령}}` 실패 | 재현 → 원인 분리 → 수정 | **`debug`** 스킬 → 로컬 재현 절차 + 프로덕션 전용 재현(EC2 로그·DB) |
 
 ### 게이트 (트랙 공통 — 전부 통과)
 
-| 게이트 | Claude Code | TripFit |
+| 게이트 | Claude Code | 이 프로젝트 |
 |--------|-------------|---------|
 | **G1 리서치** | `WebFetch`/`WebSearch` · `Agent` 서브에이전트 | 2개 이상 문서 비교면 **`researcher`**(`.claude/agents/researcher.md`), 단일 페이지면 인라인 `WebFetch`. 소스 우선순위·버전 고정은 `core-workflow.md` G1 |
 | **G2 승인** | `AskUserQuestion` · 채팅 확인 | A=스펙 승인 · B=`audit.md` A/B 항목 승인 · C=원인 가설 승인. 새 이슈·브랜치·PR 생성은 **항상 먼저 확인** |
-| **G3 검증** | **`preflight`** 스킬 · `code-review`/`simplify` 서브에이전트 | `./gradlew test` + 이슈·스펙 체크리스트 + API 변경 시 `oasdiff`. 문서 50줄+ 변경·신규 문서면 **`doc-reviewer`**(기준: `doc-writing.md`), Java 3파일+·API·DB 변경이면 **`spring-reviewer`**(기준: `spring-boot-java.md`) |
+| **G3 검증** | **`preflight`** 스킬 · `code-review`/`simplify` 서브에이전트 | `{{테스트 명령}}` + 이슈·스펙 체크리스트 + API 변경 시 `oasdiff`. 문서 50줄+ 변경·신규 문서면 **`doc-reviewer`**(기준: `doc-writing.md`), Java 3파일+·API·DB 변경이면 **`spring-reviewer`**(기준: `spring-boot-java.md`) |
 | **G4 회고** | — | 프로젝트 문서 갱신 점검(승인 후 반영) · `core-followup.md` 💡 후속 제안 · 「다른 이슈로」는 **`defer`** 스킬 · 하네스 개선 후보는 **`retro`** 스킬 · B 트랙은 `refactor-log.md` append |
 
 ### 서브에이전트 호출 규약
@@ -51,7 +51,7 @@ Harness 형제: `core-guardrails.md` (⛔ STOP) · `core-scope.md` (priority·`[
 
 버그·테스트 실패 절차(로컬 재현 + 프로덕션 전용 재현)와 TDD 메모는 **`debug`** 스킬로 옮겼다 (2026-08-11, 항상 로드되는 이 파일의 크기를 줄이기 위해 — 상황 트리거라 `paths:` 스코프는 적용 불가, 스킬 방식 채택).
 
-## TripFit과 겹칠 때
+## 프로젝트 규칙과 겹칠 때
 
 - **스펙 SSOT:** API·DB·BR → `.claude/skills/specify/` (Plan Mode로 스펙 형식을 **대체 금지**)
 - **Plan Mode vs specify:** 택1. 스펙 **Approved**면 Plan Mode 생략 → 바로 구현

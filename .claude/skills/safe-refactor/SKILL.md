@@ -53,7 +53,7 @@ description: 기존 도메인 코드를 아키텍처 감사 후 API 계약·비�
 - `Agent` 툴(`subagent_type: Explore` 또는 `general-purpose`, 읽기 전용)로 **새 서브에이전트**를 띄워 해당 도메인 패키지만 스캔한다.
   - **왜 서브에이전트인가:** 방금 짠 코드를 같은 대화에서 스스로 평가하면 자기 판단을 재확인하는 self-grading 편향이 생기기 쉽다 — `code-review`/`simplify` 스킬이 서브에이전트 컨텍스트를 쓰는 것과 동일한 이유(`core-tools.md`). 이 도메인은 아직 이번 세션에서 건드리지 않았더라도, 신선한 컨텍스트가 dead code·중복을 더 냉정하게 찾는다.
   - 프롬프트에 반드시 포함: 대상 패키지 경로, `references/audit-checklist.md` 15개 점검 항목 전체, A/B/C/D 분류 기준, `references/audit-template.md` 포맷, "코드 수정 금지 — 읽기·분석만".
-- 산출물: `docs/audits/{domain}/audit.md` (신규 작성, **코드는 건드리지 않음**)
+- 산출물: `{{감사 로그}}/audit.md` (신규 작성, **코드는 건드리지 않음**)
 
 ### 2. 승인
 
@@ -72,23 +72,23 @@ LLM의 "안 바꿨다"는 자기 보고를 신뢰하지 않고, 아래를 전부
 
 ```bash
 # 1) 현재 코드 기준 OpenAPI 스펙 export
-./gradlew test --tests "com.tripfit.tripfit.common.config.OpenApiSpecExportTest"
+{{테스트 명령}} --tests "com.tripfit.tripfit.common.config.OpenApiSpecExportTest"
 
 # 2) main 스냅샷과 diff — 이 스킬 기준은 "breaking 없음"이 아니라 "diff 자체가 0"
 oasdiff breaking docs/api/openapi.json build/openapi/openapi.json
 
 # 3) 전체 테스트 (ArchitectureTest 포함)
-./gradlew test
+{{테스트 명령}}
 ```
 
-- oasdiff에 어떤 diff라도 나오면 실패로 간주하고 원인을 되돌린다 (`docs/api/README.md` "oasdiff가 못 보는 변경" 절 참고 — 스키마 diff는 기본값·문자열 포맷·computed field 트리거·헤더·순수 비즈니스 로직 변화는 못 잡으므로, 그 부분은 기존 테스트 스위트 통과 여부로 대체 검증한다).
+- oasdiff에 어떤 diff라도 나오면 실패로 간주하고 원인을 되돌린다 (`{{API 문서}}` "oasdiff가 못 보는 변경" 절 참고 — 스키마 diff는 기본값·문자열 포맷·computed field 트리거·헤더·순수 비즈니스 로직 변화는 못 잡으므로, 그 부분은 기존 테스트 스위트 통과 여부로 대체 검증한다).
 - Must Have급 변경(3파일 이상)이면 `code-review` 또는 `simplify` 스킬로 최종 게이트를 한 번 더 돌리는 걸 권장한다.
 - 하나라도 실패하면 "일단 커밋"하지 않고 원인 분석 → 재수정 → 재검증.
 
 ### 5. Report
 
-- `docs/audits/{domain}/refactor-log.md`에 append (Changelog 스타일):
-  - 실행 날짜, 반영한 A/B 항목 목록, 변경 파일·라인 수, 검증 결과(`./gradlew test`, oasdiff diff 0 확인), 남겨둔 C/D 항목과 이유
+- `{{감사 로그}}/refactor-log.md`에 append (Changelog 스타일):
+  - 실행 날짜, 반영한 A/B 항목 목록, 변경 파일·라인 수, 검증 결과(`{{테스트 명령}}`, oasdiff diff 0 확인), 남겨둔 C/D 항목과 이유
   - **H1 바로 아래에는 이 로그가 무엇인지 설명하는 개요 한 문단을 유지한다** (`doc-writing.md` — 날짜 섹션부터 시작하지 않는다)
 - `audit.md`·`refactor-log.md`를 새로 만들었거나 50줄 이상 고쳤으면 **`doc-reviewer`** 서브에이전트로 확인 (G3 문서 품질 게이트).
 - 사용자에게 짧게 요약 보고 — 설명 문체는 `core-reporting.md`를 따른다.

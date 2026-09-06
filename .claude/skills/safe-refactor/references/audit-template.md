@@ -1,6 +1,6 @@
 # Audit Template
 
-`docs/audits/{domain}/audit.md`를 새로 작성할 때 이 구조를 그대로 복사해서 채운다. 감사 단계는 **코드를 수정하지 않는다** — 이 문서만 산출한다.
+`{{감사 로그}}/audit.md`를 새로 작성할 때 이 구조를 그대로 복사해서 채운다. 감사 단계는 **코드를 수정하지 않는다** — 이 문서만 산출한다.
 
 ---
 
@@ -11,7 +11,7 @@
 
 ## 범위
 
-- 패키지: `com.tripfit.tripfit.{domain}` (+ 하위 패키지 나열)
+- 패키지: `{루트 패키지}.{domain}` (+ 하위 패키지 나열)
 - 감사자: 서브에이전트 (`Agent` 툴, 읽기 전용)
 - 기준: `audit-checklist.md` 1~15항목, `core-guardrails.md` ⛔ STOP
 

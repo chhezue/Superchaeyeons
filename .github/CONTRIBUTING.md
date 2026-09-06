@@ -1,6 +1,6 @@
 # GitHub 워크플로
 
-Issue · PR · Milestone · CI를 TripFit 하네스(`docs/`, `.claude/`)와 연결합니다.
+Issue · PR · Milestone · CI를 하네스(`docs/`, `.claude/`)와 연결합니다.
 
 계획·우선순위 SSOT: [`docs/product/release-milestones.md`](../docs/product/release-milestones.md)
 

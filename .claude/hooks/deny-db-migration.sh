@@ -1,5 +1,5 @@
 #!/bin/bash
-# Blocks creating Flyway/Liquibase migration files for TripFit project hooks.
+# Blocks creating DB migration files. Gated by harness-map.md 스택 옵션 'DB 마이그레이션 금지'.
 # core-guardrails.md STOP §3 — no prod-preserved data; schema SSOT is JPA entities + ddl-auto, not migration files.
 # Hook input: JSON with "tool_input.file_path" field on stdin (Claude Code PreToolUse schema, Write/Edit).
 

@@ -26,7 +26,7 @@ model: sonnet
 목록을 이 파일에 하드코딩하면 테스트가 늘어날 때마다 어긋난다(실제로 한 번 어긋났다). 대신 **시작할 때 직접 읽는다.**
 
 ```bash
-grep -A2 "@Test" src/test/java/com/tripfit/tripfit/architecture/ArchitectureTest.java | grep "void "
+grep -A2 "@Test" src/test/java/**/architecture/ArchitectureTest.java | grep "void "
 ```
 
 읽어낸 `@Test` 메서드가 검증하는 규칙은 지적 대상에서 제외한다. 이름만으로 무엇을 검증하는지 불분명하면 해당 메서드 본문을 읽는다.
@@ -91,7 +91,7 @@ grep -A2 "@Test" src/test/java/com/tripfit/tripfit/architecture/ArchitectureTest
 
 1~5축은 domain·service 변경을 전제하므로, `common/exception`·`config`·filter처럼 계층을 가로지르는 코드만 바뀐 diff에서는 아무 축도 발화하지 않는다. 그런 변경은 여기를 본다.
 
-- Filter·Interceptor가 응답 envelope와 **다른 ad-hoc JSON**을 직접 쓰는가? (`core-guardrails.md` STOP §2 금지 · SSOT: `docs/architecture/api-response.md`)
+- Filter·Interceptor가 응답 envelope와 **다른 ad-hoc JSON**을 직접 쓰는가? (`core-guardrails.md` STOP §2 금지 · SSOT: `{{API 응답 규격}}`)
 - `GlobalExceptionHandler`에서 처리하던 예외 타입이 통합·삭제되며 **매핑이 사라진** 것이 있는가? 잡히지 않는 예외는 500으로 샌다.
 - 필터·인터셉터의 **실행 순서**가 바뀌어 인증·권한 판정 시점이 달라지는가?
 - 로그·에러 메시지에 토큰·이메일 등 **개인정보가 그대로 실리는가?**

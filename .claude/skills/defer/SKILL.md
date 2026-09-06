@@ -16,9 +16,9 @@ description: 사용자가 「다른 이슈로 빼」·「후속 이슈로」·�
 
 ## Steps
 
-1. **`docs/specs/{domain}/{kebab-case}.md`** — Draft 스펙 작성 (`specify` 템플릿 축약 가능). Must Have·완료 기준·선행·Out of Scope 포함
+1. **`{{스펙 저장소}}/{kebab-case}.md`** — Draft 스펙 작성 (`specify` 템플릿 축약 가능). Must Have·완료 기준·선행·Out of Scope 포함
 2. **관련 Approved 스펙** — `deferred:` 헤더 또는 Out of Scope 표에 **스펙 경로 + `#n` 링크** 추가 · 본문에서 lazy/임시 구현을 **`#n` 위임**으로 명시
-3. **`docs/specs/README.md`** — 도메인 폴더 표·이슈 매핑에 행 추가
+3. **`{{스펙 저장소}}`의 README** — 도메인 폴더 표·이슈 매핑에 행 추가
 4. **이슈 생성 — ⚠️ 먼저 사용자에게 확인** — `gh issue create`는 새 이슈 생성이므로 `core-workflow.md` "새 이슈·새 브랜치·새 PR 생성은 항상 먼저 확인" 절이 적용된다. 사용자가 이 스킬을 트리거하며 이미 "이슈 만들어줘"까지 명시했다면 그대로 진행, 범위 분리만 요청했다면 이슈 생성 여부를 짧게 재확인한 뒤 진행.
    **⚠️ 중요 (이슈 템플릿 준수):** 이슈 생성 시 반드시 `.github/CONTRIBUTING.md`와 `.github/ISSUE_TEMPLATE/`의 양식을 준수하여 다음 항목을 정확히 포함할 것:
    - 제목: `[Type] 한글 설명` 형식 (예: `[Feat]`, `[Chore]`)

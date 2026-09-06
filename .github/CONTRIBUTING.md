@@ -1,0 +1,166 @@
+# GitHub 워크플로
+
+Issue · PR · Milestone · CI를 TripFit 하네스(`docs/`, `.claude/`)와 연결합니다.
+
+계획·우선순위 SSOT: [`docs/product/release-milestones.md`](../docs/product/release-milestones.md)
+
+## 브랜치 전략
+
+**에이전트 주의:** 새 이슈·새 브랜치·새 PR을 만들지는 사용자가 명시적으로 요청하지 않는 한 항상 먼저 확인한다 — `.claude/rules/core-workflow.md` "새 이슈·새 브랜치·새 PR 생성은 항상 먼저 확인" 절.
+
+```
+main  ←  {type}/{issue-number}-{description}
+```
+
+| 항목 | 규칙 |
+|------|------|
+| **기본 브랜치** | `main` — merge 시 CI test + GHCR deploy |
+| **작업 브랜치** | `main`에서 분기, PR로 `main`에 merge |
+| **네이밍** | `{type}/{issue-number}-{description}` |
+| **type** | `feat`, `fix`, `chore`, `docs`, `refactor`, `test` (브랜치명은 소문자) |
+
+예: `feat/12-trip-room-create`, `fix/34-auth-token-expiry`
+
+## 커밋 메시지
+
+**형식:** `{Type}: {한글 설명}` — **Type 첫 글자 대문자** (PascalCase)
+
+| Type | 용도 |
+|------|------|
+| `Feat` | 새 기능·API |
+| `Fix` | 버그 수정 |
+| `Refactor` | 동작 변경 없는 구조·코드 정리 |
+| `Docs` | 문서·스펙·주석 |
+| `Chore` | 빌드·설정·템플릿·의존성 |
+| `Test` | 테스트 추가·수정 |
+
+예: `Feat: 소셜 로그인 API 구현`, `Refactor: 도메인 기반 레이어드 패키지 구조로 재구성`
+
+`./scripts/install-git-hooks.sh`로 설치되는 `commit-msg` 훅이 이 형식을 로컬에서 기계적으로 검증한다(형식 위반 시 커밋 차단). Merge·Revert 커밋은 검사 대상에서 제외.
+
+### `Breaking-Change-Reason:` 트레일러
+
+프론트가 **조금이라도 대응해야 하는** API 계약 변경(필드 추가·삭제·이름변경·타입변경·필수화 — optional 추가 포함, enum 값 추가·삭제, `ErrorCode` 신규·변경·삭제, 경로·메서드 변경 등)이 포함된 커밋은 본문에 `Breaking-Change-Reason: <한 줄 사유>` 트레일러를 추가한다. "필드 하나 추가일 뿐"·"optional이라 안전함"은 생략 사유가 아니다 — CI의 `oasdiff breaking`은 스키마 파괴적 변경만 잡아내므로, 그보다 넓은 실제 프론트 영향은 커밋 시점에 직접 남긴다.
+
+```
+Fix: 마이페이지 응답 필드명 정리
+
+Breaking-Change-Reason: 프론트 요청으로 name → nickname 통일 (디자인 시스템 용어 정합)
+```
+
+상세 기준·Discord 알림 흐름: [`docs/api/README.md`](../docs/api/README.md) · [`core-guardrails.md`](../.claude/rules/core-guardrails.md) STOP §5.
+
+### 커밋 분할 (에이전트)
+
+작업이 끝나면 에이전트는 **사용자가 묻지 않아도 커밋을 어떻게 나눌지 먼저 제안한다.** 다만 **제안까지가 에이전트의 몫이고, 실행은 사용자 승인 후에만** 한다 — 승인 없이 `git commit`을 실행하지 않는다.
+
+| 원칙 | 내용 |
+|------|------|
+| **최대 개수** | **5개** — 목적·주제별로 나누되 그 이상 쪼개지 않음 |
+| **분할 기준** | 독립된 목적·주제 (예: 기능 구현 / 테스트 / 문서 / 규칙·하네스 / 설정·스크립트) |
+| **1개로 충분할 때** | 변경이 한 주제면 1커밋 — 개수를 채우려고 억지로 쪼개지 않음 |
+| **제안 시점** | 작업 완료 보고와 같은 턴. 사용자가 "커밋해줘"라고 말하기 전에 먼저 |
+| **금지** | **승인 없는 커밋 실행**, 의미 없는 파일 단위 쪼개기, 빌드 깨지는 중간 커밋 |
+
+분할 순서 예: (1) 핵심 구현 → (2) 테스트 → (3) 문서 → (4) 규칙·하네스 → (5) 설정·스크립트. 각 커밋은 `{Type}: {한글}` 형식을 따른다.
+
+## Pull Request
+
+**에이전트 주의:** `gh pr create` 실행 전 사용자에게 먼저 확인한다 — 구현·커밋까지 요청받았어도 PR 생성은 별도 승인 필요(위 "새 이슈·새 브랜치·새 PR 생성은 항상 먼저 확인" 절과 동일).
+
+| 항목 | 규칙 |
+|------|------|
+| **base** | `main` |
+| **제목** | `{Type}: {한글 설명}` (Type 첫 글자 대문자) |
+| **본문** | [`pull_request_template.md`](pull_request_template.md) |
+| **이슈 연결** | `Closes #n` |
+| **스펙** | DB·인증·다파일 변경 시 `docs/specs/` 링크 |
+| **merge** | **Create a merge commit** — PR 브랜치 커밋 히스토리 유지 |
+| **merge 후** | 작업 브랜치 삭제 — 원격(`git push origin --delete {branch}`) + 로컬(`git branch -d {branch}`). GitHub PR 화면 "Delete branch" 버튼도 동일 |
+
+### Merge 정책 (금지: Squash merge)
+
+| 허용 | 금지 |
+|------|------|
+| **Create a merge commit** | **Squash merge** |
+| Rebase merge (리뷰 후 rebase 정리한 경우만, 팀 합의) | Squash and merge |
+
+**Squash merge 금지 이유:** `main`과 feature 브랜치에 **동일 작업이 이중 히스토리**로 남고, author date·잔디·커밋 추적이 깨짐. PR merge 시 GitHub UI에서 **Squash and merge 버튼 사용 금지**.
+
+저장소 설정: Settings → General → Pull Requests → **Allow squash merging** 끄기.
+
+## 이슈·PR 본문 작성
+
+문서 작성 기준([`.claude/rules/doc-writing.md`](../.claude/rules/doc-writing.md))을 이슈·PR 본문에도 적용한다. 템플릿이 이 순서를 이미 강제하므로, 템플릿을 지우고 자유 서술하지 않는다.
+
+### 제목
+
+- **핵심 키워드를 넣는다** — "에러 해결"(X) → "`TRIP_NOT_FOUND` 에러 해결"(O). 목록에서 제목만 보고 무슨 일인지 알 수 있어야 한다.
+- **30자 이내 평서문.** `?`·`!`를 쓰지 않는다.
+- 접두사는 유지 — 이슈 `[Feat]`/`[Fix]`/`[Chore]`/`[Docs]`, PR `{Type}: {한글 설명}`.
+
+### 본문
+
+| 원칙 | 이슈·PR에서의 의미 |
+|------|--------------------|
+| **결과를 먼저, 배경은 나중에** | 이슈는 `목표`(완료되면 뭐가 달라지는가)가 `배경`보다 앞에 온다. PR은 `Summary`에 merge 후 달라지는 결과부터 쓴다. 버그 이슈는 `실제 동작(증상)`을 먼저 보여준다 |
+| **한 문장에 하나의 생각** | "한 줄 요약"은 진짜 한 문장으로. 나열이 3개를 넘으면 목록으로 바꾼다 |
+| **메타 담화 제거** | "아시다시피", "결론적으로" 같은 말은 정보를 담지 않는다 |
+| **용어 일관** | 도메인 용어는 [`docs/product/glossary.md`](../docs/product/glossary.md)가 SSOT. 같은 개념을 다른 말로 부르지 않는다 |
+
+### 금지
+
+- 템플릿 섹션을 지우고 자유 서술 — 섹션 순서 자체가 읽는 순서를 보장한다
+- 폐지된 용어 사용 — 릴리즈 구분은 Milestone(`MVP 출시`/`출시 이후`), 우선순위는 `priority: must`/`could`
+- 제목에 이슈 번호만 적고 내용을 본문에만 두기 — 목록에서 안 읽힌다
+
+## 코드 리뷰 — PN 룰
+
+리뷰 코멘트 등급 (**Milestone과 무관**).
+
+| 등급 | 의미 |
+|------|------|
+| **P1** | 필수 반영 |
+| **P2** | 권장 |
+| **P3** | 웬만하면 반영 |
+| **P4** | 선택 |
+| **P5** | 사소 |
+
+예: `P2: prod에서 ddl-auto update인데 엔티티 컬럼 삭제 시 운영 DB에 orphan column이 남을 수 있습니다.`
+
+## 라벨 · 마일스톤
+
+```bash
+./scripts/github-bootstrap.sh      # 라벨 + 마일스톤 (재실행 가능)
+```
+
+### 라벨
+
+| prefix | 값 | 용도 |
+|--------|-----|------|
+| `priority:` | must, could | **MoSCoW 우선순위** — 성능 개선·구조 정리·리팩터·최적화만 could, 그 외 기능 구현·버그 수정은 전부 must (2026-08-26 재정의). **Agent는 스스로 판단해 부여 금지 — 항상 사용자 확인** (`core-scope.md`) |
+| `kind:` | feature, bug, chore, docs | 이슈 종류 |
+| `meta:` | blocked, duplicate, wontfix | 상태 |
+
+Must/Could 구분은 **이슈에 직접 붙는 `priority:` 라벨**로 표현한다. 상세: [`release-milestones.md` §2](../docs/product/release-milestones.md#2-priority-must--priority-could).
+
+이슈당 **Milestone 1개** + priority 1개 + kind 1개 권장.
+
+### `[미정]` 항목 처리
+
+기획·스펙·BR의 `[미정]` 항목은 별도 중앙 트래커 없이 해당 문서에 표기만 남긴다. 상세: `.claude/rules/core-scope.md`.
+
+### 마일스톤
+
+| 마일스톤 | 의미 |
+|----------|------|
+| MVP 출시 | `mvp.md` In Scope — 출시 전에 끝내야 함 |
+| 출시 이후 | 런칭 후 추가 기능 · 기술부채·리팩토링 |
+
+## Agent 예시
+
+> "회원 탈퇴 API 이슈 만들어줘. MVP 출시 마일스톤, 스펙 링크 포함."
+
+## CI
+
+`workflows/ci-cd.yml` — PR·`main` push 시 test, `main` push 시 GHCR deploy.

@@ -1,0 +1,52 @@
+---
+paths:
+  - "**/controller/**"
+  - "**/service/**"
+  - "**/config/**"
+  - "docs/specs/**"
+---
+
+# Client Platform (React → Play / App Store)
+
+도메인·BR 규칙은 `docs/product/business-rules/`, 와이어프레임은 `docs/product/design/figma-wireframe-v1.md`, 표기 규칙(casing)은 `spring-boot-java.md` 참고.
+
+이 저장소는 **백엔드만**. 클라이언트는 **React(프론트 2명)**, 최종 **Play·App Store** 앱 배포 목표.
+
+작업 전: `docs/product/platform.md`, `docs/decisions/002-domain-split-vercel-api.md` 확인.
+
+## API · 도메인
+
+- Base URL: `https://api.tripfit.online` (운영), 로컬: `http://localhost:8080`
+- JSON REST, `/api/v1/...` — 앱·Vercel 웹 공용
+- 응답 envelope: [`docs/architecture/api-response.md`](../../docs/architecture/api-response.md) — `data`, `message`, `code` (Body에 status 없음)
+- DTO·에러 body는 앱에서 파싱 가능하게 — magic string 남발 금지
+- 스펙(`docs/specs/`)에 요청/응답·HTTP 상태·에러 케이스 명시
+
+## 인증 · 링크 · 알림
+
+| 기능 | 규칙 |
+|------|------|
+| 소셜 로그인 · Google Calendar | **환경 A**(네이티브 앱) / **환경 B**(카카오 인앱·모바일 웹) — [`platform.md`](../../docs/product/platform.md). **서버 302 OAuth 금지**. 클라이언트가 토큰/`authorizationCode` → REST |
+| 초대 링크 | PRD·플로우 따름. Universal/App Link는 `[미정]`이면 추측 구현 금지 |
+| **멤버십 SCHEDULE_PENDING/ACTIVE** | **방장·참여자 모두 방 진입 직후 `SCHEDULE_PENDING`**(방장=create, 참여자=join) → 일정 확인 → `activate`=`ACTIVE`. 공유=방장∧ACTIVE. create에 `inviteCode` 없음 — 상세는 `glossary.md` · `trip-room-api` 필독 절 · Trip/Trip Members `@Operation` 설명에만. Swagger 전역 `Info`·`@Tag`는 **요약 한 줄 + 필독 포인터만**, 상태 전이 상세 서술 금지 |
+| 푸시 (FCM/APNs) | Milestone **MVP 출시** — **스펙 없으면** 엔티티·발송 API 추가 금지 |
+| 결제·수익화 | `mvp.md` Out — 명시 없으면 구현 금지 |
+
+## CORS · 보안
+
+- API 호스트: `api.tripfit.online` — UI 호스트 `tripfit.online`(Vercel)와 **분리**
+- 네이티브 앱: CORS 해당 없음
+- Vercel·로컬 dev 웹: `config/`에서 `https://tripfit.online` 등 origin 최소 허용
+- 시크릿·OAuth client secret은 env — 코드·커밋 금지
+
+## 프론트 협업
+
+- API 변경은 OpenAPI(springdoc) 반영 권장 — **enum 값 목록 SSOT는 `/v3/api-docs`(Swagger), enum 전용 md는 두지 않음**
+- Swagger `description`/`@Schema`는 FE 가독성 규칙(`openapi-conventions.md`: 목적·호출 시점·전제·결과 섹션) 준수 — 이슈 번호·BR/스펙 ID 금지
+- 새 enum·상수 의미는 해당 `docs/specs/`(+ 필요 시 `glossary.md` 한글 라벨)에만 적고, 프론트에는 OpenAPI 스키마로 전달
+- JWT 필요 API는 Swagger 자물쇠(`bearer-jwt`)로 구분 — Authorize에 access token 입력
+- 화면 용어: `glossary.md` / Figma — API 필드명과 혼동하지 않기
+
+## 미정
+
+앱 패키징(RN/Capacitor 등)은 `platform.md` · `docs/decisions/` 참고 — Agent가 임의 선택 금지.

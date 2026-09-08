@@ -30,11 +30,11 @@ Claude Code용 **하네스**(규칙·스킬·훅·에이전트) 템플릿 저장
 
 ## 이 저장소에서 작업할 때
 
-- **슬롯을 늘리지 않는다** — `core-*.md`에서 실제로 `{{...}}`를 쓰는 곳이 있을 때만 `harness-map.md`에 행을 추가한다 (`harness-map.md` 규칙 3)
+- **슬롯을 늘리지 않는다** — `core-*.md`에서 실제로 `{{...}}`를 쓰는 곳이 있을 때만 `harness-map.md`에 행을 추가한다 (규칙 3)
 - **`core-*.md`에 프로젝트 고유 사실을 넣지 않는다** — 경로면 슬롯, 정책이면 능력 플래그, 둘 다 아니면 `local-*.md`
 - **"완료·통과"를 말하기 전에 `scripts/verify.sh`를 돌린다** — 이 저장소의 `{{테스트 명령}}`이며 아래 검사기 3개를 한 번에 돌린다. Stop 훅이 이 명령의 실행 기록을 본다
 - **`core-*.md`를 고쳤으면 `scripts/check-portability.sh`** — 고유명사·언어 식별자·경로 리터럴·팩 참조(C1~C4)와 always-load 예산을 exit code로 판정한다. `.claude/` 안의 `local-*` 파일은 검사하지 않는다. pre-commit도 같은 검사를 한다. 패턴은 `scripts/portability-patterns.txt`
-- **문서를 새로 만들거나 크게 고쳤으면 `scripts/check-doc-style.sh <파일>`** — 개요 없음·H4·번역투는 오류, 긴 제목·약어는 경고. pre-commit이 stage된 `.md`에 같은 검사를 한다. 패턴은 `scripts/doc-style-patterns.txt`
+- **문서를 새로 만들거나 크게 고쳤으면 `scripts/check-doc-style.sh <파일>`** — 개요 없음·H4·번역투는 오류, 긴 제목·약어·깨진 링크는 경고. pre-commit이 stage된 `.md`에 같은 검사를 한다. 패턴은 `scripts/doc-style-patterns.txt`
 - **훅을 고쳤거나 우회 경로를 발견했으면 `scripts/hook-cases.txt`에 케이스를 먼저 추가하고 `scripts/test-hooks.sh`** — 모든 `deny-*` 훅은 판정 불가 입력(python3 없음 포함)도 차단해야 한다(훅 공통 규약). 새 훅은 `settings.json`에 등록해야 통과한다. pre-commit도 같은 테스트를 한다
 - **이 저장소만 "하네스 자기 수정" ☑** — 훅·`settings.json`을 에이전트가 고칠 수 있다. 붙여 쓰는 프로젝트는 `adopt`이 ❌ + `HARNESS_SELF_EDIT="0"`
 - **씨앗 파일은 `local-*` 이름을 유지한다** — `examples/seeds/`의 규칙·에이전트·훅 파일명 접두사가 복사 뒤 검사기에 층을 알린다

@@ -12,6 +12,9 @@
 #   E/W 문장 패턴 — scripts/doc-style-patterns.txt      (메타 담화·번역투·한자어·명사형)
 #   W  제목 30자 초과                                   (doc-writing "제목은 검색 가능하게")
 #   W  약어 첫 등장에 풀어쓰기 없음 (허용 목록 제외)     (doc-writing "용어를 일관되게")
+#   W  상대 링크가 가리키는 파일이 없음                  (doc-reviewer "근거·출처 없는 참조")
+#      없어진 파일로 안내하는 링크를 따라가면 규칙이 없고, 없으면 에이전트가 스스로 판단해 버린다.
+#      외부 URL·앵커·슬롯(`{{…}}`)이 든 경로는 대상이 아니다. 오탐이면 경고이므로 커밋을 막지 않는다.
 #
 # 검사하지 않는 것: 코드 블록·인라인 코드·따옴표 안 문자열·`채운 예` 줄·frontmatter. 판단이 필요한 항목
 # (유형 적합성·개요가 실제 요약인지·근거 없는 단정)은 doc-reviewer 에이전트가 advisory로 맡는다.
@@ -57,7 +60,7 @@ printf '%s\n' "$files" >"$list_file"
 trap 'rm -f "$list_file"' EXIT
 
 python3 - "$patterns_file" "$list_file" <<'PY'
-import re, sys
+import os, re, sys
 
 patterns_file, list_file = sys.argv[1], sys.argv[2]
 files = [l.strip() for l in open(list_file, encoding="utf-8") if l.strip()]
@@ -81,6 +84,9 @@ ACRO = re.compile(r"(?<![A-Za-z])([A-Z]{2,6})(?![A-Za-z])")
 INLINE_CODE = re.compile(r"`[^`]*`")
 QUOTED = re.compile(r"\"[^\"]*\"|“[^”]*”|「[^」]*」|'[^']*'")
 LINK_TARGET = re.compile(r"\]\([^)]*\)")
+# 상대 링크 실존 검사용 — 링크 표기에서 대상만 뽑는다. 외부 URL·앵커·슬롯은 아래에서 걸러낸다.
+MD_LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
+SKIP_LINK = ("http://", "https://", "mailto:", "#", "<")
 
 def strip_for_prose(s: str) -> str:
     s = INLINE_CODE.sub(" ", s)
@@ -120,6 +126,7 @@ for path in files:
             i += 1
         i += 1
 
+    doc_dir = os.path.dirname(path) or "."
     in_fence = False
     fence_open_line = None
     seen_acro = set()
@@ -136,6 +143,17 @@ for path in files:
             continue
         if "채운 예" in line:
             continue
+
+        for lm in MD_LINK.finditer(line):
+            target = lm.group(1)
+            if target.startswith(SKIP_LINK) or "{{" in target:
+                continue
+            rel = target.split("#")[0].split("?")[0]
+            if not rel:
+                continue
+            if not os.path.exists(os.path.normpath(os.path.join(doc_dir, rel))):
+                report("W", path, lineno + 1, "LINK", target[:40],
+                       "링크 대상이 없다 — 경로를 고치거나, 다른 저장소 것이면 링크 대신 이름으로 적는다")
 
         m = re.match(r"^(#{1,6})\s+(.*)$", line)
         if m:

@@ -2,3 +2,6 @@
 .claude/worktrees/
 .DS_Store
 .idea/
+
+# 하네스와 무관한 개인 산출물 (포트폴리오·학습용 문서)
+docs/portfolio/

@@ -30,7 +30,7 @@
 | 하네스 구성 요소 지도 | 구성 요소를 추가·삭제·개명할 때 같은 턴에 갱신 | `{{문서 루트}}/harness/component-map.md` — 이 저장소 이력, 배달 안 함 | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 폴더 인덱스 | 사용자 승인 후 수동 작성 | `{{문서 루트}}/README.md` · 하위 `README.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 참조 자료 (차용 출처) | 외부 저장소·문서를 참고해 하네스를 바꿀 때 | `{{문서 루트}}/references.md` — 이 저장소 이력, 배달 안 함 | 참조 | [`reference-doc.md`](reference-doc.md) |
-| 온보딩·개념 입문 | (아직 없음) | `{{문서 루트}}/` | 학습 | [`learning-doc.md`](learning-doc.md) |
+| 온보딩·개념 입문 | 사용자 승인 후 수동 작성 | `{{문서 루트}}/` — 이 저장소: `workflow-cycle.md` | 학습 | [`learning-doc.md`](learning-doc.md) |
 | *프로젝트 문서 — `adopt`이 채운다* | | | | |
 | 제품 범위 | 사용자 승인 후 수동 작성 | `{{제품 범위}}` — 이 저장소: `AGENTS.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 용어집 | 사용자 승인 후 수동 작성 | `{{용어집}}` — 이 저장소: (없음) | 참조 | [`reference-doc.md`](reference-doc.md) |

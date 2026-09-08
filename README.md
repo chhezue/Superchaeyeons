@@ -1,73 +1,116 @@
 # Superchaeyeons
 
-Claude Code용 **AI 하네스 템플릿** — 규칙·스킬·훅·에이전트 한 벌을 새 프로젝트에 복사해 붙이는 저장소입니다. [TripFit 백엔드](https://github.com/Central-MakeUs/TripFit-server)에서 두 달간 굴린 하네스가 [baro-farm-be](https://github.com/dogs-team/baro-farm-be)로 옮겨 붙이는 과정에서 갈라졌습니다. 그 경험으로 프로젝트 고유 사실을 전부 걷어내, **어느 저장소에 붙여도 규칙 파일을 고치지 않는** 부품으로 만든 것이 이 저장소입니다. 무엇을 어디서 참고했는지는 [`docs/references.md`](docs/references.md)에 있습니다.
+Claude Code용 **AI 하네스 템플릿** — 에이전트의 임의 판단과 위험한 행동을 물리적으로 차단하고, 어느 프로젝트에나 규칙 수정 없이 붙여 쓰는 개발 환경을 제공합니다.
 
-## 하는 일
+## 왜 필요한가
 
-에이전트가 **혼자 판단하면 안 되는 지점에서 멈추게** 만듭니다. 멈추는 지점은 다음과 같습니다.
+AI 코딩 에이전트에게 말로만 "주의하라"고 당부하면 같은 실수를 반복합니다. Superchaeyeons는 프롬프트 엔지니어링 대신 **규칙·스킬·훅·기계 검증**의 4개 레이어로 에이전트의 실행 경로 자체를 통제합니다.
 
-- 문서와 구현이 어긋나면 → 조용히 맞추지 않고 **질문**
-- 요청이 "알아서·적당히"처럼 열려 있으면 → 구현 전에 **라운드 인터뷰**(`ask`)
-- API 계약·에러코드·권한이 바뀌면 → **같은 턴에** 스펙·enum까지 갱신 (미루기 금지)
-- 위험한 shell 명령(force push·재귀 삭제·hard reset·`git clean -f`·`--no-verify` 커밋·`.env` 커밋·SQL DROP·볼륨 삭제·`curl | sh` 등)·범위 밖 쓰기·**자기 훅 수정** → 훅이 **결정적으로 차단** (판단에 맡기지 않음). 같은 항목이 `settings.json`의 `permissions.deny`에도 있어 이중으로 막힘
-- 코드를 고치고(도구 편집이든 Bash `sed -i`·리다이렉션이든) 테스트를 **그 뒤에** 돌리지 않았거나 실패했는데 "완료"라고 하면 → `Stop` 훅이 **되돌림**
-- 커밋·이슈·PR 생성 → **항상 먼저 확인**
+| 흔한 AI 에이전트의 사고 | Superchaeyeons의 통제 방식 |
+|-------------------------|---------------------------|
+| 위험한 명령 실행 (`git push -f`, `rm -rf`, `DROP TABLE`) | **훅(`deny-*`)이 셸 레벨에서 결정적으로 차단** |
+| 테스트도 안 돌리고 "구현 완료했습니다" 거짓말 | **`Stop` 훅이 테스트 미실행 시 작업을 강제 되돌림** |
+| 기획·스펙 문서와 코드가 다를 때 임의 구현 | **스스로 판단하지 않고 작업을 멈춘 뒤 질문(`ask`)** |
+| "알아서 적당히 만들어줘" 같은 모호한 지시로 폭주 | **구현 전에 요구사항 인터뷰 스킬 강제** |
+| 방금 수정한 자기 훅이나 설정을 스스로 해제 | **하네스 자기 수정 금지로 설정 변조 원천 차단** |
 
-강제력이 다른 4개 레이어(규칙 → 스킬·에이전트 → 훅 → 기계 검증)로 나뉘어 있습니다. **구성 요소 하나하나가 언제 실행되고 무엇을 묻고 검사하는지, 고치려면 어디를 건드리는지**는 [`docs/harness/component-map.md`](docs/harness/component-map.md)에 있습니다. 설계 근거는 [`docs/harness/`](docs/harness/README.md), 왜 이렇게 만들었는지 긴 글은 [`docs/harness-engineering.md`](docs/harness-engineering.md).
+## 3단계 빠른 시작
 
-## 붙이는 순서
+기존 프로젝트에 하네스를 붙이는 과정은 세 단계로 끝납니다.
 
-배달물은 `.claude/`·`docs/templates/`·`scripts/` 셋이고, 그대로 복사하는 것으로 시작합니다.
+### 1단계: 필수 부품 복사
+
+새 프로젝트 루트로 세 디렉터리를 복사합니다.
 
 ```bash
-cp -R .claude docs/templates scripts <새-프로젝트>/   # .github/CONTRIBUTING.md 는 루트에 둘 수 있을 때만
+cp -R .claude docs/templates scripts <새-프로젝트>/
 ```
 
-그다음 새 프로젝트에서 **`adopt` 스킬을 돌립니다.** 저장소를 실측해(`scripts/adopt-probe.sh`) [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md)의 축 4개 · 슬롯 22개 · 능력 플래그 8개를 **제안**하고, 승인하면 채웁니다. 붙여 쓰는 프로젝트는 "하네스 자기 수정" 플래그를 ❌로 두어 에이전트가 훅·`settings.json`을 고치지 못하게 합니다. 스택에 맞는 씨앗이 `examples/seeds/`에 있으면 `local-*` 이름 그대로 복사해 실물과 대조하고, 없으면 `_template/`을 실측으로 채웁니다. `AGENTS.template.md` → `AGENTS.md`도 이 단계에서 만듭니다. 규칙 파일(`core-*.md`)은 건드리지 않습니다.
+### 2단계: 자동 환경 측정과 슬롯 설정
 
-마지막으로 git 훅을 설치합니다. 커밋 형식과 부품 계약·문서 스타일·훅 규약을 커밋 전에 검사합니다.
+새 프로젝트에서 Claude Code를 켜고 `adopt` 스킬을 실행합니다.
+
+```text
+/adopt
+```
+
+저장소를 자동으로 실측해 언어·스택·테스트 명령을 파악하고, [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md)의 설정값(축 4개 · 슬롯 22개 · 플래그 8개)을 제안합니다. 승인하면 프로젝트 맞춤 설정이 끝납니다.
+
+### 3단계: Git 훅 설치
+
+커밋 전 부품 규약과 문서 스타일을 검사하는 git 훅을 설치합니다.
 
 ```bash
 ./scripts/install-git-hooks.sh
 ```
 
-전체 순서와 각 단계의 근거: [`AGENTS.md`](AGENTS.md) "새 프로젝트에 붙이는 순서".
+## 에이전트의 작업 순서 (12단계 워크플로)
 
-## 디렉터리 구조
+Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코드를 건드리지 않고, 검증된 12단계 워크플로(`AI_Harness_Guide` 기반)를 거치며 작업합니다.
 
-경로별로 무엇이 들어 있고 새 프로젝트에 배달되는지의 표입니다.
+| 단계 | 작업 내용 | 하네스의 통제 장치 |
+|:---:|---|---|
+| **0** | **저장소 탐색 (Exploration)**<br>구조·스택·컨벤션을 읽어 멘탈 모델 수립 | `adopt` 자동 실측 및 진입 문서 확인 순서 |
+| **1** | **요구사항 분석 (Requirements)**<br>모호한 부분을 질문하고 범위 확정 | `ask` 스킬 (라운드 인터뷰) |
+| **2** | **불변 조건 정의 (Invariant & Acceptance Criteria)**<br>절대 깨지면 안 되는 조건과 완료 기준 확정 | G2 승인 게이트 & `specify` 스펙 문서 |
+| **3** | **외부 지식 조사 (Research)**<br>최신 라이브러리 문서·공식 사양 확인 | G1 리서치 게이트 & `researcher` 에이전트 |
+| **4** | **결정 기록 (ADR)**<br>설계 대안 비교 및 트레이드오프 기록 | `{{결정 기록}}` 슬롯 (ADR 템플릿) |
+| **5** | **컨텍스트 갱신 (Rules Update)**<br>새로 합의된 결정을 규칙 문서에 동기화 | G4 문서 갱신 점검 |
+| **6** | **작업 분해 (Task Breakdown)**<br>독립 검증 가능한 단위로 태스크 쪼개기 | `specify` 스펙 (태스크별 1완료조건·1커밋) |
+| **7** | **실행 환경 사전 검증 (Preflight)**<br>구현 전 빌드·의존성·테스트 동작 확인 | `preflight` 사전 모드 |
+| **8** | **핵심 구현 루프 (Task Loop)**<br>계획 ➜ 선행 테스트 ➜ 구현 ➜ 실행 ➜ 셀프리뷰 ➜ 커밋 | 구현 게이트 & 커밋 전 승인 |
+| **9** | **동시성·부하·실패 테스트**<br>단위 테스트로 잡히지 않는 한계 검증 | `testing.md` 동시성·장애 시나리오 |
+| **10**| **독립 코드 리뷰 (Independent Review)**<br>확증 편향 없는 제3의 시선으로 검토 | 리뷰 에이전트 (`doc-reviewer` 등) |
+| **11**| **문서화 및 작업 보고 (Report)**<br>사용자 문서와 작업 한계·결정사항 기록 | `report.md` (검증하지 못한 것 명시) |
 
-| 경로 | 내용 |
-|------|------|
-| `.claude/rules/` | `harness-map`(축·슬롯·플래그 값) + `core-*` 8개(프로젝트 무관 — 7개 always-load, `core-code-comments`는 소스 파일 접근 시) + `doc-writing` + `README`(구조 인덱스). 스택 규칙 없음 |
-| `.claude/skills/` | `adopt` · `ask` · `specify` · `safe-refactor` · `debug` · `preflight` · `defer` · `retro` |
-| `.claude/agents/` | `researcher`(G1 외부 문서 조사) · `doc-reviewer`(G3 문서 리뷰) |
-| `.claude/hooks/` | 스택 무관 5개 — `deny-*` 3 · `warn-*` 1 · `ask-*` 1. 규약과 `settings.json` 등록은 `scripts/test-hooks.sh`가 판정 |
-| `.claude/settings.json` | 훅 등록 5개 + `permissions.deny`(`.env` 읽기·쓰기, force push·hard reset·`rm -rf`·`--no-verify` 접두사) |
-| `scripts/` | 검사기 3개(`check-portability` · `test-hooks` · `check-doc-style`)와 그 래퍼 `verify.sh`, 실측 `adopt-probe.sh`, git 훅 |
-| `examples/seeds/` | 검증된 lang 팩 씨앗(`java-spring/`) + 스택 무관 골격(`_template/`). 파일명이 전부 `local-*`라 복사 뒤에도 검사기가 core로 오인하지 않음 |
-| `examples/tripfit/` · `examples/baro/` | 실제로 채운 모습 두 가지 (참고용, 이 저장소의 규칙 아님) |
-| `docs/templates/` | 산출물 등록부 + 유형별 문서 템플릿 (함께 배달) |
-| `docs/harness/` · `docs/out-of-scope/` · `docs/references.md` | 설계 설명 · 안 하기로 한 것 · 참조한 저장소와 차용한 것 (이 저장소 이력, 배달 안 함) |
+## 핵심 구조: 4개 레이어와 3층 권한
 
-## 수정 권한 3층
+하네스는 **강제력**을 기준으로 4개 레이어로 나뉘고, **수정 권한**을 기준으로 3개 층으로 나뉩니다.
 
-위 "4개 레이어"가 **강제력**의 축이라면, 이 표는 **누가 고칠 수 있는가**의 축입니다. 서로 다른 구분이고, 이 구분이 이식성의 근거입니다.
-
-| 층 | 파일 | 수정 |
-|----|------|------|
-| **core (부품)** | `core-*.md` · 스킬 · 에이전트 · 훅 · `settings.json` | 금지 — `scripts/check-portability.sh`가 고유명사·스택 식별자·경로 리터럴을 exit code로 막음 |
-| **map (값)** | `harness-map.md` | `adopt`이 채움 |
-| **local (고유)** | `.claude/` 안의 `local-*` 파일 | 자유 — 복사한 씨앗과 저장소 고유 규칙 |
-
-## 이 저장소의 검증 명령
-
-부품 계약·always-load 예산(`check-portability`), 훅 규약 케이스 파일과 python3 부재 케이스와 훅 등록 대조(`test-hooks`), 문서 스타일(`check-doc-style --all`)을 한 번에 돌리는 명령입니다. 이것이 이 저장소의 `{{테스트 명령}}`이고, `Stop` 훅은 코드를 고친 턴에 이 명령의 실행 기록이 있는지 봅니다.
-
-```bash
-scripts/verify.sh
+```text
+[ 4개 강제력 레이어 ]
+1. 규칙 (Rules)      : 행동 원칙 규정 (모호하면 멈추고 질문)
+2. 스킬 (Skills)     : 표준 절차 강제 (사양 확정 → 안전 리팩터링 → 검증)
+3. 훅 (Hooks)        : 위험 명령과 거짓 완료를 셸 레벨에서 차단
+4. 기계 검증 (Tests) : 이식성·문서 스타일·훅 규약을 스크립트로 판정
 ```
 
-## 규칙 본문의 언어
+```text
+[ 수정 권한 3층 구조 ]
+- Core (부품) : core-*.md, 공통 훅, 공통 스킬 (수정 금지, 100% 이식성 보장)
+- Map (연결)  : harness-map.md (adopt 스킬이 프로젝트 실측값으로 채움)
+- Local (고유): local-*.md (각 프로젝트 고유의 도메인·기술 스택 규칙)
+```
 
-규칙 본문은 한국어입니다. 영어로 옮겨도 되지만, 실측 결과 토큰 차이는 크지 않았습니다 — 근거는 [`docs/harness/layer1-human-gate.md`](docs/harness/layer1-human-gate.md).
+이 구조 덕분에 새 프로젝트에 붙일 때 **Core 규칙 파일을 단 한 줄도 고치지 않고** 그대로 재사용합니다.
+
+## 디렉터리 안내
+
+저장소 구성과 새 프로젝트 배달 여부입니다.
+
+| 경로 | 내용 | 배달 여부 |
+|------|------|:---------:|
+| `.claude/rules/` | 행동 규칙 (`core-*` 8개, `harness-map.md`, `doc-writing.md`) | 배달 |
+| `.claude/skills/` | 표준 워크플로 스킬 8개 (`adopt`, `ask`, `specify`, `preflight` 등) | 배달 |
+| `.claude/agents/` | 보조 에이전트 (`researcher`, `doc-reviewer`) | 배달 |
+| `.claude/hooks/` | 결정적 차단 훅 5개 (`deny-*`, `warn-*`, `ask-*`) | 배달 |
+| `scripts/` | 이식성·문서·훅 검사 스크립트와 git 훅 설치기 | 배달 |
+| `docs/templates/` | 산출물 등록부 및 문서 템플릿 | 배달 |
+| `examples/seeds/` | 기술 스택별 씨앗 규칙 (`java-spring/`, `_template/`) | 배달 |
+| `docs/harness/` | 4개 레이어 상세 설계 문서와 아키텍처 이력 | 저장소 전용 |
+| `examples/tripfit/` | 실제 서비스 적용 사례 (참고용 예시) | 저장소 전용 |
+
+## 자체 검증 명령
+
+이 저장소 자체의 부품 계약, 훅 규약, 문서 스타일을 한 번에 검증하는 명령입니다.
+
+```bash
+./scripts/verify.sh
+```
+
+## 더 읽어보기
+
+- [컴포넌트 맵](docs/harness/component-map.md): 각 부품의 실행 시점과 수정 가이드
+- [하네스 엔지니어링 기록](docs/harness-engineering.md): 설계 철학과 실제 인시던트 해결 과정
+- [참고 자료 및 출처](docs/references.md): 영감을 받은 선행 연구와 차용한 개념
+- [상세 적용 순서](AGENTS.md): adopt 단계별 상세 동작 원리

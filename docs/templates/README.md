@@ -18,19 +18,17 @@
 
 | 산출물 | 만드는 것 | 저장 경로 | 유형 | 템플릿 |
 |--------|-----------|-----------|------|--------|
-| 기능 스펙 | `specify` · `defer` 스킬 | `{{스펙 저장소}}/{unit}/{kebab-case}.md` | 참조 | 골격은 [`spec-template.md`](../../.claude/skills/specify/references/spec-template.md) (참조 유형의 작업 산출물 판) |
+| 기능 스펙 | `specify` 스킬 (범위를 미룰 때의 Draft 포함) | `{{스펙 저장소}}/{unit}/{kebab-case}.md` | 참조 | 골격은 [`spec-template.md`](../../.claude/skills/specify/references/spec-template.md) (참조 유형의 작업 산출물 판) |
 | 아키텍처 감사 | `safe-refactor` 스킬 (Audit 단계) | `{{감사 로그}}/{unit}/{NNN}-{kebab-topic}.md` (작업 단위 안에서 001부터 증가) | 문제 해결 | 골격은 [`audit-template.md`](../../.claude/skills/safe-refactor/references/audit-template.md) (문제 해결 유형의 작업 산출물 판) |
 | 리팩터 반영 이력 | `safe-refactor` 스킬 (G4 Report) | `{{감사 로그}}/{unit}/refactor-log.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 하네스 회고 백로그 | `retro` 스킬 | `{{문서 루트}}/audits/harness-retro.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 아키텍처 결정 (ADR) | 사용자 승인 후 수동 작성 | `{{결정 기록}}/{번호}-{kebab-case}.md` | 설명 | [`explanation-doc.md`](explanation-doc.md) "작업 산출물로 쓸 때" |
 | 하네스 슬롯 값 | `adopt` 스킬 | `.claude/rules/harness-map.md` | 참조 | 파일 자체가 골격 |
-| 작업 보고서 (`report.md`) | G4 — Must Have급 작업 끝에 | `{{문서 루트}}/reports/{YYYY-MM-DD}-{kebab-topic}.md` | 참조 | [`reference-doc.md`](reference-doc.md) "작업 보고서" |
+| 작업 보고서 (`report.md`) | G4 — L 규모(3파일 이상·API·DB) 작업 끝에 | `{{문서 루트}}/reports/{YYYY-MM-DD}-{kebab-topic}.md` | 참조 | [`reference-doc.md`](reference-doc.md) "작업 보고서" |
 | 안 하기로 한 것 | 검토 후 기각 결정이 날 때 (G4·`retro`) | `{{문서 루트}}/out-of-scope/README.md` — 이 저장소 이력, 배달 안 함 | 참조 | [`reference-doc.md`](reference-doc.md) |
-| 하네스 설계 배경 | 사용자 승인 후 수동 작성 | `{{문서 루트}}/harness/` · `harness-engineering.md` | 설명 | [`explanation-doc.md`](explanation-doc.md) |
-| 하네스 구성 요소 지도 | 구성 요소를 추가·삭제·개명할 때 같은 턴에 갱신 | `{{문서 루트}}/harness/component-map.md` — 이 저장소 이력, 배달 안 함 | 참조 | [`reference-doc.md`](reference-doc.md) |
+| 하네스 설계 배경 | 사용자 승인 후 수동 작성 | `{{문서 루트}}/harness/README.md` · `harness-engineering.md` — 이 저장소 이력, 배달 안 함 | 설명 | [`explanation-doc.md`](explanation-doc.md) |
 | 폴더 인덱스 | 사용자 승인 후 수동 작성 | `{{문서 루트}}/README.md` · 하위 `README.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 참조 자료 (차용 출처) | 외부 저장소·문서를 참고해 하네스를 바꿀 때 | `{{문서 루트}}/references.md` — 이 저장소 이력, 배달 안 함 | 참조 | [`reference-doc.md`](reference-doc.md) |
-| 온보딩·개념 입문 | 사용자 승인 후 수동 작성 | `{{문서 루트}}/` — 이 저장소: `workflow-cycle.md` | 학습 | [`learning-doc.md`](learning-doc.md) |
 | *프로젝트 문서 — `adopt`이 채운다* | | | | |
 | 제품 범위 | 사용자 승인 후 수동 작성 | `{{제품 범위}}` — 이 저장소: `AGENTS.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 용어집 | 사용자 승인 후 수동 작성 | `{{용어집}}` — 이 저장소: (없음) | 참조 | [`reference-doc.md`](reference-doc.md) |

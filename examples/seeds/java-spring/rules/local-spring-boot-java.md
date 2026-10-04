@@ -253,7 +253,7 @@ ResponseEntity<...> updateProfile(
 3. 로컬·dev DB **폐기·재생성** 허용 (`docker compose down -v` 등 — 단 이 명령은 `deny-dangerous-bash.sh`가 막으므로 사용자가 직접 실행한다). orphan·구 스키마 호환 레이어 금지.
 4. "나중에 마이그레이션 도입" 식 예정 코드/파일·주석 추가 금지. prod 보존이 필요해지면 **그때** `{{결정 기록}}` + 마이그레이션 별도 결정.
 
-부수 효과: ERD는 고정 계약이 아니라 언제든 더 나은 모델을 제안해야 하는 대상이다 — `core-followup.md` 💡 ERD 절.
+부수 효과: ERD는 고정 계약이 아니라 언제든 더 나은 모델을 제안해야 하는 대상이다. Entity·API 작업 중이나 L 규모 작업을 마친 뒤 컬럼 위치·nullable·상태 표현(enum vs 시각)·인덱스·예약어 rename·파생→저장 전환에서 아쉬운 점이 보이면 **아쉬운 점 → 권장 형태 → (선택) 스펙 amend**를 후속 제안으로 짧게 낸다. 승인되거나 Approved 스펙이 스키마를 바꾸면 엔티티와 `{{스키마 SSOT}}`를 최신 하나로 맞춘다. 임시·중복 컬럼을 쌓거나 ERD drift를 코드 주석으로만 남기지 않는다.
 
 ## Configuration
 

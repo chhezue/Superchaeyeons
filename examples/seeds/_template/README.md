@@ -24,7 +24,7 @@ core 규칙이 `[플래그: X]` 배지로 부르는 절은 **이름을 그대로
 | 주석 규칙 | 이 언어의 문서화 주석 문법·필드 주석 위치 (원칙은 `core-code-comments.md`) | `core-code-comments` · `core-reporting` 적용 안 함 표 |
 | 테스트 규칙 | 실행 명령 · 위치 · "유의미한 테스트만" 기준 | `core-workflow` G3 · `preflight` |
 | **같은 턴 즉시 갱신** — 에러 코드 · 권한 게이트·활동 기록 | 계약에 닿는 변경을 같은 턴에 끝내는 스택별 체크 표 | `core-guardrails` §1.7 · 플래그 2개 |
-| **DB 스키마 정책** | 운영 데이터 유무에 따른 스키마 SSOT | 플래그 "DB 마이그레이션 금지" · `core-followup` ERD |
+| **DB 스키마 정책** | 운영 데이터 유무에 따른 스키마 SSOT · ERD 개선 제안 기준 | 플래그 "DB 마이그레이션 금지" · `core-guardrails` §2 |
 | **API 계약 변경** | 계약 diff 도구 · 사유 트레일러 · 프론트 알림 | 플래그 "API 계약 보호" · `core-workflow` G3 |
 | **생성 문서 검증** | 소스 표기 ≠ 생성 문서 노출인 함정 | 플래그 "생성 문서 검증" · `core-guardrails` §1.6 |
 | **스택 함정 메모** | 웹 예제 대다수와 다른 주 버전 등 | 플래그 "스택 함정 메모" · `core-workflow` G1 |

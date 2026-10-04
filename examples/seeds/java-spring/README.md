@@ -15,9 +15,9 @@ Java 21 / Spring Boot / JPA / Gradle 백엔드용 lang 팩 **씨앗**이다. 하
 | `rules/local-java-comments.md` · `rules/local-testing.md` | `.claude/rules/` | — |
 | `rules/local-g1-stack-trap.md` | `.claude/rules/` (본문을 lang 규칙에 합쳐도 된다) | 스택 함정 메모 |
 | `agents/local-spring-reviewer.md` | `.claude/agents/` | 스택 리뷰어 |
-| `hooks/local-deny-db-migration.sh` | `.claude/hooks/` + `settings.json` `PreToolUse`/`Write\|Edit` 등록 | DB 마이그레이션 금지 (❌면 복사하지 않는다) |
+| `hooks/local-deny-db-migration.sh` | `.claude/hooks/` + `settings.json` `PreToolUse`/`Write\|Edit\|MultiEdit\|NotebookEdit` 등록 (매처는 정확한 이름 목록 — 넷 다 적는다) | DB 마이그레이션 금지 (❌면 복사하지 않는다) |
 | `hooks/local-warn-breaking-change.sh` | `.claude/hooks/` + `settings.json` `PreToolUse`/`Bash` 등록 | API 계약 보호 (❌면 복사하지 않는다) |
-| `hooks/local-auto-format-java.sh` | `.claude/hooks/` + `settings.json` `PostToolUse`/`Edit\|Write` 등록 | — (`{{포맷 명령}}`이 있을 때만) |
+| `hooks/local-auto-format-java.sh` | `.claude/hooks/` + `settings.json` `PostToolUse`/`Write\|Edit\|MultiEdit\|NotebookEdit` 등록 | — (`{{포맷 명령}}`이 있을 때만) |
 
 훅을 복사하면 `scripts/hook-cases.txt`의 해당 케이스도 살아난다 — `test-hooks.sh`는 `.claude/hooks/`와 `examples/seeds/*/hooks/` 둘 다에서 훅을 찾는다.
 

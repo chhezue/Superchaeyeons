@@ -1,6 +1,7 @@
 #!/bin/bash
 # Blocks Write/Edit outside the harness's write scope, and blocks the agent from rewriting the harness's own hooks/settings
-# unless the project explicitly allows it. Registered in .claude/settings.json (PreToolUse, Write|Edit).
+# unless the project explicitly allows it. Registered in .claude/settings.json (PreToolUse, Write|Edit|MultiEdit|NotebookEdit —
+# 매처는 정확한 이름 목록이라 `Write|Edit`만 두면 MultiEdit·NotebookEdit 쓰기가 이 훅을 거치지 않는다. test-hooks.sh가 대조한다).
 # 모노레포처럼 저장소 일부만 이 하네스가 소유하는 프로젝트(shape 축)에서, 다른 모듈을 참조·조사하는 건 자유지만
 # 쓰기는 소유 범위로 제한한다. .claude/의 규칙·스킬·에이전트는 하네스 유지보수를 위해 항상 허용한다.
 #

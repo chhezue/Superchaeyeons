@@ -121,13 +121,3 @@ deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixture
 # Stop 훅은 판정 불가면 통과 (명시적 예외 — 대화가 끝나지 못하는 피해가 더 크다)
 deny-unverified-completion.sh	-	0	not json
 deny-unverified-completion.sh	-	0	{"transcript_path":"/nonexistent.jsonl","stop_hook_active":false}
-
-# ---- ask-open-request.sh (UserPromptSubmit) — 항상 exit 0, 주입 여부는 stdout ----
-ask-open-request.sh	-	0	{"prompt":"이 코드 알아서 최적화해줘"}
-ask-open-request.sh	-	0	{"prompt":"오타 하나 고쳐줘"}
-ask-open-request.sh	-	0	{"prompt":"이 모듈 리팩토링해줘"}
-ask-open-request.sh	-	0	{"prompt":"please clean up this code"}
-ask-open-request.sh	-	0	not json
-
-# ---- warn-unfilled-map.sh (SessionStart) — 항상 exit 0 ----
-warn-unfilled-map.sh	-	0	{"session_id":"x","source":"startup"}

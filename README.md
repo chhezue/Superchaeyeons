@@ -58,7 +58,7 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 | **5** | **컨텍스트 갱신 (Rules Update)**<br>새로 합의된 결정을 규칙 문서에 동기화 | G4 문서 갱신 점검 |
 | **6** | **작업 분해 (Task Breakdown)**<br>독립 검증 가능한 단위로 태스크 쪼개기 | `specify` 스펙 (태스크별 1완료조건·1커밋) |
 | **7** | **실행 환경 사전 검증 (Preflight)**<br>구현 전 빌드·의존성·테스트 동작 확인 | `preflight` 사전 모드 |
-| **8** | **핵심 구현 루프 (Task Loop)**<br>계획 ➜ 선행 테스트 ➜ 구현 ➜ 실행 ➜ 셀프리뷰 ➜ 커밋 | 구현 게이트 & 커밋 전 승인 |
+| **8** | **핵심 구현 루프 (Task Loop)**<br>계획 ➜ 선행 테스트 ➜ 구현 ➜ 실행 ➜ 셀프리뷰 ➜ 커밋 | `tdd` 스킬(승인된 테스트 먼저 지점·버그 수정) · `core-testing.md` · 커밋 전 승인 |
 | **9** | **동시성·부하·실패 테스트**<br>단위 테스트로 잡히지 않는 한계 검증 | 공통 부품에는 없음. Java 씨앗의 스택 리뷰어가 트랜잭션 경계·동시 쓰기 충돌(lost update)을 점검 |
 | **10**| **독립 코드 리뷰 (Independent Review)**<br>확증 편향 없는 제3의 시선으로 검토 | 구현 대화를 모르는 별도 컨텍스트 리뷰 — 코드는 `code-review`·`simplify`, 문서는 `doc-reviewer` |
 | **11**| **문서화 및 작업 보고 (Report)**<br>사용자 문서와 작업 한계·결정사항 기록 | `report.md` (검증하지 못한 것 명시) |
@@ -90,9 +90,9 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 
 | 경로 | 내용 | 배달 여부 |
 |------|------|:---------:|
-| `.claude/rules/` | 행동 규칙 (`core-*` 8개, `harness-map.md`, `doc-writing.md`) | 배달 |
-| `.claude/skills/` | 표준 워크플로 스킬 8개 (`adopt`, `ask`, `specify`, `preflight` 등) | 배달 |
-| `.claude/agents/` | 보조 에이전트 (`researcher`, `doc-reviewer`) | 배달 |
+| `.claude/rules/` | 행동 규칙 (`core-*` 9개, `harness-map.md`, `doc-writing.md`) | 배달 |
+| `.claude/skills/` | 표준 워크플로 스킬 9개 (`adopt`, `ask`, `specify`, `tdd`, `preflight` 등) | 배달 |
+| `.claude/agents/` | 보조 에이전트 (`researcher`, `test-writer`, `doc-reviewer`) | 배달 |
 | `.claude/hooks/` | 결정적 차단 훅 5개 (`deny-*`, `warn-*`, `ask-*`) | 배달 |
 | `scripts/` | 이식성·문서·훅 검사 스크립트와 git 훅 설치기 | 배달 |
 | `docs/templates/` | 산출물 등록부 및 문서 템플릿 | 배달 |

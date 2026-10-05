@@ -47,7 +47,7 @@ core에 프로젝트 사실이 새면 `scripts/check-portability.sh`가 커밋�
 
 ## 4. 규칙 — 싣는 시점과 예산
 
-`paths:` frontmatter가 없는 규칙은 매 세션 실리고, 있는 규칙은 맞는 파일을 열 때만 실린다. 지금은 always-load 8개(`core-*` 7개 + `harness-map.md`)와 path-scoped 3개(`core-code-comments.md`·`doc-writing.md`·`README.md`)다.
+`paths:` frontmatter가 없는 규칙은 매 세션 실리고, 있는 규칙은 맞는 파일을 열 때만 실린다. 지금은 always-load 8개(`core-*` 7개 + `harness-map.md`)와 path-scoped 4개(`core-code-comments.md`·`core-testing.md`·`doc-writing.md`·`README.md`)다.
 
 매 세션 무조건 지불하는 always-load 합계에는 **예산**을 걸었다. `check-portability.sh`가 상한 52,000B와 대조하고, 상한은 줄일 수만 있는 래칫이다. 2026-09-06에 합계를 64,600B에서 약 20% 줄이며 상한을 65,000B에서 52,000B로 내렸다.
 
@@ -55,7 +55,7 @@ core에 프로젝트 사실이 새면 `scripts/check-portability.sh`가 커밋�
 
 ## 5. 스킬·서브에이전트 — 자기 보고 불신
 
-스킬 8개는 전부 "에이전트의 말 대신 기계의 출력"을 요구한다. `preflight`는 "통과했다"는 말 대신 `{{테스트 명령}}`의 실제 결과를, `safe-refactor`는 "안 바꿨다"는 말 대신 불변 조건마다 검증 결과를 요구한다. 돌리지 못한 검증은 숨기지 않고 `report.md` "검증하지 못한 것"에 남긴다 — 환경이 없어 못 돌린 것은 실패가 아니라 기록할 대상이다.
+스킬 9개는 전부 "에이전트의 말 대신 기계의 출력"을 요구한다. `tdd`는 "테스트 먼저 했다"는 말 대신 지점마다 실패 사유와 통과 결과를, `preflight`는 "통과했다"는 말 대신 `{{테스트 명령}}`의 실제 결과를, `safe-refactor`는 "안 바꿨다"는 말 대신 불변 조건마다 검증 결과를 요구한다. 돌리지 못한 검증은 숨기지 않고 `report.md` "검증하지 못한 것"에 남긴다 — 환경이 없어 못 돌린 것은 실패가 아니라 기록할 대상이다.
 
 감사·리뷰는 신선한 서브에이전트에게 맡긴다. 같은 대화 맥락에서 자기 결과를 평가하면 편향이 생기기 때문이다. 반대로 `retro`는 메인 컨텍스트에서 돈다. 회고의 입력이 대화 이력 자체라서, 격리하면 입력이 사라진다. 컨텍스트 격리를 원칙이 아니라 트레이드오프로 다룬 지점이다.
 
@@ -109,10 +109,10 @@ core에 프로젝트 사실이 새면 `scripts/check-portability.sh`가 커밋�
 
 ## 10. 숫자로 보는 현재
 
-2026-09-15 기준이다. 정확한 목록은 [`.claude/rules/README.md`](../.claude/rules/README.md)가 SSOT다.
+2026-10-05 기준이다. 정확한 목록은 [`.claude/rules/README.md`](../.claude/rules/README.md)가 SSOT다.
 
-- 규칙: always-load 8개 · path-scoped 3개 · always-load 합계 51,387B / 상한 52,000B
-- 스킬 8개 · 서브에이전트 2개 · 배달 훅 5개 · 검사기 3개(+ `verify.sh` 래퍼) · git 훅 2개
+- 규칙: always-load 8개 · path-scoped 4개 · always-load 합계 51,384B / 상한 52,000B
+- 스킬 9개 · 서브에이전트 3개 · 배달 훅 5개 · 검사기 3개(+ `verify.sh` 래퍼) · git 훅 2개
 - 씨앗: `java-spring`(규칙 5 · 리뷰어 1 · 훅 3) · 스택 무관 골격 `_template`
 - `harness-map.md`: 축 4 · 슬롯 22 · 능력 플래그 8
 - 훅 규약 케이스 108개

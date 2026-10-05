@@ -39,8 +39,9 @@ paths:
 │   ├── deny-unverified-completion.sh # Stop: 코드 고치고 테스트 안 돌린 완료 선언 되돌림
 │   ├── ask-open-request.sh           # UserPromptSubmit: 열린 요청이면 ask 스킬 알림 주입
 │   └── warn-unfilled-map.sh          # SessionStart: harness-map ⬜·이유 없는 (없음) 경고
-├── agents/                ← 조사·리뷰 전용 서브에이전트 (Edit/Write 없음)
+├── agents/                ← 서브에이전트 (조사·리뷰는 Edit/Write 없음 · test-writer만 테스트를 쓴다)
 │   ├── researcher.md                 # G1 외부 문서 조사
+│   ├── test-writer.md                # 통제 영역 TDD 지점의 테스트를 스펙만 보고 작성 (Bash 없음)
 │   └── doc-reviewer.md               # G3 문서 품질 리뷰 (advisory)
 ├── rules/
 │   ├── README.md                     ← 이 파일
@@ -54,9 +55,10 @@ paths:
 │   ├── harness-map.md                # 축·슬롯·플래그 값 — 프로젝트가 채우는 유일한 파일 (always-load)
 │   ├── doc-writing.md                # 문서 작성 규칙 (paths: 마크다운)
 │   ├── core-code-comments.md         # 코드 주석 원칙 — 언어 무관 (paths: 소스 파일)
+│   ├── core-testing.md               # 테스트 원칙 S1~S8 — 언어 무관 (paths: 테스트 파일)
 │   └── local-*.md                    # 이 저장소 고유 (있을 때만)
 └── skills/                ← 승인 게이트가 있는 반복 워크플로
-    ├── adopt/ · ask/ · specify/ · safe-refactor/ · debug/ · preflight/ · defer/ · retro/
+    ├── adopt/ · ask/ · specify/ · tdd/ · safe-refactor/ · debug/ · preflight/ · defer/ · retro/
     └── */references/                 # 스킬이 읽는 골격 (spec-template · audit-template · audit-checklist)
 ```
 
@@ -98,6 +100,7 @@ paths:
 | 파일 | `paths` | 요약 |
 |------|---------|------|
 | `core-code-comments.md` | 소스 파일 확장자(다스택) | 코드 주석 원칙 — 실행 줄 위 단계 주석 · 필드·의존성 해설 · 실물 대조 · 이유. 언어별 표기는 lang 팩 |
+| `core-testing.md` | 테스트 파일 이름·폴더 패턴(다스택) | 테스트 원칙 S1~S8 — 결과만 단언 · 실제 경로 · 통제 못 하는 경계만 가짜 · 문장 이름 · 실패도 계약 · 상태 변화 · 격리 · 비싼 테스트 분리. 표기는 lang 팩, 순서는 `tdd` 스킬 |
 | `doc-writing.md` | 문서 루트·`.claude/` 마크다운 · 이슈·PR 템플릿 | 문서 유형 → 정보 구조 → 문장. 기계 판정은 `scripts/check-doc-style.sh` |
 | lang 팩 (복사 후, `local-{스택}.md`) | 그 언어 확장자 | 씨앗 README 참고 |
 | `README.md`(이 파일) | `agents/**`·`skills/**`·`hooks/**`·`settings*.json`·이 파일 | 구조 인덱스 |
@@ -133,6 +136,7 @@ paths:
 | `adopt` | **D 트랙** — 하네스를 붙일 때 · `harness-map.md` 재동기화 | 사용자 | `harness-map.md` 값 · lang 팩 복사/채움 · `local-*.md` · `AGENTS.md`. 코드 불변 |
 | `ask` | **G2 앞** — 열린 요청·미명시 기본값·해석이 갈리는 범위 | 에이전트 (`ask-open-request.sh`가 알림) | 없음 — 라운드 인터뷰, 사실은 조사·결정만 질문 |
 | `specify` | **A 트랙** — 기능·API·DB·정책 변경 | 에이전트 | `{{스펙 저장소}}/{unit}/{name}.md` (불변 조건 절 포함) |
+| `tdd` | **구현** — 스펙의 테스트 먼저 지점 · 버그 수정(C 트랙) | 에이전트 (`specify`·`debug`가 연결) | 없음 — 실패 테스트 → 최소 구현 → 정리. 증거 표는 완료 보고·`report.md`로 |
 | `safe-refactor` | **B 트랙** — 기존 코드 감사·리팩터 | 사용자 | 감사 문서 `{{감사 로그}}/{unit}/{NNN}-*.md` · `refactor-log.md` |
 | `debug` | **C 트랙** — 버그·테스트 실패 | 에이전트 | 없음 — 재현·원인 분리 절차 |
 | `preflight` | **G2 직후(사전) · G3(사후)** | 에이전트 | 없음 — 검증 절차. 미검증은 `report.md`로 |
@@ -143,11 +147,12 @@ paths:
 
 ## Agents
 
-게이트에서 호출하는 조사·리뷰 전용 서브에이전트다. `tools`에서 `Edit`/`Write`를 뺐지만 **`Bash`가 있어 물리적으로 막혀 있지는 않다** — 마지막 한 겹은 각 지침의 "수정하지 않는다" 규범이다. 결정론적 차단으로 오해하지 않는다.
+게이트(G1·G3)와 구현 단계에서 호출하는 서브에이전트다. 조사·리뷰 에이전트는 `tools`에서 `Edit`/`Write`를 뺐지만 **`Bash`가 있어 물리적으로 막혀 있지는 않다** — 마지막 한 겹은 각 지침의 "수정하지 않는다" 규범이다. 결정론적 차단으로 오해하지 않는다. `test-writer`는 반대로 테스트를 써야 해서 `Write`/`Edit`가 있고 `Bash`가 없다 — "프로덕션 코드는 쓰지 않는다"도 규범이다.
 
 | 에이전트 | 게이트 | 역할 |
 |----------|--------|------|
 | `researcher` | G1 | 외부 문서 조사. 로컬 실물 버전 → 공식 문서(버전 확인) → 릴리즈 노트 순서 강제. 규칙 파일에 박힌 버전을 믿지 않는다 |
+| `test-writer` | 구현 (`tdd` 1단계) | 통제 영역 지점의 실패하는 테스트를 스펙 문장만 보고 쓴다. 구현 계획을 받지 않고, 기대값 근거는 스펙·손계산. 실행은 호출자 |
 | `doc-reviewer` | G3 | 소유권·유형 → 정보 구조 → 문장 3단계 리뷰 (기준 `doc-writing.md`). 1단계에서 **이 문서가 이 저장소 것인지**(남의 프로젝트 문서가 파일 단위로 남았는지, 이력인지 지시인지)를 먼저 본다. advisory |
 | `{스택}-reviewer` | G3 | **[플래그: 스택 리뷰어]** lang 팩이 지정. 정적 검사가 못 잡는 결함만 (씨앗 예: `examples/seeds/java-spring/agents/`) |
 

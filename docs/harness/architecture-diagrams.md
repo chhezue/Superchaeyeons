@@ -73,7 +73,7 @@ flowchart LR
 ```mermaid
 flowchart LR
     subgraph TPL["이 저장소"]
-        CORE["core 부품<br/>core-*.md · 스킬 8 · 에이전트 2 · 훅 5"]
+        CORE["core 부품<br/>core-*.md · 스킬 9 · 에이전트 3 · 훅 5"]
         SEED["씨앗<br/>examples/seeds/"]
         TMPL["AGENTS.template.md"]
     end

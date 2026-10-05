@@ -12,7 +12,7 @@ C1	baro-farm|barofarm|baro-ai|Barofarm|바로팜	프로젝트 이름(baro)
 C1	touchLastActivity	TripFit 전용 메서드 (어노테이션 `@TripActivity`는 아래 클래스 패턴이 잡는다)
 C1	카카오|Kakao|Apple|애플 로그인|애플 서버|구글 로그인|구글 서버	특정 소셜 로그인 provider(예시 문장)
 C1	Discord|디스코드|Slack|슬랙	특정 알림 채널
-C1	EC2|AWS|S3|Loki|Grafana	특정 인프라 제품
+C1	EC2|AWS|Amazon S3|S3 ?(버킷|bucket|presigned|URL)|s3://|Loki|Grafana	특정 인프라 제품 (단독 `S3`는 테스트 원칙 번호 S3과 겹쳐 제품 문맥만 잡는다)
 C1	#[0-9]+	특정 저장소의 이슈 번호 (자리표시자 `#n`은 허용)
 C1	how-it-works\.md|release-milestones\.md|erd\.md|platform\.md|glossary\.md	TripFit 문서 파일명 → 슬롯으로 ({{스키마 SSOT}}·{{클라이언트 전제}}·{{용어집}})
 C1	NotificationController|Trip[A-Z][A-Za-z]*|TRIP_[A-Z_]+|여행방|여행 일정	TripFit 클래스·에러 코드·도메인 용어 (2026-09-07 감사: 대문자 상수·한글 도메인어가 빠져 있었다)
@@ -36,5 +36,5 @@ C3	[0-9]+\.[0-9]+\.[0-9]+|[0-9]+\.x	버전 번호
 C3	(Boot|Java|Node|Python|Kotlin|Gradle) ?[0-9]+([ .,)]|$)	프레임워크 버전 표기 ("Java 3파일"처럼 한글이 바로 이어지면 제외)
 
 # ---- C4 팩 참조 (core → 팩 방향 참조 금지) ----
-C4	spring-boot-java\.md|java-comments\.md|openapi-conventions\.md|testing\.md|spring-reviewer	스택 팩 파일·에이전트 이름
+C4	spring-boot-java\.md|java-comments\.md|openapi-conventions\.md|local-testing\.md|spring-reviewer	스택 팩 파일·에이전트 이름
 C4	packs/	팩 디렉터리 참조

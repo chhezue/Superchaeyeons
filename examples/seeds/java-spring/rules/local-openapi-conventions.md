@@ -25,9 +25,9 @@ springdoc OpenAPI 3 + `therapi-runtime-javadoc`(build.gradle). 레이어·Entity
 
 **전 어노테이션 공통 금지**
 
-- GitHub 이슈 번호 (`#39` …)
-- BR/스펙 ID (`BR-USER-007`, `D5`, `D-JOIN-ENTRY`, `C1` 단독 등)
-- `docs/specs/...` 경로만 나열
+- GitHub 이슈 번호 (`#n` …)
+- BR/스펙 ID (`BR-{DOMAIN}-NNN`, `{결정 ID}` 단독 등)
+- `{{스펙 저장소}}/...` 경로만 나열
 - `구 XXX 대체` 같은 레거시 메모
 - Bearer/JWT 문구 (`@Operation` — 자물쇠·`security`로만)
 
@@ -51,42 +51,42 @@ springdoc OpenAPI 3 + `therapi-runtime-javadoc`(build.gradle). 레이어·Entity
 - **클래스 `@Schema`:** 무엇인지 + 주로 쓰이는 API 경로 (이슈 번호 금지)
 - Entity는 Swagger UI에 직접 안 나와도 **코드·ERD SSOT**로 동일하게 작성
 - Javadoc 대신 `@Schema` 우선 (필드 의미). 메서드·API 흐름 주석은 `local-java-comments.md` 참고
-- 계약 값·정책 SSOT: `docs/architecture/erd.md`, 해당 `docs/specs/` — 불일치 시 문서 먼저. **스펙 경로·스펙 ID는 `@Schema` 문자열에 넣지 않음**
+- 계약 값·정책 SSOT: `{{스키마 SSOT}}`, `{{스펙 저장소}}`의 해당 스펙 — 불일치 시 문서 먼저. **스펙 경로·스펙 ID는 `@Schema` 문자열에 넣지 않음**
 
-### 상태성 enum `@Schema` (SCHEDULE_PENDING/ACTIVE · TripStatus 등)
+### 상태성 enum `@Schema` ({STATE_PENDING}/{STATE_ACTIVE} · {Domain}Status 등)
 
 상수마다 **① 이 상태가 뭔지 → ② 언제 이 상태가 되는지 → ③ 이 상태에서 할 수 있는 것·없는 것**을 이어지는 문장으로 자연스럽게 설명한다. 억지로 줄을 나누거나 라벨을 달지 않는다 — 문단 하나로 읽혀도 된다. 클래스 `@Schema`는 "이 enum이 통째로 무엇을 나타내는지" 한 문장이면 충분하다.
 
 ```java
 @Schema(description = """
-		여행방 안에서 멤버가 어디까지 진행했는지를 나타내는 상태입니다.
+		{도메인} 안에서 멤버가 어디까지 진행했는지를 나타내는 상태입니다.
 		""")
-public enum TripMemberStatus {
+public enum {Domain}MemberStatus {
 	@Schema(description = """
-			방에 참여하긴 했지만 아직 이 방의 일정을 확인하지 않은 상태입니다. 방장은 방을 만든 직후,
-			참여자는 초대 링크로 들어온 직후 이 상태가 되고, "일정 확인 완료" 버튼을 눌러야 다음 상태(ACTIVE)로 넘어갑니다.
+			{도메인}에 참여하긴 했지만 아직 {선행 단계}까지 끝내지 않은 상태입니다. 소유자는 생성 직후,
+			참여자는 {참여 경로}로 들어온 직후 이 상태가 되고, "{선행 단계} 완료" 버튼을 눌러야 다음 상태({STATE_ACTIVE})로 넘어갑니다.
 
-			이 상태에서는 방 상세 화면·멤버 목록·달력·초대 링크 공유를 아직 쓸 수 없습니다. 다만 홈 화면
-			목록에는 보이고, 즐겨찾기(Pin)는 개인 설정이라 가능합니다.
+			이 상태에서는 {도메인} 상세 화면·멤버 목록 같은 {도메인} 안 기능을 아직 쓸 수 없습니다. 다만 홈 화면
+			목록에는 보이고, 개인 설정 성격의 기능({개인 설정 기능})은 쓸 수 있습니다.
 			""")
-	SCHEDULE_PENDING,
+	{STATE_PENDING},
 	// ...
 }
 ```
 
 ### 파생·조회 시 계산 필드 (DB 컬럼 없음)
 
-Entity·`user` 테이블에 **저장되지 않는** API 필드(예: `hasCompletedPreSchedule` — `users.vacation_apply_period IS NOT NULL` 파생)는 아래를 **반드시** 남긴다.
+Entity·`user` 테이블에 **저장되지 않는** API 필드(예: `hasCompleted{Step}` — `{table}.{column} IS NOT NULL` 파생)는 아래를 **반드시** 남긴다.
 
 | 위치 | 필수 내용 |
 |------|-----------|
 | **DTO `@Schema(description)`** | 어떤 조건인지 · **저장 안 함** · **true/false가 바뀌는 트리거**(어떤 CRUD) · **값이 클라이언트에 실리는 API**(login/me 등). 스펙 ID·이슈 번호 금지 |
 | **계산 Service** (`UserSummaryService` 등) | 클래스·public 메서드 `//` — **어디서 호출되는지**, EXISTS/집계 **How**, 정책 **Why(평문)** |
 | **Repository** | EXISTS·집계 메서드 — **파생 필드 SSOT 조회**임을 한 줄 (`existsByUserId` 등) |
-| **스펙** | `docs/specs/` 해당 정책 ID — **스펙 문서용**, Swagger·역할 `//` 본문 아님 |
+| **스펙** | `{{스펙 저장소}}` 해당 정책 ID — **스펙 문서용**, Swagger·역할 `//` 본문 아님 |
 
 - ❌ DTO 필드명만으로 “알아서 파생값” 가정 — OpenAPI·프론트 계약 깨짐
-- 일정 CRUD 응답에 `user` 요약이 **없으면** `@Schema` 또는 Service 주석에 **me 재조회 필요** 명시
+- {기능} CRUD 응답에 `user` 요약이 **없으면** `@Schema` 또는 Service 주석에 **me 재조회 필요** 명시
 
 ```java
 @Schema(description = "소셜 로그인 요청")
@@ -125,29 +125,29 @@ public record LoginRequest(
 
 **Javadoc(`@Operation`/`@Tag`/`@Parameter` 설명 포함) 공통 금지**
 
-- GitHub 이슈 번호 (`#39`, `#17` …)
-- BR/스펙 ID (`BR-USER-007`, `D5`, `D-JOIN-ENTRY`, `C1` 단독 등)
-- `docs/specs/...` 경로만 나열
+- GitHub 이슈 번호 (`#n` …)
+- BR/스펙 ID (`BR-{DOMAIN}-NNN`, `{결정 ID}` 단독 등)
+- `{{스펙 저장소}}/...` 경로만 나열
 - Bearer/JWT 문구 (자물쇠와 중복)
 
-**허용:** 도메인 용어의 **의미** (`SCHEDULE_PENDING` = 멤버이지만 일정 확인 전), HTTP 상태·`ErrorCode` 상수명, idempotent/정렬/쿼리 의미
+**허용:** 도메인 용어의 **의미** (`{STATE_PENDING}` = 멤버이지만 {선행 단계} 완료 전), HTTP 상태·`ErrorCode` 상수명, idempotent/정렬/쿼리 의미
 
 **예시**
 
 ```java
 /**
- * 일정 확인을 끝내 여행방 입장을 완료한다. 방장·참여자 모두 이 API를 호출하면 SCHEDULE_PENDING이었던
- * 멤버십이 ACTIVE로 바뀐다. 이미 ACTIVE인 상태에서 다시 호출해도 아무것도 바뀌지 않고 같은 응답을 그대로
- * 돌려주므로 여러 번 호출해도 안전하다. 방 안 API(멤버 목록, 달력 등)는 이 호출 이후에만 쓸 수 있다.
+ * {선행 단계}까지 끝내 {도메인} 입장을 완료한다. 소유자·참여자 모두 이 API를 호출하면 {STATE_PENDING}이었던
+ * 멤버십이 {STATE_ACTIVE}로 바뀐다. 이미 {STATE_ACTIVE}인 상태에서 다시 호출해도 아무것도 바뀌지 않고 같은 응답을 그대로
+ * 돌려주므로 여러 번 호출해도 안전하다. {도메인} 안 API(멤버 목록 등)는 이 호출 이후에만 쓸 수 있다.
  */
-@Operation(summary = "여행방 멤버십 활성화")
-@PostMapping("/{tripId}/activate")
-ResponseEntity<SuccessResponse<TripDetailResponse>> activateMembership(...) { ... }
+@Operation(summary = "{도메인} 멤버십 활성화")
+@PostMapping("/{{domain}Id}/activate")
+ResponseEntity<SuccessResponse<{Domain}DetailResponse>> activateMembership(...) { ... }
 
 // ✅ 설명할 게 없으면 Javadoc 생략 — summary만으로 충분
-@Operation(summary = "정기 일정 목록")
-@GetMapping("/regular")
-ResponseEntity<?> listRegular(@AuthorizedUser UUID userId) { ... }
+@Operation(summary = "{하위 리소스} 목록")
+@GetMapping("/{sub-resource}")
+ResponseEntity<?> list{SubResource}(@AuthorizedUser UUID userId) { ... }
 
 // ✅ JWT 불필요 — security = {} 필수
 /** 소셜 토큰으로 로그인하고 access·refresh를 발급한다. 앱 최초 로그인·재로그인에 사용. */
@@ -205,7 +205,7 @@ ResponseEntity<SuccessResponse<UserSummaryResponse>> me(@AuthorizedUser UUID use
 
 > **[플래그: 생성 문서 검증]** `harness-map.md`에서 꺼져 있으면 이 절을 무시한다. 절은 삭제하지 않는다. 원칙은 `core-guardrails.md` STOP §1.6이고, 여기는 springdoc에서 스키마가 실제로 사라지는 함정을 적는다.
 
-DTO·enum에 `@Schema`가 있다고 해서 Swagger에 실제로 노출된다고 단정하지 않는다. `@ApiResponse`에서 제네릭 wrapper(`SuccessResponse<T>`)를 `schema = @Schema(implementation = SuccessResponse.class)`처럼 raw 타입으로 지정하면 springdoc이 실제 `data` 타입(리스트·필드·enum)을 못 읽어 스키마가 통째로 사라진다 — `useReturnTypeSchema = true`가 필요하다(위 "200 성공 응답" 절, 알림 API 스키마 소실 사고가 계기). "프론트가 필요한 값이 Swagger에 이미 있다"고 답하기 전에 로컬 `/v3/api-docs`, 배포 서버 `/v3/api-docs`, 또는 `{{API 문서}}`를 실제로 열어 해당 스키마·enum이 진짜 노출되는지 확인한다.
+DTO·enum에 `@Schema`가 있다고 해서 Swagger에 실제로 노출된다고 단정하지 않는다. `@ApiResponse`에서 제네릭 wrapper(`SuccessResponse<T>`)를 `schema = @Schema(implementation = SuccessResponse.class)`처럼 raw 타입으로 지정하면 springdoc이 실제 `data` 타입(리스트·필드·enum)을 못 읽어 스키마가 통째로 사라진다 — `useReturnTypeSchema = true`가 필요하다(위 "200 성공 응답" 절, 실제 스키마 소실 사고가 계기). "프론트가 필요한 값이 Swagger에 이미 있다"고 답하기 전에 로컬 `/v3/api-docs`, 배포 서버 `/v3/api-docs`, 또는 `{{API 문서}}`를 실제로 열어 해당 스키마·enum이 진짜 노출되는지 확인한다.
 
 ## API 계약 변경 — `Breaking-Change-Reason` 트레일러 (같은 커밋 필수)
 

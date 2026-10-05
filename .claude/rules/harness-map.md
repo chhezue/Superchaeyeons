@@ -1,6 +1,6 @@
 # Harness Map — 이 프로젝트의 슬롯
 
-규칙(`core-*.md`)은 경로·명령을 `{{역할 이름}}`으로 부르고, 이 파일이 역할 → 실제 값을 잇는다. **새 프로젝트가 채우는 파일은 이것 하나다** (`adopt` 스킬). 채운 예: `examples/tripfit/harness-map.md` · `examples/baro/harness-map.md`
+규칙(`core-*.md`)은 경로·명령을 `{{역할 이름}}`으로 부르고, 이 파일이 역할 → 실제 값을 잇는다. **새 프로젝트가 채우는 파일은 이것 하나다** (`adopt` 스킬). 채운 예: `examples/baro/harness-map.md`
 
 ## 규칙
 
@@ -89,4 +89,4 @@ Git 규율은 `core-workflow.md` G2·G4가 담고, **형식 문자열만** 여�
 |----|------------------|-----------|------|
 | (없음) — lang 축이 "없음"인 문서·스크립트 저장소 | — | — | — |
 
-인프라 성격 규칙(클라이언트 전제·배포 토폴로지)은 스택이 아니라 저장소 고유 사실이라 `local-*.md`로 쓴다 (견본 `examples/tripfit/client-platform.md`·`deployment.md`). 이 파일의 변경 이력은 `{{문서 루트}}/specs/cross-cutting/harness-slot-system-v2.md` 변경 이력에 있다.
+인프라 성격 규칙(클라이언트 전제·배포 토폴로지)은 스택이 아니라 저장소 고유 사실이라 `local-*.md`로 쓴다. 이 파일의 변경 이력은 `{{문서 루트}}/specs/cross-cutting/harness-slot-system-v2.md` 변경 이력에 있다.

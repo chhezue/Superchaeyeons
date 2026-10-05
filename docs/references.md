@@ -14,7 +14,7 @@
 
 | 출처 | 기간 | 가져온 것 | 반영 위치 |
 |------|------|-----------|-----------|
-| [Central-MakeUs/TripFit-server](https://github.com/Central-MakeUs/TripFit-server) — Java·Spring 백엔드, 앱 클라이언트 | 2026-07 ~ 09 | 하네스 v1 전부 — STOP 규칙·4 게이트 워크플로·스킬 6개(`specify`·`safe-refactor`·`debug`·`preflight`·`defer`·`retro`)·에이전트(`researcher`·`doc-reviewer`·스택 리뷰어)·훅(위험 명령·마이그레이션 차단·계약 변경 경고·자동 포맷)·API 계약 3중 검증·레이어 4개 서술·인시던트 기록(agent-type 훅 사고, Redis 문서 드리프트, priority 오판) | `.claude/` 전부의 원형 · `examples/seeds/java-spring/`(스택 규칙·에이전트·훅) · `examples/tripfit/` · `docs/harness/` · `docs/harness-engineering.md` · `.github/CONTRIBUTING.md` 견본 |
+| 원본 백엔드 프로젝트(Java·Spring) — 앱 클라이언트 | 2026-07 ~ 09 | 하네스 v1 전부 — STOP 규칙·4 게이트 워크플로·스킬 6개(`specify`·`safe-refactor`·`debug`·`preflight`·`defer`·`retro`)·에이전트(`researcher`·`doc-reviewer`·스택 리뷰어)·훅(위험 명령·마이그레이션 차단·계약 변경 경고·자동 포맷)·API 계약 3중 검증·레이어 4개 서술·인시던트 기록(agent-type 훅 사고, 결정 문서 드리프트, priority 오판) | `.claude/` 전부의 원형 · `examples/seeds/java-spring/`(스택 규칙·에이전트·훅) · `docs/harness/` · `docs/harness-engineering.md` · `.github/CONTRIBUTING.md` 견본 |
 | [dogs-team/baro-farm-be](https://github.com/dogs-team/baro-farm-be) — 모노레포 안의 Java 서비스 `baro-ai`, k8s, 외부 클라이언트 없음 | 2026-09 | v1을 옮겨 붙이자 파일 21개를 고쳐야 했다는 **실측** — 축 4개와 슬롯 v2(`{{문서 루트}}`·`{{작업 범위}}`·`{{Git 컨벤션 SSOT}}`·형식 슬롯)의 직접 근거. 거기서 고친 것 중 프로젝트와 무관한 개선은 아래 목록대로 회수했다 | `harness-map.md` 축·슬롯 표 · `examples/baro/` · 아래 목록의 각 위치 |
 
 baro에서 **회수한 것** (프로젝트 사정과 무관한 개선만):
@@ -44,7 +44,7 @@ baro에서 **가져오지 않은 것:** baro 고유 규칙(`local-baro-ai-perfor
 
 **검토했지만 참조하지 않은 것:** `read4ai` — 2026-09-05 조사에서 하네스가 아님을 확인하고 제외했다.
 
-**도구:** 레이어 다이어그램은 [Eraser.io](https://app.eraser.io/)로 그렸다(`docs/harness/architecture-diagrams.md`). 참조 지식이 아니라 그림 도구다.
+**도구:** 레이어 다이어그램은 Mermaid로 그렸다(`docs/harness/architecture-diagrams.md`) — GitHub에서 렌더링되고 FigJam에 붙여 넣을 수 있다. 참조 지식이 아니라 그림 도구다.
 
 ## 관련 문서
 

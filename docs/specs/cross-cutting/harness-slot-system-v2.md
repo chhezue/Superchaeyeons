@@ -6,7 +6,7 @@
 
 ## 목표
 
-TripFit·baro-farm-be 두 저장소에서 갈라진 하네스를 합치면서 **`core-*.md`를 언어·저장소 형상·배포 토폴로지·프로젝트 성숙도 어느 것도 알지 못하는 순수 부품**으로 만든다.
+원본 백엔드 프로젝트(Java·Spring)와 baro-farm-be 두 저장소에서 갈라진 하네스를 합치면서 **`core-*.md`를 언어·저장소 형상·배포 토폴로지·프로젝트 성숙도 어느 것도 알지 못하는 순수 부품**으로 만든다.
 
 ## 배경
 
@@ -14,16 +14,16 @@ TripFit·baro-farm-be 두 저장소에서 갈라진 하네스를 합치면서 **
 
 ### 갈라진 경위
 
-TripFit(2026-08~09) → Superchaeyeons(범용화) → baro-farm-be(이식) 순으로 옮겨졌고, baro에서 규칙 파일 본문을 대거 수정해야 했다. 2026-09-05 실측:
+원본 저장소(2026-08~09) → Superchaeyeons(범용화) → baro-farm-be(이식) 순으로 옮겨졌고, baro에서 규칙 파일 본문을 대거 수정해야 했다. 2026-09-05 실측:
 
-| | Superchaeyeons | baro (로컬 미커밋) | TripFit (`chore/128-*`) |
+| | Superchaeyeons | baro (로컬 미커밋) | 원본 (하네스 개명 브랜치) |
 |---|---|---|---|
 | `.claude` 파일 | 30 | 34 | 34 |
 | Superchaeyeons와 다른 파일 | — | **21** | 17 |
 | 훅 | 4 | 5 | 4 |
 | 규칙 | core 6 + 스택팩 5 | core 6 + **분리 4** + 고유 1 | core 6 + 저장소 고유 3 |
 
-Superchaeyeons는 TripFit의 `chore/128-harness-component-rename` 브랜치에서 갈라져 나왔으므로, TripFit 대비 차이 17개에는 **Superchaeyeons가 범용화하며 만든 것**과 **TripFit이 그 뒤 저장소 고유 사실을 덧붙인 것**이 섞여 있다. 어느 쪽이 몇 개인지는 아직 항목별로 분해하지 않았다 — P0에서 확인한다. **지금 확정적으로 회수 대상인 것은 baro 쪽 21개다.**
+Superchaeyeons는 원본 저장소의 하네스 개명 브랜치에서 갈라져 나왔으므로, 원본 대비 차이 17개에는 **Superchaeyeons가 범용화하며 만든 것**과 **원본 저장소가 그 뒤 저장소 고유 사실을 덧붙인 것**이 섞여 있다. 어느 쪽이 몇 개인지는 아직 항목별로 분해하지 않았다 — P0에서 확인한다. **지금 확정적으로 회수 대상인 것은 baro 쪽 21개다.**
 
 ### 원인 3개
 
@@ -40,10 +40,10 @@ Superchaeyeons는 TripFit의 `chore/128-harness-component-rename` 브랜치에�
 
 | 위치 | 잔재 |
 |---|---|
-| `core-guardrails.md:24,39,97` | `@TripActivity` · `touchLastActivity` · `how-it-works.md` |
-| `core-guardrails.md:77` | "Discord 알림 흐름" |
-| `core-reporting.md:18` | 카카오/구글/애플 로그인 예시 |
-| `core-scope.md:5` · `core-workflow.md:41,50` | `examples/tripfit/` 직접 참조 |
+| `core-guardrails.md:24,39,97` | 원본 프로젝트의 활동 기록 어노테이션·메서드 · 원본의 현재동작 요약 문서 파일명 |
+| `core-guardrails.md:77` | "팀 채널 알림 흐름" |
+| `core-reporting.md:18` | 소셜 로그인 예시 |
+| `core-scope.md:5` · `core-workflow.md:41,50` | 원본 저장소 견본 폴더 직접 참조 |
 
 baro 쪽은 반대 방향으로 오염됐다 — `researcher.md`에 Spring AI 1.0.0-M5·ES 8.x가 박혔고, `safe-refactor` 절대 원칙 1번은 취소선 처리됐다.
 
@@ -51,14 +51,14 @@ baro 쪽은 반대 방향으로 오염됐다 — `researcher.md`에 Spring AI 1.
 
 현재 하네스는 "스택 팩 1개 + 스택 옵션 7개 boolean"으로 다양성을 표현한다. 실제로는 **서로 독립인 축이 4개**다.
 
-| 축 | 무엇이 달라지나 | TripFit | baro |
+| 축 | 무엇이 달라지나 | 원본 | baro |
 |---|---|---|---|
 | **lang** | 코딩 컨벤션·어노테이션·테스트·포맷 명령·리뷰어 | Spring Boot | Spring Boot |
 | **shape** | 경로·쓰기 범위·빌드 단위·문서 루트·Git 컨벤션 소유권 | 모놀리스 | 모노레포 마이크로서비스, 부분 도입 |
-| **deploy** | 인증 위치·API 계약 보호·배포 SSOT | 단일 EC2 + 앱 클라이언트 | API 게이트웨이 + Kubernetes, 외부 클라이언트 없음 |
+| **deploy** | 인증 위치·API 계약 보호·배포 SSOT | 단일 서버 + 앱 클라이언트 | API 게이트웨이 + Kubernetes, 외부 클라이언트 없음 |
 | **stage** | 마이그레이션·계약 동결·레거시 삭제 강도 | 그린필드 | 기능 완성 후 인수 |
 
-TripFit은 네 축이 전부 한쪽 끝이었고 그 값이 부품 본문에 박혔다. baro는 네 축이 전부 반대쪽이라 규칙을 뜯어고칠 수밖에 없었다.
+원본 저장소는 네 축이 전부 한쪽 끝이었고 그 값이 부품 본문에 박혔다. baro는 네 축이 전부 반대쪽이라 규칙을 뜯어고칠 수밖에 없었다.
 
 ### 외부 참조 (2026-09-05 조사)
 
@@ -128,7 +128,7 @@ TripFit은 네 축이 전부 한쪽 끝이었고 그 값이 부품 본문에 박
 
 ### Out of Scope
 
-- baro-farm-be·TripFit 저장소에 실제 역이식 — 이 스펙은 Superchaeyeons를 최종본으로 만드는 것까지다
+- baro-farm-be·원본 저장소에 실제 역이식 — 이 스펙은 Superchaeyeons를 최종본으로 만드는 것까지다
 - 팩 자동 감지(빌드 파일 보고 lang 추론) — `adopt` 스킬이 **제안**하고 사람이 고른다
 - 훅의 지속적 통합(CI) 연동
 - **모호성 점수 게이팅** — 점수 기준을 직접 설계해야 하고 그 값이 자의적이라, 라운드 방식의 확인 게이트로 같은 목적을 더 단순하게 달성한다
@@ -488,9 +488,9 @@ PDF가 하네스를 **코드 저장소와 분리된 별도 저장소**(레포별
 | **P4** ✅ | baro 개선 회수 + `doc-writing` 보강 + `check-doc-style.sh` | §11·§15 | 문서 강제가 advisory에서 벗어남 |
 | **P5** ✅ | **결정론적 하한선 강화 + Stop & Ask** — 훅 공통 규약(판정 불가 = 차단·경로 정규화) + `scripts/test-hooks.sh`(케이스 데이터 파일) · `core-gates.md`(통제/위임 · 멈추는 신호 · 자동으로 하지 않는 것 — **훅 우회 금지, 승인 = 사용자가 범위·값을 바꾸는 행위**) · 훅 3개(`ask-open-request`·`deny-unverified-completion`·`warn-unfilled-map`) · `ask` 스킬 · `check-doc-style` 코드 펜스 짝 검사. `inject-rules.sh`는 만들지 않는다 | §6·§7·§8 · 회고 4·5·8 | 훅 전부가 케이스 파일을 통과 (fail-open 0) |
 | **P6** ✅ | **배달물 범용화 — 물려받은 전제 제거** — `check-portability` 판정 범위를 `.claude/` 전체(skills·agents·hooks)로 확대 · Java·Spring 씨앗(규칙 4·에이전트 1·훅 2)을 `examples/seeds/java-spring/`로 이동, `adopt` 3단계에 **씨앗 대조**(의존성·버전·기반 클래스를 빌드 파일·코드와 대조) · `researcher`·`debug`·`safe-refactor`·`preflight`에서 스택 사실 제거 · Invariant + `safe-refactor` 유연화 + 감사 템플릿 "구현 결과" 절 · `preflight` 사전 모드 + **`report.md`(G4 산출물, "검증하지 못한 것" 절 필수)** · `doc-writing` 코드 발췌 규칙 · `.out-of-scope/` + 라우터 + 스킬 문서 프레임 · 서술형 문서(`docs/harness/`·`harness-engineering.md`)는 배달하지 않고 링크만 · `CONTRIBUTING.md`를 견본화 | §10·§12·§13·§16 · 회고 1·2·3·6·7·8 | `check-portability.sh --scope all` exit 0 — `.claude/` 안에 프로젝트·스택 사실 0 |
-| **P7** ✅ | **범용성 증명 + 예산 확정** — `adopt`을 (a) baro-farm-be 사본 (b) TripFit-server 사본 (c) 세 저장소 어디에도 없는 조합(비 JVM 스택 가상 저장소)에 돌려 세 경우 모두 `core-*.md`·스킬·에이전트 diff 0 확인 · `examples/tripfit`·`examples/baro`를 `adopt` 산출물 형태로 갱신 · always-load 실측 후 상한 값 확정 → `check-portability` 예산 판정을 차단으로 전환 · `docs/harness/` 4개 문서 새 구조 반영 | 검증 시나리오 전부 | 하네스 배달물이 세 프로젝트에서 바이트 단위 동일 |
+| **P7** ✅ | **범용성 증명 + 예산 확정** — `adopt`을 (a) baro-farm-be 사본 (b) 원본 백엔드 프로젝트 사본 (c) 세 저장소 어디에도 없는 조합(비 JVM 스택 가상 저장소)에 돌려 세 경우 모두 `core-*.md`·스킬·에이전트 diff 0 확인 · 원본 저장소 견본(이후 삭제)·`examples/baro`를 `adopt` 산출물 형태로 갱신 · always-load 실측 후 상한 값 확정 → `check-portability` 예산 판정을 차단으로 전환 · `docs/harness/` 4개 문서 새 구조 반영 | 검증 시나리오 전부 | 하네스 배달물이 세 프로젝트에서 바이트 단위 동일 |
 
-**단계 재편 경위 (2026-09-05):** baro 하네스 회고 8건을 대조한 결과 "이미 해결된 것"은 없었고, 뿌리가 둘로 모였다. ① 배달물(스킬·에이전트·훅·씨앗)에 TripFit 스택 전제가 검증 없이 남아 있었다(회고 1·2·3) — 판정 범위가 `core-*.md`뿐이었기 때문이다. ② fail-closed로 설계한 훅이 판정 불가 입력에서 fail-open이었고(회고 4), 승인 후 통로가 없어 규칙·훅·우회 금지가 충돌했다(회고 5). 개별 수정 대신 둘 다 **메커니즘**으로 푼다 — 판정 범위 확대 + 씨앗 분리 + 훅 규약 + 훅 테스트. 회고 6·7·8은 각각 `report.md` "검증하지 못한 것" 절, 감사 템플릿 "구현 결과" 절, 코드 펜스 검사 + 발췌 규칙으로 일반화한다.
+**단계 재편 경위 (2026-09-05):** baro 하네스 회고 8건을 대조한 결과 "이미 해결된 것"은 없었고, 뿌리가 둘로 모였다. ① 배달물(스킬·에이전트·훅·씨앗)에 원본 저장소의 스택 전제가 검증 없이 남아 있었다(회고 1·2·3) — 판정 범위가 `core-*.md`뿐이었기 때문이다. ② fail-closed로 설계한 훅이 판정 불가 입력에서 fail-open이었고(회고 4), 승인 후 통로가 없어 규칙·훅·우회 금지가 충돌했다(회고 5). 개별 수정 대신 둘 다 **메커니즘**으로 푼다 — 판정 범위 확대 + 씨앗 분리 + 훅 규약 + 훅 테스트. 회고 6·7·8은 각각 `report.md` "검증하지 못한 것" 절, 감사 템플릿 "구현 결과" 절, 코드 펜스 검사 + 발췌 규칙으로 일반화한다.
 
 ## 검증 시나리오
 
@@ -500,7 +500,7 @@ PDF가 하네스를 **코드 저장소와 분리된 별도 저장소**(레포별
 
 - [x] `check-portability.sh`가 정화 후 `core-*.md`에 대해 exit 0 (P2) — 배달물 전체로 확대해도 exit 0 (P6)
 - [x] `adopt`을 Superchaeyeons 자신에게 돌리면 `harness-map.md`가 채워지고, `core-*.md`는 한 줄도 바뀌지 않는다 (P3)
-- [x] `examples/tripfit`·`examples/baro`가 `adopt` 산출물(`harness-map.md`) 형태로 재현되고, 두 경우 모두 core 변경 없이 슬롯·플래그·훅 상수만으로 표현된다 (P7 — `examples/baro/harness-map.md` 신설)
+- [x] 원본 저장소 견본(이후 삭제)·`examples/baro`가 `adopt` 산출물(`harness-map.md`) 형태로 재현되고, 두 경우 모두 core 변경 없이 슬롯·플래그·훅 상수만으로 표현된다 (P7 — `examples/baro/harness-map.md` 신설)
 - [x] **카탈로그에 없던 조합** — Node·TypeScript·Prisma 가상 저장소에 실측(`scripts/adopt-probe.sh`)을 돌려 lang 씨앗 없음 → `_template` 채움, 마이그레이션 디렉터리 있음 → 플래그 ❌, 소문자 `type:` 커밋 → 형식 슬롯·훅 정규식 교체로 전부 표현됨. core 변경 0 (P7, `docs/reports/2026-09-06-p7-generality.md`)
 - [x] ~~`pack.md` 계약 판정~~ → `packs/` 미채택 결정으로 대체: `adopt` 산출물 체크리스트 6개
 - [x] `ask-open-request.sh` — 열린 표현에 컨텍스트가 주입된다 (`hook-cases.txt`)
@@ -531,8 +531,8 @@ PDF가 하네스를 **코드 저장소와 분리된 별도 저장소**(레포별
 ### 수동 / 통합
 
 - [ ] 훅 3개를 실제 세션에서 발화시켜 stderr·`additionalContext`가 의도대로 보이는지 확인
-- [ ] `adopt` 스킬을 baro-farm-be 사본에 돌려 4단계가 승인 게이트를 지키는지 확인 (원본 수정 없이)
-- [ ] `core-*.md`를 세 저장소에 두고 `diff`로 바이트 일치 확인 — **미실행**: baro·TripFit에 v2를 실제로 역이식하는 것은 Out of Scope. 대신 P7 보고서가 세 케이스에서 core 변경이 필요한 항목이 0임을 표로 확인
+- [ ] `adopt` 스킬을 baro-farm-be 사본에 돌려 4단계가 승인 게이트를 지키는지 확인 (baro 실물 수정 없이)
+- [ ] `core-*.md`를 세 저장소에 두고 `diff`로 바이트 일치 확인 — **미실행**: baro·원본 저장소에 v2를 실제로 역이식하는 것은 Out of Scope. 대신 P7 보고서가 세 케이스에서 core 변경이 필요한 항목이 0임을 표로 확인
 
 ## 완료 기준
 
@@ -540,7 +540,7 @@ PDF가 하네스를 **코드 저장소와 분리된 별도 저장소**(레포별
 - [x] `harness-map.md`에 ⬜가 없고, `(없음)` 10개는 전부 "이 프로젝트엔 없음" 이유가 명시됨 (P3)
 - [x] `core-guardrails.md`가 3절이고, 이사한 §2·§3·§5·§1.6이 씨앗 `java-spring/rules/`에서 **삭제 없이 온전한 형태로** 산다 (P1·P6)
 - [x] ~~`packs/`가 하네스 배달본에서 비어 있다~~ → 2026-09-05 결정으로 `packs/`를 만들지 않는다. 대신 `harness-map.md` 축 표가 어휘 SSOT
-- [x] `examples/tripfit`·`examples/baro` 두 조합이 `harness-map.md` 값으로 표현되고, 규칙 파일 수정이 0이다 (P7)
+- [x] 원본 저장소 견본(이후 삭제)·`examples/baro` 두 조합이 `harness-map.md` 값으로 표현되고, 규칙 파일 수정이 0이다 (P7)
 - [x] 훅 전부가 발화·통과하는 것을 `scripts/test-hooks.sh` 케이스 파일 전부로 확인 (P5 당시 44건, 2026-09-07 감사 후 107건 + 등록 대조) (오탐 케이스 포함) (P5)
 - [x] `docs/harness/` 5개 문서와 `harness-engineering.md`에 v2 반영 노트 — 본문은 v1 이력으로 보존, 현행 SSOT는 `.claude/rules/README.md` (P7)
 - [x] `.claude/rules/README.md` 디렉터리 다이어그램·표가 실제 파일 목록과 일치 (P6 전면 재작성)
@@ -580,19 +580,19 @@ PDF가 하네스를 **코드 저장소와 분리된 별도 저장소**(레포별
 | 날짜 | 변경 |
 |------|------|
 | 2026-09-05 | 초안 — 세 저장소 실측(`.claude` 30·34·34개 파일) 후 4축 팩·배지 판정·Stop & Ask 게이트 설계 |
-| 2026-09-05 | `doc-reviewer` 리뷰 반영 — `데이터 모델`·`비즈니스 규칙`·`검증 시나리오`·`변경 이력` 절 추가, TripFit 차이 17개에 대한 단정 완화 |
+| 2026-09-05 | `doc-reviewer` 리뷰 반영 — `데이터 모델`·`비즈니스 규칙`·`검증 시나리오`·`변경 이력` 절 추가, 원본 대비 차이 17개에 대한 단정 완화 |
 | 2026-09-05 | 외부 참조 4건 반영 — 통제/위임 영역 분리로 멈춤의 근거 교체 · `ask`를 라운드 방식으로 재설계 · Invariant가 `{{계약 동결 수준}}` 슬롯을 대체 · 실행 환경 검증·규칙 주입·문서 검사기 추가 · 부품성 원칙 3조 신설 |
 | 2026-09-05 | 팩을 **배달 카탈로그에서 생성물로** 전환 — 하네스는 축 정의·능력 플래그·`pack.md` 계약만 배달하고 `packs/`는 비운다. 배지가 팩 이름 대신 능력 플래그를 부르도록 교정. `adopt`이 하네스를 붙이는 유일한 경로가 되면서 단계 순서 재배치(자기 채움 P0 → P3) |
-| 2026-09-06 | **always-load 토큰 최적화** — 64,600B → 약 51,900B(약 20%). (1) `core-tools` 트랙×게이트 라우터 표를 `core-workflow` 트랙 표("Claude Code 도구" 열)·게이트 절로 통합, `core-tools`는 서브에이전트 규약·별도 컨텍스트 리뷰·도구 채택 기준만 (2) `harness-map` 규칙 서술 압축·머리 문단·변경 이력 제거(이력은 이 표) (3) `core-guardrails` "금지 (요약)" 표와 규칙 7개의 "형제 규칙" 머리 제거 (4) `core-scope` priority 절을 `examples/tripfit/local-priority.md` 견본으로 내리고 `[미정]` 절만 부품에 (5) 규칙 안의 사고 계기·날짜 서술 제거 (6) `core-followup` 점검 축 표를 한 문단으로. 예산 상한 65,000 → 52,000B 래칫 (`core-workflow` G2·G3·G4 재압축 포함) |
-| 2026-09-06 | **fresh-eye 검수 반영 (별도 세션).** (1) 씨앗 파일명을 `local-*`로 통일 — `adopt` 3단계가 씨앗을 `.claude/`에 복사하면 검사기가 core로 취급해 436건 위반이 나던 결함(시뮬레이션으로 확인). 검사기는 `.claude/*/local-*`를 제외 (2) `deny-dangerous-bash`·씨앗 `local-deny-db-migration`이 python3 부재 시 fail-open → 차단으로. `test-hooks.sh`에 python3 부재 내장 케이스 (3) force push 우회 3종(`git push origin main --force`·`+refspec`·`-u … -f`) 차단 + 케이스 7개 (4) `specify`·`defer`·`doc-reviewer`의 TripFit 잔재(도메인 폴더·`erd.md`·`platform.md`·이슈 라벨 규칙·`glossary.md`)를 슬롯으로, 패턴 파일 보강 (5) `settings.json` 개인 권한 → `settings.local.json`, 훅 경로 `$CLAUDE_PROJECT_DIR` (6) `core-scope` priority 절에 `{{우선순위 SSOT}}` `(없음)`이면 무시하는 적용 조건 (7) `{{테스트 명령}}` = `scripts/verify.sh`(검사기 3개 래퍼), Stop 훅 `TEST_CMD` 동기화, 완료 단정 정규식 오탐 축소 (8) `harness-map` 훅 단락·스펙 머리 상태·미결정 표 정정, `.idea/` gitignore, `check-doc-style --all`에 미추적 파일 포함 |
-| 2026-09-06 | **P7 구현 — 범용성 증명 + 예산 확정.** `scripts/adopt-probe.sh` 신설(adopt 1단계 실측을 반복 가능하게 — 축 4개·커밋/브랜치 형식 집계·슬롯 후보). 네 저장소에 실행: 이 저장소 · TripFit-server(기본값 일치) · baro-farm-be `baro-ai`(네 축 전부 반대 — 모노레포 부분 소유·`[Type] #n - {설명}`·`.github/` 불가) · Node·TypeScript·Prisma 가상 저장소(씨앗 없음·마이그레이션 있음·소문자 `type:`). 세 케이스 모두 슬롯·플래그·훅 상수·씨앗/템플릿만으로 표현되고 core 변경 필요 항목 0 — `examples/baro/harness-map.md` 신설, `docs/reports/2026-09-06-p7-generality.md`에 기록. always-load 상한 65,000B 래칫 확정·기본 차단. `docs/harness/` 5개·`harness-engineering.md`에 v2 노트. 검증 시나리오 21/22 체크(세 저장소 바이트 diff는 역이식이 Out of Scope라 미실행) |
+| 2026-09-06 | **always-load 토큰 최적화** — 64,600B → 약 51,900B(약 20%). (1) `core-tools` 트랙×게이트 라우터 표를 `core-workflow` 트랙 표("Claude Code 도구" 열)·게이트 절로 통합, `core-tools`는 서브에이전트 규약·별도 컨텍스트 리뷰·도구 채택 기준만 (2) `harness-map` 규칙 서술 압축·머리 문단·변경 이력 제거(이력은 이 표) (3) `core-guardrails` "금지 (요약)" 표와 규칙 7개의 "형제 규칙" 머리 제거 (4) `core-scope` priority 절을 원본 저장소 견본의 `local-priority.md`로 내리고 `[미정]` 절만 부품에 (5) 규칙 안의 사고 계기·날짜 서술 제거 (6) `core-followup` 점검 축 표를 한 문단으로. 예산 상한 65,000 → 52,000B 래칫 (`core-workflow` G2·G3·G4 재압축 포함) |
+| 2026-09-06 | **fresh-eye 검수 반영 (별도 세션).** (1) 씨앗 파일명을 `local-*`로 통일 — `adopt` 3단계가 씨앗을 `.claude/`에 복사하면 검사기가 core로 취급해 436건 위반이 나던 결함(시뮬레이션으로 확인). 검사기는 `.claude/*/local-*`를 제외 (2) `deny-dangerous-bash`·씨앗 `local-deny-db-migration`이 python3 부재 시 fail-open → 차단으로. `test-hooks.sh`에 python3 부재 내장 케이스 (3) force push 우회 3종(`git push origin main --force`·`+refspec`·`-u … -f`) 차단 + 케이스 7개 (4) `specify`·`defer`·`doc-reviewer`의 원본 저장소 잔재(도메인 폴더·ERD·플랫폼 문서 파일명·이슈 라벨 규칙·용어집 문서 파일명)를 슬롯으로, 패턴 파일 보강 (5) `settings.json` 개인 권한 → `settings.local.json`, 훅 경로 `$CLAUDE_PROJECT_DIR` (6) `core-scope` priority 절에 `{{우선순위 SSOT}}` `(없음)`이면 무시하는 적용 조건 (7) `{{테스트 명령}}` = `scripts/verify.sh`(검사기 3개 래퍼), Stop 훅 `TEST_CMD` 동기화, 완료 단정 정규식 오탐 축소 (8) `harness-map` 훅 단락·스펙 머리 상태·미결정 표 정정, `.idea/` gitignore, `check-doc-style --all`에 미추적 파일 포함 |
+| 2026-09-06 | **P7 구현 — 범용성 증명 + 예산 확정.** `scripts/adopt-probe.sh` 신설(adopt 1단계 실측을 반복 가능하게 — 축 4개·커밋/브랜치 형식 집계·슬롯 후보). 네 저장소에 실행: 이 저장소 · 원본 백엔드 프로젝트(기본값 일치) · baro-farm-be `baro-ai`(네 축 전부 반대 — 모노레포 부분 소유·`[Type] #n - {설명}`·`.github/` 불가) · Node·TypeScript·Prisma 가상 저장소(씨앗 없음·마이그레이션 있음·소문자 `type:`). 세 케이스 모두 슬롯·플래그·훅 상수·씨앗/템플릿만으로 표현되고 core 변경 필요 항목 0 — `examples/baro/harness-map.md` 신설, `docs/reports/2026-09-06-p7-generality.md`에 기록. always-load 상한 65,000B 래칫 확정·기본 차단. `docs/harness/` 5개·`harness-engineering.md`에 v2 노트. 검증 시나리오 21/22 체크(세 저장소 바이트 diff는 역이식이 Out of Scope라 미실행) |
 | 2026-09-06 | **`core-code-comments.md` 신설** (사용자 요청, baro 세션에서 확립한 주석 스타일을 언어 무관 원칙으로) — 실행 줄 위 `[N단계]` 주석 · 필드·의존성 해설 생략 금지 · 실물 대조(주석도 STOP §1의 문서) · Why 평문. 원칙은 core(소스 파일 접근 시 로드), 표기는 lang 팩 "주석 규칙" 절. Java 씨앗의 "이름이 자명하면 생략" 원칙을 폐기하고 개정 표시 |
 | 2026-09-05 | **P6 구현 — 배달물 범용화.** `check-portability` 기본 판정 범위를 배달물 전체(`.claude/` 규칙·스킬·에이전트·훅·settings, git 훅, `AGENTS.template`, `CONTRIBUTING`)로 확대하고 패턴 보강(스택 개념어·도구), frontmatter·`다스택 예시` 줄 제외 → 위반 212건 → **0건**. Java·Spring 규칙 4·에이전트 1·훅 3(`deny-db-migration`·`auto-format-java`·`warn-breaking-change`)을 `examples/seeds/java-spring/`로 이동(씨앗 README에 **씨앗 대조 표**), `_template/` 신설, `settings.json`은 스택 무관 훅 5개만. 플래그 2개 개명. `researcher`·`debug`·`safe-refactor`(불변 조건·G1 하위 단계·A 승격)·`preflight`(사전 모드·`report.md`)·`audit-checklist`(스택 무관 14항)·`audit-template`(불변 조건·승격 후보·구현 결과 절)·`spec-template`(불변 조건 절) 재작성. `core-workflow` G2 불변 조건·G4 `report.md`. `docs/reports/`·`docs/out-of-scope/`(기각 10건) 신설, `core-tools` 결론 문단을 그쪽으로 이동. `doc-writing` 코드 발췌 규칙. `pre-commit` 포맷 단계를 `FORMAT_CMD` 상수로 일반화. `CONTRIBUTING.md` 견본화(슬롯). 배달 정책: `docs/harness/`·`harness-engineering.md` 배달 안 함. 규칙 README 전면 재작성(3층 구조·라우터 체크리스트). `doc-reviewer` 2회 20건 반영 — safe-refactor 3문서 SSOT 순환 해소, "도메인" → "작업 단위" 통일, lang 팩 절 이름을 core 배지·템플릿·씨앗에서 글자 단위로 통일(`"DB 스키마 정책"`), 씨앗 대조 표에 확인 경로 구체화, 등록부에 `out-of-scope` 행 |
 | 2026-09-05 | **P5 구현 — 결정론적 하한선 + Stop & Ask.** 훅 공통 규약(판정 불가 = 차단, 실경로 정규화, `notebook_path` 지원)을 `deny-*` 3개에 적용 → baro 훅에서 열리던 입력 4종(`..` 순회·JSON 깨짐·키 없음·빈 입력) 전부 차단. `scripts/test-hooks.sh` + `hook-cases.txt` 44케이스 전부 통과, pre-commit 연결. `core-gates.md` 신설(always-load). 훅 3개 신설·등록(`UserPromptSubmit`·`Stop`·`SessionStart`) + Stop 훅 픽스처 3종. `ask` 스킬 신설. `check-doc-style`에 코드 펜스 짝 검사(E). 훅 접두사 `ask-` 추가 |
 | 2026-09-05 | **남은 단계 재편 (P5·P6·P7).** baro 하네스 회고 8건 대조 — 이미 해결 0 · 가치 있음 6(뿌리 2개: 배달물의 스택 전제 미검증, 훅 fail-open + 승인 통로 부재) · baro 커스텀 3(팩 내용 2·로컬 환경 1). Must Have 6개 추가(훅 규약+테스트 · 승인 통로 원칙 · 판정 범위 확대 · 씨앗 대조 · `report.md` 승격 · 배달 정책). Nice to Have 3개를 Must로 승격. P7 신설: 세 저장소 + 카탈로그 밖 조합에 `adopt`을 돌려 배달물 diff 0을 증명하고 예산 상한을 확정한다 |
-| 2026-09-05 | **P4 구현 — 문서 강제 + baro 회수.** `scripts/check-doc-style.sh`(python3, E/W 2단계) + `doc-style-patterns.txt`(META·TRANS·HANJA·NOMINAL + ALLOW 약어) → pre-commit이 stage된 `.md`에 실행. 현 코퍼스 오류 1건(`testing.md` 개요 없음, 수정)·경고 115건. `doc-writing.md` 재작성(프로젝트 고유 유형 매핑 표 삭제 → 등록부 SSOT, toss 3절 보강, 검증 분담 표). `docs/templates/README.md`를 산출물 등록부로, `explanation-doc.md` 신설. baro 훅 2건 회수(`**/` glob, `deny-out-of-scope-write.sh` 일반형 — `SCOPE=.`이면 무동작, 저장소 밖 절대경로 통과 스모크 확인). 감사 문서 `{NNN}-{topic}` 네이밍, `safe-refactor` 도메인 표 일반화. **결정:** 훅은 슬롯 값을 본문 상수로 갖는다. 규칙 분리 4건은 같은 glob이라 회수 안 함. `doc-reviewer` 리뷰 8건 반영(제목 30자·ADR 풀어쓰기·등록부 범례·행 분리 등). **남은 잔재:** `.github/CONTRIBUTING.md`는 `{{Git 컨벤션 SSOT}}` 견본이면서 TripFit 문서 경로(release-milestones·glossary)를 직접 가리킨다 — P6 `examples` 씨앗 정리 때 함께 |
+| 2026-09-05 | **P4 구현 — 문서 강제 + baro 회수.** `scripts/check-doc-style.sh`(python3, E/W 2단계) + `doc-style-patterns.txt`(META·TRANS·HANJA·NOMINAL + ALLOW 약어) → pre-commit이 stage된 `.md`에 실행. 현 코퍼스 오류 1건(`testing.md` 개요 없음, 수정)·경고 115건. `doc-writing.md` 재작성(프로젝트 고유 유형 매핑 표 삭제 → 등록부 SSOT, toss 3절 보강, 검증 분담 표). `docs/templates/README.md`를 산출물 등록부로, `explanation-doc.md` 신설. baro 훅 2건 회수(`**/` glob, `deny-out-of-scope-write.sh` 일반형 — `SCOPE=.`이면 무동작, 저장소 밖 절대경로 통과 스모크 확인). 감사 문서 `{NNN}-{topic}` 네이밍, `safe-refactor` 도메인 표 일반화. **결정:** 훅은 슬롯 값을 본문 상수로 갖는다. 규칙 분리 4건은 같은 glob이라 회수 안 함. `doc-reviewer` 리뷰 8건 반영(제목 30자·ADR 풀어쓰기·등록부 범례·행 분리 등). **남은 잔재:** `.github/CONTRIBUTING.md`는 `{{Git 컨벤션 SSOT}}` 견본이면서 원본 저장소의 문서 경로(우선순위·용어집 문서)를 직접 가리킨다 — P6 `examples` 씨앗 정리 때 함께 |
 | 2026-09-05 | **P3 구현 — `adopt` 스킬 + 자기 채움.** `.claude/skills/adopt/SKILL.md` 신설(defining constraint·4단계·산출물 체크리스트 6개·It's working if). `core-workflow`를 4 트랙으로(D 트랙 행·G2 승인 대상), `core-tools`에 D 행, `README`·`AGENTS.md`·`README.md` "붙이는 순서"를 `adopt` 경로로 교체. 스킬을 이 저장소에 실제로 돌려 실측표 → 제안(질문 5개, 전부 권장안 승인) → `harness-map.md` 채움. 체크리스트: 검사기 exit 0 · ⬜ 0 · 이유 없는 `(없음)` 0 · 스택 팩 파일 일치 · 커밋 형식 일치. 채움 중 `core-*.md` 변경 0줄. `{{작업 범위}}`는 `adopt` 1단계가 실제로 참조하므로 유지 |
-| 2026-09-05 | **P2 구현 — 슬롯 v2.** `harness-map.md`에 경로 슬롯 3개(`문서 루트`·`작업 범위`·`Git 컨벤션 SSOT`)와 "형식 슬롯" 절(`브랜치명 형식`·`커밋 메시지 형식`) 추가, "함께 배달되는 문서는 고정 경로" 전제 폐기. core의 `docs/`·`.github/CONTRIBUTING.md` 리터럴 7곳을 슬롯으로 교체. **결정 2건**: `packs/` 만들지 않음(질문 목록), `core-workflow-git.md` 신설하지 않음. `examples/tripfit/harness-map.md`에 새 슬롯 값(실측 근거 포함) 반영. 실측: **C1~C4 위반 0건** — 이제부터 pre-commit이 core 오염을 실제로 막는다. always-load **52.1KB**(형식 슬롯 절 +2.4KB) — 예산 판정은 상한 확정 전까지 경고 모드 |
+| 2026-09-05 | **P2 구현 — 슬롯 v2.** `harness-map.md`에 경로 슬롯 3개(`문서 루트`·`작업 범위`·`Git 컨벤션 SSOT`)와 "형식 슬롯" 절(`브랜치명 형식`·`커밋 메시지 형식`) 추가, "함께 배달되는 문서는 고정 경로" 전제 폐기. core의 `docs/`·`.github/CONTRIBUTING.md` 리터럴 7곳을 슬롯으로 교체. **결정 2건**: `packs/` 만들지 않음(질문 목록), `core-workflow-git.md` 신설하지 않음. 원본 저장소 견본의 `harness-map.md`에 새 슬롯 값(실측 근거 포함) 반영. 실측: **C1~C4 위반 0건** — 이제부터 pre-commit이 core 오염을 실제로 막는다. always-load **52.1KB**(형식 슬롯 절 +2.4KB) — 예산 판정은 상한 확정 전까지 경고 모드 |
 | 2026-09-05 | **P1 구현 — core 정화.** `core-guardrails.md` 6절 → 3절(정합·레거시·보안 요약) + "플래그 판정" 절 신설. §2(에러코드·AOP)·§3(마이그레이션 금지)를 `spring-boot-java.md`로, §1.6(생성 문서 검증)·§5(API 계약 보호)를 `openapi-conventions.md`로 **삭제 없이 이사**하고 `[플래그: X]` 배지를 달았다. 플래그 이름 "OpenAPI 계약 보호" → "API 계약 보호", "스택 옵션" → "능력 플래그", `{프로젝트}-release.md` → `local-*.md`. `harness-map.md`에 규칙 4·5와 축 4행 표 추가. core에서 이슈 번호·소셜 provider·인프라 제품명 제거. 실측: 위반 69 → **C3 7건**(경로 리터럴, P2 슬롯 v2 대상), always-load **49.7KB**(정화만으로는 줄지 않음 — `core-guardrails` −2.7KB, `harness-map` 축·플래그 표 +2.2KB — 예산 달성은 P4 규칙 분리 + 상한 값 결정에 달려 있다) |
 | 2026-09-05 | **P0 구현** — `scripts/check-portability.sh` + `scripts/portability-patterns.txt`(C1~C4 패턴 21개) + always-load 예산 판정 + pre-commit 연결. 현 core 실측: 위반 69건(C1 12·C2 39·C3 10·C4 8), always-load 49.8KB. 예산 상한 값은 `미결정`으로 등록 |
 | 2026-09-05 | PDF `AI_Harness_Guide` 재대조 — §17 워크플로 12단계 커버리지 표 추가, 작업 분해·always-load 토큰 예산을 Must Have로, handover는 `specify` Draft→Approved로 흡수. 외부 레포 4개 재조사(read4ai는 하네스가 아님을 확인) 후 `packs/`·`inject-rules.sh`·배달 방식 3건을 재검토 제안으로 `미결정`에 등록 |

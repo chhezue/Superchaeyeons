@@ -38,7 +38,6 @@
 
 **`[미정]` 처리와 priority 라벨:** `core-scope.md` (⛔ 단정 금지)
 **저장소 고유 릴리즈 사실(Milestone·심사 게이트·도메인 용어):** `local-release.md`처럼 `local-` 접두사 규칙 파일로 따로 둔다 — 부품(`core-*`)과 층이 다르므로 이식성 검사 대상이 아니다
-> 채운 예: `examples/tripfit/tripfit-release.md`
 
 ## G1. 리서치 게이트 — 외부 지식 확인
 

@@ -9,7 +9,7 @@ lang 축별 **검증된 lang 팩**을 모아 둔 곳이다. 하네스 배달물(
 | 씨앗 | 스택 | 검증된 곳 | 상태 |
 |------|------|-----------|------|
 | [`_template/`](_template/README.md) | (스택 무관 골격) | — | 모든 lang 팩이 갖춰야 할 절의 목록 |
-| [`java-spring/`](java-spring/README.md) | Java 21 · Spring Boot · JPA · Gradle | TripFit(2026-07~09) · baro-farm-be(2026-09) | 씨앗 대조 표 있음 — 복사 직후 전제를 대조한다 |
+| [`java-spring/`](java-spring/README.md) | Java 21 · Spring Boot · JPA · Gradle | 원본 백엔드 프로젝트(2026-07~09) · baro-farm-be(2026-09) | 씨앗 대조 표 있음 — 복사 직후 전제를 대조한다 |
 
 ## 씨앗을 새로 올리는 조건
 

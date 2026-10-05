@@ -1,6 +1,6 @@
 # Harness Map — 채운 예 (baro-farm-be · `baro-ai`)
 
-`adopt` 1단계 실측(`scripts/adopt-probe.sh ~/IdeaProjects/baro-farm-be baro-ai`, 2026-09-06)을 근거로 2단계 제안 형태로 채운 견본이다. TripFit 견본(`../tripfit/harness-map.md`)과 네 축이 전부 반대쪽이라, 슬롯·플래그만으로 표현되는지 확인하는 두 번째 케이스다. 실제 baro 저장소의 `harness-map.md`가 아니라 **이 하네스 v2가 baro에 붙었을 때의 모습**이다. 사람이 확인해야 할 값은 `[확인 필요]`로 남겼다.
+`adopt` 1단계 실측(`scripts/adopt-probe.sh ~/IdeaProjects/baro-farm-be baro-ai`, 2026-09-06)을 근거로 2단계 제안 형태로 채운 견본이다. 원본 저장소와 네 축이 전부 반대쪽이라, 슬롯·플래그만으로 표현되는지 확인하는 두 번째 케이스다. 실제 baro 저장소의 `harness-map.md`가 아니라 **이 하네스 v2가 baro에 붙었을 때의 모습**이다. 사람이 확인해야 할 값은 `[확인 필요]`로 남겼다.
 
 ## 축
 
@@ -64,4 +64,4 @@
 
 ## 이 견본이 증명하는 것
 
-네 축이 TripFit과 전부 반대인데도 core 규칙·스킬·에이전트·훅 본문은 한 줄도 바뀌지 않는다. 바뀌는 것은 이 파일의 값, 훅 상수 두 개(`SCOPE`·`commit-msg` 정규식), 복사한 씨앗 본문뿐이다. 2026-09-05 이전 v1에서 baro가 `core-*.md`를 포함해 21개 파일을 고쳤던 것과 대비된다.
+네 축이 원본 저장소와 전부 반대인데도 core 규칙·스킬·에이전트·훅 본문은 한 줄도 바뀌지 않는다. 바뀌는 것은 이 파일의 값, 훅 상수 두 개(`SCOPE`·`commit-msg` 정규식), 복사한 씨앗 본문뿐이다. 2026-09-05 이전 v1에서 baro가 `core-*.md`를 포함해 21개 파일을 고쳤던 것과 대비된다.

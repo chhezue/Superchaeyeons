@@ -5,7 +5,7 @@
 ## 무엇을 했나
 
 - `scripts/adopt-probe.sh` — `adopt` 1단계 실측을 스크립트로. 축 4개(lang·shape·deploy·stage), 커밋·브랜치 형식 집계, 슬롯 후보를 마크다운 표로 출력한다. 읽기 전용이고 판단은 하지 않는다
-- 네 저장소에 실행: 이 저장소 · `TripFit-server`(원본) · `baro-farm-be`(범위 `baro-ai`) · Node·TypeScript·Prisma 가상 저장소(임시 디렉터리, 커밋 7·브랜치 3·`prisma/migrations`·`.env.production`)
+- 네 저장소에 실행: 이 저장소 · 원본 백엔드 프로젝트(Java·Spring) · `baro-farm-be`(범위 `baro-ai`) · Node·TypeScript·Prisma 가상 저장소(임시 디렉터리, 커밋 7·브랜치 3·`prisma/migrations`·`.env.production`)
 - 결과로 `examples/baro/harness-map.md` 견본을 만들고, `docs/harness/` 5개와 `harness-engineering.md`에 v2 반영 노트를 달았다
 - always-load 상한을 65,000B로 확정하고 `check-portability.sh`를 기본 차단으로 바꿨다
 
@@ -19,7 +19,7 @@
 
 ## 실측 — 네 저장소가 네 축에서 어디에 서 있나
 
-| 축 | Superchaeyeons | TripFit-server | baro-farm-be (`baro-ai`) | Node 가상 |
+| 축 | Superchaeyeons | 원본 | baro-farm-be (`baro-ai`) | Node 가상 |
 |----|---|---|---|---|
 | lang | 없음 (md·sh) | Java·Gradle — 씨앗 일치 | Java·Gradle — 씨앗 + **대조 필수** | TypeScript·Node — 씨앗 없음 → `_template` |
 | shape | 단일, `docs/`, `.github/` 가능 | 단일, `docs/`, `.github/` 가능 | **모노레포 13패키지**, `baro-ai/docs/`, `.github/` 불가 | 단일, `docs/`, `.github/` 없음 |
@@ -32,7 +32,7 @@
 
 | 케이스 | 바뀌는 것 | core 변경 |
 |--------|-----------|-----------|
-| TripFit | 없음 — 기본값과 일치 | 0 |
+| 원본 | 없음 — 기본값과 일치 | 0 |
 | baro-ai | `harness-map.md` 값 · `SCOPE="baro-ai"` · `commit-msg` 정규식 `[Type] #n - ` · 씨앗 복사 후 대조(therapi·에러 코드 기반 타입·아키텍처 테스트) · `{{Git 컨벤션 SSOT}}`=(없음) | 0 |
 | Node 가상 | `harness-map.md` 값 · `commit-msg` 정규식 소문자 `type:` · `_template` 채움 · DB 마이그레이션 금지 ❌ · 스택 훅 없음 | 0 |
 
@@ -51,7 +51,7 @@ v1(2026-09-05 이전)에서 baro는 `core-*.md`를 포함해 하네스 파일 21
 
 | 무엇 | 왜 못 했나 | 누가·언제 확인하나 |
 |------|-----------|-------------------|
-| 세 저장소에 v2 `.claude/`를 실제로 복사해 바이트 `diff` 0 확인 | baro·TripFit 역이식은 스펙 Out of Scope. 원본 저장소를 건드리지 않았다 | 역이식 작업을 결정할 때 — `cp -R .claude` 후 `diff -r` |
+| 세 저장소에 v2 `.claude/`를 실제로 복사해 바이트 `diff` 0 확인 | baro·원본 저장소 역이식은 스펙 Out of Scope. 두 저장소의 실물(사본이 아닌 쪽)을 건드리지 않았다 | 역이식 작업을 결정할 때 — `cp -R .claude` 후 `diff -r` |
 | `adopt` 2~4단계(제안·승인·채움)의 실제 대화 흐름을 baro·Node에서 끝까지 | 승인 게이트가 있는 대화라 이 세션에서는 1단계(실측)까지만 기계로 돌렸다. 이 저장소 자기 채움(P3)은 4단계까지 완료 | 다음 실제 이식 때 |
 | always-load 상한 값의 적정성 | 65,000B는 현 실측의 래칫이지 "적정 토큰"의 근거가 아니다 | 규칙을 줄이는 작업(후보: `core-tools` 트랙 표 중복, `harness-map` 설명 문단)마다 값을 낮춘다 |
 | Node 가상 저장소에서 `_template` 채움 결과의 품질 | 템플릿을 실측으로 채우는 것은 `adopt` 3단계이고, 실제 Node 코드베이스가 없어 채울 값이 없다 | 실제 비 JVM 프로젝트에 붙일 때 — 그 결과가 검증되면 씨앗으로 승격 |

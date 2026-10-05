@@ -32,7 +32,7 @@ paths:
 
 ```java
 @Test
-void createTrip_whenInvalidDates_throwsBadRequest() { ... }
+void create{Domain}_whenInvalidRequest_throwsBadRequest() { ... }
 ```
 
 - `given_when_then` 또는 `method_condition_expected` 스타일

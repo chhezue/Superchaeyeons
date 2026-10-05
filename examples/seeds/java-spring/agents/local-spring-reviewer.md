@@ -50,7 +50,7 @@ grep -A2 "@Test" src/test/java/**/architecture/ArchitectureTest.java | grep "voi
 
 가장 비싼 결함이 나오는 자리다. 먼저 본다.
 
-- 외부 API 호출(소셜 토큰 검증·FCM·Google Calendar)이 `@Transactional` **안에** 있는가? 있으면 provider 지연이 DB 커넥션을 붙잡는다.
+- 외부 API 호출(소셜 토큰 검증·푸시 발송·외부 HTTP 연동)이 `@Transactional` **안에** 있는가? 있으면 provider 지연이 DB 커넥션을 붙잡는다.
 - 커밋 이후에만 나가야 할 부수 효과(알림 발송 등)를 트랜잭션 안에서 직접 호출하는가? `@TransactionalEventListener(phase = AFTER_COMMIT)`로 분리돼야 한다.
 - 같은 row를 동시에 갱신할 수 있는 유스케이스(정원 체크 후 멤버 추가 등)인데 lost update 대비가 없는가?
 - 읽기 전용 Service 메서드에 `readOnly = true`가 빠졌는가?
@@ -67,8 +67,8 @@ grep -A2 "@Test" src/test/java/**/architecture/ArchitectureTest.java | grep "voi
 `core-guardrails.md` STOP 위반은 심각도를 높게 잡는다.
 
 - 새 실패 분기를 throw하는데 `{Domain}ErrorCode` 상수·`@Schema`·스펙 에러 표가 함께 갱신됐는가? (`local-spring-boot-java.md` "같은 턴 즉시 갱신" 절 · STOP §1.7)
-- `last_activity_at`을 touch해야 하는 유스케이스인데 `@TripActivity`가 없는가? 수동 `touchLastActivity()` 호출로 되돌아갔는가? (같은 절)
-- 멤버·방장 전용 API인데 `@TripMemberOnly`/`@TripOwnerOnly`가 없는가? (같은 절)
+- `last_activity_at`을 touch해야 하는 유스케이스인데 `@{Domain}Activity`가 없는가? 수동 `touch{Domain}Activity()` 호출로 되돌아갔는가? (같은 절)
+- 멤버·소유자 전용 API인데 `@{Domain}MemberOnly`/`@{Domain}OwnerOnly`가 없는가? (같은 절)
 - DTO 필드·enum 값·`ErrorCode`·경로가 바뀌었는가? 그렇다면 **커밋할 때 `Breaking-Change-Reason:` 트레일러가 필요하다고 알린다** — optional 필드 추가도 대상이다. (`local-openapi-conventions.md` "API 계약 변경" 절)
   - **트레일러 유무를 결함으로 판정하지 않는다.** 이 에이전트는 보통 **커밋 전에** 불리므로 커밋 메시지가 아직 없고, 없는 것을 지적하면 항상 오탐이 된다. 트레일러 존재 여부는 `.claude/hooks/local-warn-breaking-change.sh`가 커밋 시점에 결정론적으로 검사한다.
   - 과거 커밋을 리뷰하는 경우에만 실제 트레일러 유무를 확인하고, 없으면 결함으로 올린다.
@@ -76,7 +76,7 @@ grep -A2 "@Test" src/test/java/**/architecture/ArchitectureTest.java | grep "voi
 
 ### 4축 — 레이어·재사용
 
-- **이미 있는 조회·검증 헬퍼를 인라인 재구현했는가?** 같은 예외·조건을 `repository.findBy...().orElseThrow(...)`로 다시 만들지 않고 기존 헬퍼를 호출해야 한다. 도메인마다 이름이 다르므로 해당 도메인에 그런 헬퍼가 있는지 먼저 찾는다 — `trip`은 `TripServiceSupport`(`requireActiveTrip`·`requireMembership`·`requireOwner`), 사용자 조회는 `UserLookupService.requireUser()`가 SSOT다. `notification`·`common`처럼 대응물이 없는 도메인은 이 항목이 적용되지 않는다.
+- **이미 있는 조회·검증 헬퍼를 인라인 재구현했는가?** 같은 예외·조건을 `repository.findBy...().orElseThrow(...)`로 다시 만들지 않고 기존 헬퍼를 호출해야 한다. 도메인마다 이름이 다르므로 해당 도메인에 그런 헬퍼가 있는지 먼저 찾는다 — `{domain}`은 `{Domain}ServiceSupport`(`requireActive{Domain}`·`requireMembership`·`requireOwner`), 사용자 조회는 `UserLookupService.requireUser()`가 SSOT다. `common`처럼 대응물이 없는 도메인은 이 항목이 적용되지 않는다.
 - Service 하나가 서로 다른 도메인 개념을 함께 다루는가? (줄 수만으로 판단하지 않는다 — 얇은 위임 위주면 대상 아님)
 - 구현체가 하나뿐인 의존성에 "나중에 갈아끼울 수도 있으니" 인터페이스를 새로 만들었는가? 이 저장소는 그 방향을 이미 폐기했다.
 
@@ -107,13 +107,13 @@ grep -A2 "@Test" src/test/java/**/architecture/ArchitectureTest.java | grep "voi
 | 등급 | 해당 항목 |
 |------|-----------|
 | **Critical** | 데이터 정합성·보안 파손 — 롤백된 트랜잭션의 알림이 실제 발송됨 · 권한 게이트 누락 · 삭제된 접근자를 프레임워크가 리플렉션으로 요구해 런타임이 깨짐 · **과거 커밋인데** 계약 변경에 `Breaking-Change-Reason` 없음 |
-| **High** | 장애로 이어질 수 있음 — 외부 I/O가 트랜잭션 안 · 목록 API의 N+1 · lost update 미대비 · `ErrorCode`·`@TripActivity` 누락 · 삭제된 심볼의 호출부 잔존 |
+| **High** | 장애로 이어질 수 있음 — 외부 I/O가 트랜잭션 안 · 목록 API의 N+1 · lost update 미대비 · `ErrorCode`·`@{Domain}Activity` 누락 · 삭제된 심볼의 호출부 잔존 |
 | **Medium** | 유지보수성 — 기존 조회·검증 헬퍼 재구현 · SRP 위반 · 캡슐화 위반 · 교체된 구 코드 잔존 |
 | **Low** | 스타일 — 포맷·네이밍·주석 |
 
 기준에 없는 항목은 낮은 쪽으로 잡는다. 커밋 전 리뷰에서 트레일러 부재는 결함이 아니라 **리마인드**이므로 등급을 매기지 않고 `## 커밋 시 확인할 것`에 적는다.
 
-**각 지적에는 반드시 위치를 붙인다.** 현재 트리에 있는 줄은 `파일:줄`, **삭제된 줄은 현재 트리에 없으므로** `<부모리비전>:<파일>:<줄>`(예: `dfbfa93^:.../SlotStatuses.java:54`)로 인용한다.
+**각 지적에는 반드시 위치를 붙인다.** 현재 트리에 있는 줄은 `파일:줄`, **삭제된 줄은 현재 트리에 없으므로** `<부모리비전>:<파일>:<줄>`(예: `abc1234^:.../{Domain}Service.java:54`)로 인용한다.
 
 ## 여러 파일을 한 번에 볼 때
 

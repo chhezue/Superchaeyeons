@@ -1,161 +1,109 @@
-# Layer 1 — Human Gate (AI가 멈추고 사람에게 묻는 지점)
+# Layer 1 — 규칙 (멈추고 묻는 지점)
 
-> 분류: **rule** (`.claude/rules/`) · 강제 수단: 프롬프트(소프트 가드레일) · 대응 다이어그램: "Layer 1: Human Gate"
+규칙 레이어가 무엇을 싣고, 언제 실리고, 어떤 상황에서 에이전트를 멈춰 세우는지 설명한다. 읽고 나면 규칙 파일이 왜 "항상 실리는 것"과 "파일을 열 때만 실리는 것"으로 나뉘는지, 규칙이 막지 못하는 것은 무엇인지 알 수 있다.
 
-> **2026-09-06 — v2 반영.** 아래 표·흐름은 TripFit 시절 always-load 7개(`tripfit-release` 포함)·Java 규칙 기준이다. 현행: `core-*` 8개 + `core-gates`(멈추는 신호) 신설, STOP은 §1~§3, 스택 절은 씨앗(`examples/seeds/java-spring/`)으로 이사, `local-*.md`가 저장소 고유 층. 컨텍스트 예산은 `scripts/check-portability.sh`가 상한 52,000B로 판정한다(2026-09-06 토큰 최적화 후). 현행 목록은 [`.claude/rules/README.md`](../../.claude/rules/README.md).
+> 분류: **rule** (`.claude/rules/`) · 강제 수단: 프롬프트(소프트 가드레일) · 현행 목록 SSOT: [`.claude/rules/README.md`](../../.claude/rules/README.md)
 
-## 1. 기본 사항
+## 규칙 레이어 소개
 
-### 이 레이어가 나타내는 것
+규칙은 에이전트가 코드를 쓰기 **전에** 스스로 판단하면 안 되는 지점을 적은 마크다운 파일이다. 핵심 명제는 하나다 — **문서와 구현이 어긋날 때 에이전트가 "더 합리적인 쪽"을 임의로 고르지 않는다.** 고르는 순간 그 선택은 아무 기록도 남기지 않고 코드에 박힌다.
 
-에이전트가 코드를 쓰기 **전에** 스스로 판단하면 안 되는 지점을 규정한 층입니다. 핵심 명제는 하나입니다 — **문서와 구현이 어긋날 때 에이전트가 "더 합리적인 쪽"을 임의로 고르지 않는다.** 고르는 순간 그 선택은 아무 기록도 남기지 않고 코드에 박히기 때문입니다.
+규칙에는 강제력이 없다. 에이전트가 읽고 따르는 것이 전부라서, 규칙의 실제 효과는 **질문**으로 나타난다. 되돌리기 어려운 것은 규칙만 믿지 않고 [Layer 3 훅](layer3-deterministic-hooks.md)으로 한 번 더 막는다.
 
-### 파일 위치와 분류
+## 등장 배경
 
-| 파일 | 분류 | 로딩 방식 | 담당 |
-|---|---|---|---|
-| [`CLAUDE.md`](../../CLAUDE.md) | rule (진입점) | 세션 시작 시 항상 | `@AGENTS.md` import + Claude Code 전용 보충 |
-| [`AGENTS.md`](../../AGENTS.md) | rule (프로젝트 지도) | 세션 시작 시 항상 | 기술 스택·컨벤션·경로 맵 |
-| [`.claude/rules/core-guardrails.md`](../../.claude/rules/core-guardrails.md) | rule (**코어**) | 세션 시작 시 항상 | ⛔ STOP §1~§3 · 플래그 판정 · 금지 요약 (2026-09-05 스택 절은 lang 팩으로 이사) |
-| [`.claude/rules/core-workflow.md`](../../.claude/rules/core-workflow.md) | rule (**코어**) | 세션 시작 시 항상 | 4 트랙 × 4 게이트 사이클 · 구현 중 지킬 것 |
-| [`.claude/rules/core-scope.md`](../../.claude/rules/core-scope.md) | rule | 세션 시작 시 항상 | priority(must/could) 단정 금지 · `[미정]` 처리 |
-| [`examples/tripfit/tripfit-release.md`](../../examples/tripfit/tripfit-release.md) | rule (**저장소 고유**) | 세션 시작 시 항상 | Release Gate · 일정 용어 · 도메인·배포 확정 사항 |
-| [`.claude/rules/core-followup.md`](../../.claude/rules/core-followup.md) | rule | 세션 시작 시 항상 | 후속 제안 · Defer · ERD 개선 제안 |
-| [`.claude/rules/core-tools.md`](../../.claude/rules/core-tools.md) | rule | 세션 시작 시 항상 | 도구 우선순위·트랙×게이트→도구 매핑 |
-| [`.claude/rules/core-reporting.md`](../../.claude/rules/core-reporting.md) | rule | 세션 시작 시 항상 | 사용자 보고는 쉬운 말로 (코드 주석은 제외) |
-| `spring-boot-java.md` · `openapi-conventions.md` · `java-comments.md` | rule | **`**/*.java` 접근 시에만** | Java 레이어·`@Schema`·주석 스타일 |
-| `client-platform.md` | rule | **controller/service 접근 시에만** | 클라이언트 계약·인증 전제 |
-| `deployment.md` | rule | **yml·docker-compose 접근 시에만** | 배포 가드레일 |
-| `testing.md` | rule | **`*Test.java`·`src/test/**` 접근 시에만** | JUnit·Testcontainers |
-| `doc-writing.md` | rule | **`docs/**/*.md`·`.claude/**/*.md` 접근 시에만** | 문서 유형·정보 구조·문장 (2026-09-03 신설) |
-| `.claude/rules/README.md`(이 표 자체가 실린 파일) | rule(구조 인덱스) | **`agents/`·`skills/`·`hooks/`·`settings*.json`·이 파일** 접근 시 (2026-09-04 축소, 이전 `.claude/**`) | 위 path-scoped 7개 + 이 파일 자체 = **총 8개** (아래 §4 "path-scoped 8개"의 근거) |
+에이전트는 매 세션 기억 없이 시작한다. 지시만으로 일관성을 기대하면 이번에는 맞게 구현한 값을 다음 세션에 다르게 쓰고, "업계 일반값"이라며 문서와 다른 수치를 넣는다. 그래서 멈춰야 하는 조건을 파일로 고정했다.
 
-**로딩 메커니즘:** `.claude/rules/*.md`에 YAML frontmatter `paths:`가 **없으면** 세션 시작 시 항상 주입되고, **있으면** 그 glob에 매칭되는 파일을 읽거나 쓸 때만 주입됩니다(Cursor `.mdc`의 `alwaysApply`/`globs`에 대응). 이렇게 나눈 이유는 토큰 절약입니다 — Java를 안 건드리는 세션에서 Spring 컨벤션 전체를 매번 실을 필요가 없습니다.
+규칙을 전부 매 세션 싣지 않은 이유는 비용이다. 규칙이 늘수록 매 세션 토큰을 먹고, 중요한 규칙이 덜 중요한 규칙 사이에 묻힌다.
 
-## 2. 언제 발동하고, 어떤 흐름을 타는가
+## 규칙이 실리는 방식
 
-### 트리거
+`.claude/rules/*.md`에 `paths:` frontmatter가 **없으면** 세션 시작 시 항상 실리고, **있으면** 그 glob에 맞는 파일을 읽거나 쓸 때만 실린다.
 
-세션 시작 시 **무조건** 1회(always-load 규칙 주입), 그 뒤로는 특정 파일에 접근할 때마다 해당 path-scoped 규칙이 추가 주입됩니다. STOP 조건 자체는 "구현·기본값 변경·커밋 전"에 매번 재확인 대상입니다.
+| 파일 | 실리는 때 | 담당 |
+|---|---|---|
+| `CLAUDE.md` → `AGENTS.md` | 세션 시작 (항상) | 진입점 · 프로젝트 지도 |
+| `core-guardrails.md` | 세션 시작 (항상) | ⛔ STOP §1~§3 · 플래그 판정 — **하지 말 것** |
+| `core-gates.md` | 세션 시작 (항상) | 통제/위임 영역 · 멈추는 신호 · 자동으로 하지 않는 것 — **언제 멈추는가** |
+| `core-workflow.md` | 세션 시작 (항상) | 4 트랙 × 4 게이트 — **어떤 순서로** |
+| `core-scope.md` · `core-followup.md` · `core-tools.md` · `core-reporting.md` | 세션 시작 (항상) | `[미정]` 처리 · 후속 제안 · 도구 규약 · 보고 문체 |
+| `harness-map.md` | 세션 시작 (항상) | 축·슬롯·플래그의 이 프로젝트 값 |
+| `core-code-comments.md` | 소스 파일(`.java`·`.ts`·`.py` 등 10종)을 열 때 | 코드 주석 원칙 |
+| `doc-writing.md` | `docs/`·`.claude/`·`examples/`의 마크다운, `.github/`를 열 때 | 문서 작성 규칙 |
+| `README.md` | `.claude/agents/`·`skills/`·`hooks/`·`settings*.json`을 열 때 | 구성 요소 지도 |
+| `local-*.md` (복사한 lang 팩 포함) | 파일에 적힌 대로 | 저장소 고유 사실 · 스택 규칙 |
 
-### 실제 로딩 흐름 (이 문서를 쓴 세션에서 관측된 순서)
+이 저장소에서 한 세션을 예로 들면 이렇다.
 
-```
+```text
 1. 세션 시작
-   → CLAUDE.md 주입 → 그 안의 @AGENTS.md import 따라 AGENTS.md 주입
-   → .claude/rules/ 중 frontmatter 없는 7개 주입
-     (core-guardrails · core-workflow · core-scope · core-followup
-      · core-tools · core-reporting · tripfit-release)
+   → CLAUDE.md → @AGENTS.md import → always-load 규칙 8개
 
-2. 에이전트가 src/main/java/.../JwtProperties.java 를 Read
-   → paths: ["**/*.java"] 매칭
-   → spring-boot-java.md · openapi-conventions.md · java-comments.md 3개 추가 주입
+2. 에이전트가 docs/harness/README.md 를 Read
+   → paths: "**/docs/**/*.md" 매칭 → doc-writing.md 추가
 
-3. 에이전트가 .../controller/AuthController.java 를 Read
-   → paths: ["**/controller/**", "**/service/**"] 매칭
-   → client-platform.md 추가 주입
+3. 에이전트가 .claude/hooks/deny-dangerous-bash.sh 를 Read
+   → paths: ".claude/hooks/**" 매칭 → .claude/rules/README.md 추가
 ```
 
-즉 규칙은 "한 번에 다 읽는 매뉴얼"이 아니라 **작업 대상에 따라 그때그때 조립되는 컨텍스트**입니다.
+규칙은 한 번에 다 읽는 매뉴얼이 아니라 **작업 대상에 따라 조립되는 컨텍스트**다.
 
-### STOP 조건별로 실제 읽는 파일
+## 에이전트를 멈추는 조건
 
-STOP은 성격이 3가지로 갈립니다. 다이어그램은 가독성을 위해 4단계 순차 판단으로 단순화했지만, 실제로는 아래가 **모든 변경에 동시에** 걸립니다.
+멈추는 근거는 두 파일에 나뉘어 있다. `core-guardrails.md`는 "문서와 어긋나면 멈춘다"를, `core-gates.md`는 그 밖의 멈춤을 다룬다.
 
-| STOP | 조건 | 발동 시 읽는 파일 | 결과 |
-|---|---|---|---|
-| §1 문서·구현 정합 | 스펙·ADR·기획 문서와 코드의 TTL·enum·env·경로가 다름 | `docs/specs/{domain}/*.md`, `docs/decisions/*.md`, `docs/architecture.md` | **중단 → 충돌 목록화 → 사용자 질문** |
-| §1.5 | "미구현"이라고 보고하기 직전 | 관련 Controller·Service·테스트를 **직접 grep/Read** | 스펙 문구만으로 단정 금지 |
-| §1.6 | "Swagger에 있다"고 보고하기 직전 | `/v3/api-docs` 또는 `docs/api/openapi.json` **실제 생성 문서** | `@Schema` 존재만으로 단정 금지 |
-| §1.7 계약에 닿는 변경 | 새 실패 분기·권한 게이트·활동 시각 기록 추가 | 에러 코드 enum, 스펙 에러 표, 응답 스키마 | **같은 턴에** 전부 갱신 (미루기 금지). 스택별 체크 표는 lang 팩 "같은 턴 즉시 갱신" 절 (2026-09-05 §2에서 이사) |
-| §2 레거시 | 경로·상수·API를 교체 | 교체된 구 메서드·상수·테스트 assert | **같은 PR에서 삭제** (호환 레이어 금지) |
-| §3 보안·아키텍처 | 토큰·세션·결제·개인정보 저장 방식 변경 | `{{현재동작 요약}}` | **같은 턴에** 쉬운 말로 갱신 |
-| lang 팩 [플래그: DB 마이그레이션 금지] | 마이그레이션 파일 작성 시도 | — | **금지** (Layer 3 훅이 물리적으로도 차단). 2026-09-05 core §3에서 `spring-boot-java.md`로 이사 |
-| lang 팩 [플래그: API 계약 보호] | DTO·enum·에러 코드·경로 변경 | — | 커밋 본문에 `Breaking-Change-Reason:` 트레일러. 2026-09-05 core §5에서 `openapi-conventions.md`로 이사 |
-| 별도 | 새 이슈·브랜치·PR 생성 | — | 실행 전 채팅으로 먼저 확인 |
-| 별도 | priority must/could 판단 | 이슈의 `priority:` 라벨 | 에이전트가 임의 부여 금지 |
+**STOP — 문서와 어긋날 때** (`core-guardrails.md`)
 
-## 3. 실제 사례 — Redis 문서 드리프트 (2026-08-28)
-
-이 레이어가 **실패했다가 복구된** 사례라 오히려 설명 가치가 큽니다.
-
-**1) 실패:** 사용자가 배포 다이어그램을 검토해 달라고 했을 때, 에이전트가 `docs/decisions/010-redis-infra.md`(TripFit 문서 — 이 저장소에 없음)를 읽고 "EC2 D의 Redis는 access token 블랙리스트 저장소"라고 단정해 사용자 코드를 잘못 지적했습니다.
-
-**2) 문서가 stale했음:** 실제로는 `#2`(PR #121)에서 블랙리스트가 폐기되고 Redis가 refresh token 저장소로 바뀐 상태였는데, ADR이 갱신되지 않았습니다.
-
-**3) 복구 — STOP §1.5 절차 적용:** 사용자 지적 후 문서가 아니라 **코드를 먼저** 확인했습니다.
-
-```bash
-grep -rn "blacklist\|Blacklist" src/main/java   # → 결과 0건
-ls src/main/java/com/tripfit/tripfit/auth/service/
-# → RefreshTokenService.java, IssuedRefreshToken.java
-```
-
-`JwtProperties.java`의 주석에는 이미 "access token 블랙리스트를 폐기해"라고 적혀 있었습니다. 즉 **코드가 진실, 문서가 거짓**인 상태였습니다.
-
-**4) 결과:** `docs/` 전체를 코드와 대조해 19개 파일을 정정하고 3개 커밋으로 분리 반영했습니다(`caa16e3`, `1eba357`, `758e9fa`). 부수적으로 Closed된 이슈 9개가 문서엔 Open으로 남아있던 것, 깨진 링크 2건도 함께 정리했습니다.
-
-**교훈:** STOP §1.5("구현 상태 보고 전 코드 우선 확인")는 바로 이 실패 모드 때문에 미리 규칙에 박아둔 조항이었고, 실제로 그 절차가 복구 경로가 됐습니다. 규칙이 실패를 **막지는** 못했지만, 실패를 **체계적으로 되돌리는 절차**를 제공했습니다.
-
-## 4. AI-native 관점에서의 강조 포인트
-
-| 순위 | 강조할 것 | 근거 |
+| STOP | 조건 | 결과 |
 |---|---|---|
-| 1 | **path-scoped 규칙 로딩으로 컨텍스트 예산을 설계했다** | always-load 7개 + path-scoped 8개로 분리. "규칙을 많이 쓰면 좋다"가 아니라 "언제 무엇을 실을지"를 토큰 비용 관점에서 설계했다는 점이 차별점. **2026-09-04에 실측으로 재조정**했다 — 아래 절 참고 |
-| 2 | **문서 드리프트를 실패 모드로 인정하고 절차를 만들었다** | STOP §1.5·§1.6은 "문서를 믿지 말고 코드/생성물을 확인하라"는 규칙. 문서 SSOT를 만들면서 동시에 그 SSOT가 썩는다는 걸 전제한 설계 |
-| 3 | 충돌 시 임의 판단 금지 (STOP §1) | 흔한 주장이라 단독으로는 약함. 위 2번 사례와 묶어서 말해야 설득력이 생김 |
+| §1 문서·구현 정합 | `{{스펙 저장소}}`·`{{결정 기록}}`·`{{제품 범위}}`와 코드의 값·계약·경로가 다름 | 충돌을 목록으로 만들고 사용자에게 질문 |
+| §1.5 코드 우선 확인 | "아직 구현 안 됨"이라고 답하기 직전 | 스펙 문구만 믿지 않고 진입점·테스트를 직접 확인 |
+| §1.7 계약에 닿는 변경 | 새 실패 분기·에러 코드·권한 게이트 추가 | 코드·스펙·스키마를 **같은 턴에** 전부 갱신 |
+| §2 레거시 | 경로·상수·API를 교체 | 대체된 구 코드·문서 '현행' 문구를 같은 변경에서 삭제 (호환 레이어 금지) |
+| §3 보안·아키텍처 | 인증·세션·결제·개인정보 저장 방식 변경 | `{{현재동작 요약}}`을 같은 턴에 쉬운 말로 갱신 |
 
-### 4-1. 실측으로 재조정한 컨텍스트 예산 (2026-09-04)
+**멈추는 신호 — 문서가 없어도** (`core-gates.md`)
 
-"컨텍스트 예산을 설계했다"고 말하려면 숫자가 있어야 합니다. 이날 처음 실제 크기를 쟀고, 그 결과로 세 가지를 고쳤습니다.
+변경이 **통제 영역**(도메인 규칙·인증·과금·외부 계약·스키마)에 닿으면 트랙과 무관하게 사람 승인(G2) 대상이다. **위임 영역**(테스트 가능한 컴포넌트·표현 계층·변환·상용구)만 건드리면 승인은 짧게 지나고 검증(G3)에 무게를 둔다. 그 밖에도 사용자가 정하지 않은 기본값을 골라야 할 때, "알아서" 같은 열린 표현, 새 파일 3개 이상·삭제·의존성 추가, 트랙이 바뀔 때, 훅이 막았을 때 멈춘다.
 
-| 항목 | 크기 | 언제 지불하나 |
+멈추는 이유는 표현이 모호해서가 아니라 **변경이 통제 영역에 닿기 때문**이다. 이 구분이 있어야 위임 영역에서는 덜 묻는다. 무조건 묻는 마찰은 곧 무시당한다.
+
+## 규칙을 옮겨 붙이는 구조
+
+규칙 파일은 세 층으로 나뉘고 층마다 수정 권한이 다르다.
+
+| 층 | 파일 | 수정 |
 |---|---|---|
-| always-load 규칙 7개 | 약 42KB | **매 세션 무조건** |
-| `AGENTS.md` + `CLAUDE.md` | 약 7.7KB | **매 세션 무조건** |
-| Java 규칙 3개(`spring-boot-java`·`openapi-conventions`·`java-comments`) | 약 45KB | `**/*.java` **한 개만 열어도 전부** |
-| `.claude/rules/README.md` | 약 18KB | 구 설정에서는 `.claude/` 안 어디든 건드리면 |
+| core | `core-*.md` | 금지 — 모든 프로젝트에서 바이트 단위로 같아야 개선이 함께 퍼진다 |
+| map | `harness-map.md` | `adopt` 스킬이 이 프로젝트 값으로 채운다 |
+| local | `local-*.md` | 자유 |
 
-**드러난 것 ①** — Java 파일 하나를 여는 순간 붙는 45KB가 **always-load 전체(42KB)보다 큽니다.** 세 규칙이 모두 `**/*.java`에 걸려 있어 테스트 한 줄을 고쳐도 셋 다 실립니다.
+core 규칙은 경로를 `{{스펙 저장소}}` 같은 **슬롯**으로만 부르고, 켜고 끌 정책은 `[플래그: X]` 배지로 표시한다. 값은 `harness-map.md`가 갖는다. 그래서 새 프로젝트에 붙일 때 core 파일을 고치지 않는다. core에 프로젝트 이름·스택 식별자·경로 리터럴이 새어 들어오면 `scripts/check-portability.sh`가 커밋을 막는다.
 
-**드러난 것 ②** — `.claude/rules/README.md`는 자기 파일에 "사람이 보는 디렉터리 맵이라 행동 규칙이 아님"이라고 적어두고도, `.claude/**` 스코프라 규칙 *내용*만 고치는 세션에도 18KB가 실렸습니다. **구성 요소를 추가·삭제할 때**(유지보수 체크리스트가 실제로 필요할 때)만 로드되도록 좁혔습니다.
+## 컨텍스트 예산
 
-**기각한 것** — "Swagger 규칙을 Controller·DTO 경로로 좁히자"는 안은 실제 코드를 확인하고 폐기했습니다. `@Schema`가 `domain`·`exception`·`schedule` 등 전 패키지에 퍼져 있어, 좁히면 필요한 자리에 규칙이 **안 실리는** 사고가 납니다. 측정 없이 직관으로 좁혔으면 통제가 약해졌을 지점입니다.
+always-load 규칙과 `CLAUDE.md`·`AGENTS.md`의 합계는 매 세션 무조건 지불하는 비용이다. `check-portability.sh`가 이 합계를 상한 52,000B와 대조한다(현재 51,387B).
 
-### 4-2. 규칙 5개 → 7개 재편과 그 대가 (2026-09-04, `#128`)
+2026-09-06에 합계를 64,600B에서 약 20% 줄이면서 상한을 65,000B에서 52,000B로 내렸다. 상한은 **래칫**이다 — 줄일 수는 있어도 올리지 않는다. 줄인 방법은 중복을 SSOT 하나로 모으고, 사고 계기 서술을 이력 문서로 옮기고, 스택 사실을 씨앗으로 뺀 것이다. 줄이는 동안 "규칙의 뜻은 바뀌지 않는다"를 불변 조건으로 두고 `doc-reviewer`가 diff로 대조했다.
 
-같은 날 규칙 파일의 **경계**도 다시 그었습니다. 이름이 내부 은어(`harness-*`)였고, 한 파일이 두 가지 일을 하고 있었습니다.
+같은 glob으로 규칙 파일을 둘로 나누는 것은 토큰 효과가 없다. 한쪽을 열면 둘 다 실리기 때문이다. 이 이유로 검토한 분리 4건을 기각했다([`../out-of-scope/README.md`](../out-of-scope/README.md)).
 
-| 이전 | 이후 | 가른 기준 |
-|---|---|---|
-| `harness-workflow.md` (195줄·21KB, always-load 중 최대) | `core-guardrails.md` + `core-workflow.md` | **하지 말 것**(⛔ STOP §1~§6) vs **어떤 순서로 할 것**(트랙·게이트) |
-| `harness-milestone.md` (70줄) | `core-scope.md` + `tripfit-release.md` | **프로젝트 무관 원칙** vs **이 저장소 고유 사실**(Release Gate·일정 용어) |
+## 이 저장소에서의 적용
 
-**핵심은 토큰이 아닙니다.** 파일이 5개에서 7개로 늘었지만 always-load 총량은 42KB로 거의 그대로입니다 — 내용이 이동했을 뿐이기 때문입니다. 얻은 것은 두 가지입니다.
+2026-09-07 감사([보고서](../reports/2026-09-07-harness-audit-baseline.md))에서 이 레이어의 결함이 두 가지 드러났다.
 
-- **찾는 시간** — "이거 해도 되나"는 `core-guardrails`, "다음에 뭘 하지"는 `core-workflow`로 갈립니다
-- **이식 경계** — `core-` 접두사는 다른 프로젝트로 가져갈 것, `tripfit-`는 두고 갈 것을 파일명이 스스로 말합니다
+**규칙이 약속한 차단이 실제로는 없었다.** 규칙은 "`.env` 커밋과 DB 삭제는 훅이 막는다"고 적었는데, 훅 패턴에는 그 항목이 없었다. 규칙만 읽은 에이전트는 막혀 있다고 믿는다. 훅 패턴을 늘리고 `settings.json` `permissions.deny`에도 같은 항목을 넣었다. 지금 `core-guardrails.md`는 "훅이 차단"하는 목록(SSOT = 훅의 `PATTERNS`)과 "훅이 못 봐서 규칙으로만 금지"하는 목록을 따로 적는다.
 
-**같은 날 시도한 always-load 다이어트는 거의 실패했습니다.** `tripfit-release.md`에서 폐지 이력 2건을 `docs/product/release-milestones.md`로 옮겼는데, 총량은 25,635자 → 25,490자로 **0.6%밖에 줄지 않았습니다**(사전 추정은 5%). 이력을 걷어낸 만큼 "폐지 사유는 저기 있다"는 안내 문장을 새로 써야 했기 때문입니다. **토큰 절감은 규칙 파일을 쪼개는 근거가 되지 못한다**는 것이 이날의 실측 결론입니다.
+**한 절만 고쳐 문서가 자기 자신과 모순됐다.** 같은 문서 안에서 예산 상한이 한 곳은 52,000B, 다른 곳은 65,000B였다. 값이 두 문서에 갈린 것보다 발견이 늦다. `preflight` 레거시 재점검에 "고친 문서 안을 먼저 본다 — 상수·개수를 바꿨으면 그 숫자로 저장소를 검색한다"를 넣었다.
 
-### 4-3. 이 레이어의 새 실패 모드 — 분할하면 포인터가 어긋난다
+두 경우 모두 규칙이 실패를 **막지는** 못했다. 감사와 검사가 잡았고, 잡은 뒤 규칙과 검사기를 함께 고쳤다. 이 레이어는 [Layer 3](layer3-deterministic-hooks.md)의 결정론적 강제와 대비할 때 쓸모가 드러난다 — 소프트 가드레일로 되는 것과 안 되는 것을 가르는 판단이 핵심이다.
 
-규칙을 쪼개면서 **상호참조 오류 5건**이 생겼습니다. 참조 127곳을 "STOP 문맥이면 `core-guardrails`, 게이트 문맥이면 `core-workflow`"로 자동 분류했는데, 분류기가 **바로 옆 문장의 "⛔ STOP" 문구에 끌려** 게이트 안내를 guardrails로 보냈습니다.
+## `docs/`가 별도 레이어가 아닌 이유
 
-| 잘못된 안내 | 실제 위치 |
-|---|---|
-| `core-tools.md` — "진입 — 트랙 분류"·"사이클" 절이 `core-guardrails.md`에 있다 | `core-workflow.md` |
-| `core-workflow.md` — priority·`[미정]`을 `tripfit-release.md`에서 찾아라 | `core-scope.md` |
-| `specify` 스킬 — "G3 검증·G4 회고는 `core-guardrails.md`가 SSOT" | `core-workflow.md` |
+스펙·결정 기록·제품 범위 문서는 이 레이어의 **판단 근거 데이터**이지 독립된 통제 장치가 아니다. 문서가 잘 정리돼 있다는 것 자체는 통제의 증거가 아니다. 이 저장소에서 `docs/`가 의미 있는 이유는 에이전트가 매 턴 읽고, 어긋나면 멈추는 기준이기 때문이고, 그 역할은 위 STOP 표가 이미 표현한다.
 
-**왜 이게 오타보다 나쁜가:** 안내를 따라간 에이전트가 그 파일을 열면 규칙이 **없습니다.** 없으면 "규칙이 없구나" 하고 스스로 판단해버립니다 — priority 안내가 어긋났다면 `core-scope.md`가 ⛔로 금지한 "에이전트가 must/could를 임의 판단"이 그대로 재현됩니다.
+## 관련 문서
 
-**어떻게 잡았나:** `doc-reviewer` 서브에이전트(L2)가 2건을 지적했고, 그 유형을 단서로 저장소 전체를 기계 검사해 3건을 더 찾았습니다. 소프트 가드레일(L1)의 결함을 별도 컨텍스트의 리뷰(L2)가 잡은 사례이고, **자기가 방금 나눈 문서를 자기가 검토하면 놓친다**는 self-grading 편향의 실례이기도 합니다.
-
-**남긴 교훈:** 규칙 파일을 분할할 때는 이름 치환만으로 끝나지 않습니다. **"A를 가리키는 안내가 실제로 A에 있는가"를 기계적으로 확인**해야 합니다 — 절 제목이 어느 파일에 있는지 대조하는 검사로, 지금은 수동이지만 훅(L3)으로 승격할 수 있는 성격입니다.
-
-**주의 — 면접에서 이 레이어만 강조하면 약합니다.** "AI에게 규칙 파일을 잘 써줬다"는 프롬프트 엔지니어링에 가깝고, 누구나 보여줄 수 있습니다. 이 레이어는 [Layer 3](layer3-deterministic-hooks.md)의 결정론적 강제와 **대비**시킬 때 가치가 살아납니다 — "소프트 가드레일로 되는 것과 안 되는 것을 구분했다"는 판단이 핵심입니다.
-
-## 5. `docs/`는 왜 별도 레이어가 아닌가
-
-`docs/product/` → `docs/specs/` → `docs/decisions/`로 이어지는 다층 SSOT는 이 레이어의 **판단 근거 데이터**이지 독립된 통제 장치가 아닙니다. 문서가 잘 정리돼 있다는 것 자체는 AI-native의 증거가 아니고(문서 잘 쓰는 팀은 AI 없이도 많습니다), 이 저장소에서 `docs/`가 의미 있는 이유는 **에이전트가 매 턴 읽고 어긋나면 멈추는 제어면**이기 때문입니다. 그 역할은 위 STOP 표가 이미 표현하고 있습니다.
+- [`.claude/rules/README.md`](../../.claude/rules/README.md) — 규칙 목록·`paths:` 패턴 SSOT
+- [`README.md`](README.md) — 4개 레이어와 사이클의 관계
+- [`layer3-deterministic-hooks.md`](layer3-deterministic-hooks.md) — 규칙이 못 막는 것을 막는 층

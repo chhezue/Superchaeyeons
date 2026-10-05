@@ -6,7 +6,7 @@
 
 이 하네스는 "판단은 LLM에게, 불변식은 스크립트에게"라는 원칙을 실제로 구현한 드문 사례다. 부품 계약 검사기·훅 규약 테스트·문서 스타일 검사기·`verify.sh` 래퍼·git 훅이 전부 실행되고 exit code로 판정하며, 이번 감사에서 항상 통과했다(케이스 54 → 작업 후 62). 컨텍스트 예산은 실측 14.8k 토큰(o200k 프록시)으로 상한 래칫이 커밋을 막는다. 규칙은 항상 로드 8개와 파일 접근 시 로드 3개로 나뉘어 실제로 그렇게 전달되는 것을 이 세션의 시스템 프롬프트로 확인했다.
 
-가장 큰 약점은 통제의 "겉과 속"이 다른 지점 세 곳이다. 첫째, `Stop` 훅은 Write/Edit 도구 호출만 코드 수정으로 세므로 Bash(`sed -i`·heredoc)로 고친 뒤 "완료"라고 하면 그대로 통과한다 — 이 세션처럼 Bash 편집을 권장하는 모드에서는 사실상 무동작이다. 둘째, `core-guardrails.md`는 ".env·API 키 커밋, 운영 DB 파괴를 훅이 차단한다"고 적지만 훅에는 그 패턴이 없다. 셋째, `settings.json`에서 훅 등록을 지우는 커밋을 pre-commit이 잡지 못한다(약화·삭제는 잡는다). 그 밖에 훅 스크립트 본문은 세션 중 수정 즉시 효력이 생겨 에이전트가 스스로 풀 수 있고, `docs/harness/` 서술 문서는 배달하지 않는다고 못 박았지만 저장소 안에서 v1 시절 CI·oasdiff·훅 4개를 현재형으로 말한다.
+가장 큰 약점은 통제의 "겉과 속"이 다른 지점 세 곳이다. 첫째, `Stop` 훅은 Write/Edit 도구 호출만 코드 수정으로 세므로 Bash(`sed -i`·heredoc)로 고친 뒤 "완료"라고 하면 그대로 통과한다 — 이 세션처럼 Bash 편집을 권장하는 모드에서는 사실상 무동작이다. 둘째, `core-guardrails.md`는 ".env·API 키 커밋, 운영 DB 파괴를 훅이 차단한다"고 적지만 훅에는 그 패턴이 없다. 셋째, `settings.json`에서 훅 등록을 지우는 커밋을 pre-commit이 잡지 못한다(약화·삭제는 잡는다). 그 밖에 훅 스크립트 본문은 세션 중 수정 즉시 효력이 생겨 에이전트가 스스로 풀 수 있고, `docs/harness/` 서술 문서는 배달하지 않는다고 못 박았지만 저장소 안에서 원본 저장소 시절 CI·계약 비교 도구·훅 4개를 현재형으로 말한다.
 
 canonical task(하네스가 스스로 예시로 든 `git clean -f` 차단 추가)는 인간 개입 없이 끝났고 독립 검증을 통과했다. 다만 하네스 규칙대로면 G2 승인(스펙)과 커밋 승인 두 번은 사람이 끊어야 한다 — 이것은 결함이 아니라 설계다.
 
@@ -40,7 +40,7 @@ canonical task(하네스가 스스로 예시로 든 `git clean -f` 차단 추가
 | `.github/CONTRIBUTING.md` | knowledge | Git 컨벤션 견본 | 아니오 | 슬롯 참조 | Medium | — |
 | `docs/templates/`·`docs/README.md`·하위 README | knowledge | 산출물 등록부·폴더 인덱스 | 아니오 | 규칙 참조 | Medium | — |
 | `docs/harness/*`·`harness-engineering.md`·`docs/specs/cross-cutting/harness-slot-system-v2.md` | knowledge (이력) | 설계 근거 | 아니오 | 사람 | Low (배달 안 함) | — |
-| `examples/seeds/`·`examples/tripfit/`·`examples/baro/` | seed/example | lang 팩 씨앗·채운 예 | 아니오 | adopt | Medium | — |
+| `examples/seeds/`·`examples/baro/`·원본 저장소 채운 예 | seed/example | lang 팩 씨앗·채운 예 | 아니오 | adopt | Medium | — |
 | CI workflows / MCP(`.mcp.json`) / `permissions.deny` | — | 없음 | — | — | — | 부재 확인 |
 
 **Constraint Propagation Failure 후보:** 문서상 존재하나 런타임에 전달되지 않는 것은 없다. 반대로 문서가 "훅이 차단한다"고 말하는데 훅에 없는 항목이 있다(§3 ROT-1).
@@ -85,15 +85,15 @@ canonical task(하네스가 스스로 예시로 든 `git clean -f` 차단 추가
 
 **ROT-2 (Medium)** — File: `docs/harness/component-map.md` · Line: 105 vs 51 · Claim: "always-load 합계 ≤ 65,000B(래칫)" · Actual: `scripts/check-portability.sh:28` 기본값 52,000B; 같은 문서 51행은 52,000B · Evidence: 두 행 인용 · Impact: 현행 지도 문서 안에서 상수가 둘. 같은 값이 `docs/specs/cross-cutting/harness-slot-system-v2.md` 110·562·588행과 `scripts/check-portability.sh:26` 주석에도 65,000으로 남아 있다.
 
-**ROT-3 (Medium)** — File: `docs/harness/README.md` · Line: 20, 32, 44, 61 · Claim: Layer 4 = "CI + script (`.github/workflows/`)", "L4 CI(계약 diff)", "oasdiff 3중 감지 구축" (현재형) · Actual: `.github/workflows/` 없음, `oasdiff` 없음, `scripts/notify-api-breaking-change.sh` 없음 · Evidence: `ls .github/workflows` → No such file · Impact: 배달하지 않는 문서라 낮지만 저장소 안에서 에이전트가 읽으면 CI가 검증한다고 오판한다. `layer4-api-contract-safety.md` 21~24행 링크 4개, `layer1:82`, `layer2:132,135`, `harness-engineering.md:66,100,102,130` 링크가 깨져 있다.
+**ROT-3 (Medium)** — File: `docs/harness/README.md` · Line: 20, 32, 44, 61 · Claim: Layer 4 = "CI + script (`.github/workflows/`)", "L4 CI(계약 diff)", "계약 비교 도구 기반 3중 감지 구축" (현재형) · Actual: `.github/workflows/` 없음, 계약 비교 도구 없음, 원본의 계약 변경 알림 스크립트 없음 · Evidence: `ls .github/workflows` → No such file · Impact: 배달하지 않는 문서라 낮지만 저장소 안에서 에이전트가 읽으면 CI가 검증한다고 오판한다. L4 레이어 문서(이후 삭제) 21~24행 링크 4개, `layer1:82`, `layer2:132,135`, `harness-engineering.md:66,100,102,130` 링크가 깨져 있다.
 
 **ROT-4 (Medium)** — File: `docs/harness/layer3-deterministic-hooks.md` · Line: 19-26, 53-96 · Claim: 훅 8개가 `settings.json`에 등록, `PostToolUse` 자동 포맷 흐름 · Actual: 등록 5개, `"PostToolUse": []` · Evidence: `.claude/settings.json` · Impact: 흐름도가 실제 등록 훅(`deny-out-of-scope-write.sh`)을 빠뜨리고 미등록 훅을 그린다.
 
-**ROT-5 (Medium)** — File: `docs/harness/architecture-diagrams.md` · Line: 1, 82, 112-115, 203-204 · Claim: 스킬 5·훅 4·트랙 3·규칙 7+8, EC2·MySQL·Redis 배포, "100% 팩트" · Actual: 스킬 8·훅 5·트랙 4·규칙 8+3, 배포 없음 · Evidence: 인벤토리 표 · Impact: v2 반영 노트가 없는 유일한 설계 문서. 외부 공개용 다이어그램이 저장소 실물과 전부 다르다.
+**ROT-5 (Medium)** — File: `docs/harness/architecture-diagrams.md` · Line: 1, 82, 112-115, 203-204 · Claim: 스킬 5·훅 4·트랙 3·규칙 7+8, 원본 저장소의 배포 인프라, "100% 팩트" · Actual: 스킬 8·훅 5·트랙 4·규칙 8+3, 배포 없음 · Evidence: 인벤토리 표 · Impact: v2 반영 노트가 없는 유일한 설계 문서. 외부 공개용 다이어그램이 저장소 실물과 전부 다르다.
 
 **ROT-6 (Low)** — File: `docs/harness-engineering.md` · Line: 58, 70, 106, 142 · Claim: "서브에이전트 3개", "훅 현재 4개", "`deny-db-migration.sh`가 물리적으로 차단", "2026-09-04 기준 스킬 6·에이전트 3·훅 4" · Actual: 에이전트 2, 훅 5, 마이그레이션 훅은 씨앗이며 플래그 ❌ · Impact: 5행 배너가 v1 이력이라고 밝혀 낮음.
 
-**ROT-7 (Low)** — File: `.claude/skills/specify/references/spec-template.md` · Line: 76-77 · Claim: 실패 예시 `"code": "TRIP_NOT_FOUND", "message": "여행방을 찾을 수 없습니다."` · Actual: TripFit 도메인 용어("여행방")가 배달물 템플릿에 남아 있고 `check-portability.sh`의 C1 패턴(`Trip[A-Z]`·`TripFit`)이 대문자 `TRIP_`·한글 도메인어를 잡지 못한다 · Impact: 부품 계약 검사기의 사각지대 증거.
+**ROT-7 (Low)** — File: `.claude/skills/specify/references/spec-template.md` · Line: 76-77 · Claim: 실패 예시의 `code`·`message`가 원본 프로젝트의 도메인 에러 코드와 도메인 용어를 그대로 쓴다 · Actual: 원본 도메인 용어가 배달물 템플릿에 남아 있고 `check-portability.sh`의 C1 패턴(원본 프로젝트 이름·도메인 식별자의 대소문자 혼합형)이 대문자 에러 코드 접두사·한글 도메인어를 잡지 못한다 · Impact: 부품 계약 검사기의 사각지대 증거.
 
 **ROT-8 (Low)** — File: `docs/specs/cross-cutting/harness-slot-system-v2.md` · Line: 119, 540, 544, 591, 142-192, 419-429 · Claim: `(없음)` 11개, 훅 케이스 44, `pack.md`·`packs/`·`inject-rules.sh`를 현재형 설계로 서술 · Actual: `(없음)` 10, 케이스 54(작업 전), 셋 다 `out-of-scope`로 기각 · Impact: 스펙이 자기 결정 이력과 어긋난다.
 
@@ -285,7 +285,7 @@ Critical 판정: "security check가 AI 판단에만 의존" — 해당(시크릿
 
 **[TOKEN OPTIMIZATION] always-load 2k 토큰** · `harness-map.md` 규칙 5개·축 설명·"쓰는 곳" 열(README로), `core-followup.md`·`core-scope.md`를 조건부/스킬로. 래칫을 48,000B로 낮춘다 · Confidence: MEDIUM
 
-**[ROT] 배달 템플릿의 TripFit 도메인 잔재** · `spec-template.md:76-77` "TRIP_NOT_FOUND / 여행방" → `RESOURCE_NOT_FOUND / 대상을 찾을 수 없습니다`; 검사기 C1에 `여행방|TRIP_` 추가 · Confidence: HIGH
+**[ROT] 배달 템플릿의 원본 도메인 잔재** · `spec-template.md:76-77` 원본 도메인 에러 코드·용어 → `RESOURCE_NOT_FOUND / 대상을 찾을 수 없습니다`; 검사기 C1에 원본 에러 코드 접두사·도메인어 패턴 추가 · Confidence: HIGH
 
 **[QUICK FIX] 절차 충돌** · `core-workflow.md` A 트랙 "3파일+ → 스펙"과 `component-map.md` "훅 추가 5단계(스펙 없음)" — 하네스 파일 변경은 D 트랙 또는 B 트랙으로 분류를 명시 · Confidence: MEDIUM
 
@@ -328,8 +328,8 @@ Critical 판정: "security check가 AI 판단에만 의존" — 해당(시크릿
 | 도구 무음 통과 | `test-hooks.sh` 케이스 0건 → exit 2, `check-doc-style.sh` 없는 파일 → exit 2 | 실행 확인 |
 | `ask` 패턴 누락 | 리팩토링·다듬·간단하게·영어(clean up·refactor·improve·make it better·tidy·optimize·simplify) 추가 | 7문장 probe |
 | 상수 65,000B 잔존 | `component-map.md`·`check-portability.sh` 주석·v2 스펙 현재형 행 → 52,000B | grep |
-| 설계 문서 rot | `architecture-diagrams.md` v2 배너, 깨진 링크 11개 → "(TripFit — 이 저장소에 없음)" 문자열, `docs/harness/README.md` 트랙 4·L4 주석·개수, 매달린 포인터 3곳, `harness-engineering.md` SSOT 포인터 | 링크 검사 0건 |
-| 템플릿의 TripFit 잔재 | `spec-template.md` `RESOURCE_NOT_FOUND`, 검사기 C1에 `TRIP_`·`여행방` | 부품 계약 통과 |
+| 설계 문서 rot | `architecture-diagrams.md` v2 배너, 깨진 링크 11개 → "(원본 저장소 — 이 저장소에 없음)" 문자열, `docs/harness/README.md` 트랙 4·L4 주석·개수, 매달린 포인터 3곳, `harness-engineering.md` SSOT 포인터 | 링크 검사 0건 |
+| 템플릿의 원본 도메인 잔재 | `spec-template.md` `RESOURCE_NOT_FOUND`, 검사기 C1에 원본 에러 코드 접두사·도메인어 | 부품 계약 통과 |
 | 문서 개수 | 플래그 7 → 8을 README·AGENTS·AGENTS.template·docs/README·rules README·adopt·adopt-probe·component-map·spec에 반영 | grep |
 
 `verify.sh` 최종: 부품 계약 위반 0 · always-load 52,000B 이하(래칫이 도중 세 번 막아 규칙 문장을 줄였다) · 케이스 107/107 · 문서 오류 0.

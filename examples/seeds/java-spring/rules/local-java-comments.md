@@ -7,23 +7,23 @@ paths:
 
 레이어·Entity·SOLID/OOP/ACID는 [`local-spring-boot-java.md`](local-spring-boot-java.md), OpenAPI 어노테이션(`@Schema`·`@Operation` 등)은 [`local-openapi-conventions.md`](local-openapi-conventions.md) 참고 — 이 파일은 `//`·Javadoc 작성 스타일만 다룬다.
 
-> **2026-09-06 개정:** 주석 **원칙**은 `.claude/rules/core-code-comments.md`가 SSOT다 — 실행 줄 바로 위 `// [N단계: …]` 주석, 필드·상수·의존성 해설 생략 금지, 설정·스키마 실물 대조, 이유 평문. 이 파일은 그 원칙의 **Java 표기**(`//`·Javadoc 위치, `@Schema`와의 분담)만 다룬다. 아래에서 "이름이 자명하면 생략"이라고 읽히는 문장은 폐기됐다.
+> **개정:** 주석 **원칙**은 `.claude/rules/core-code-comments.md`가 SSOT다 — 실행 줄 바로 위 `// [N단계: …]` 주석, 필드·상수·의존성 해설 생략 금지, 설정·스키마 실물 대조, 이유 평문. 이 파일은 그 원칙의 **Java 표기**(`//`·Javadoc 위치, `@Schema`와의 분담)만 다룬다. 아래에서 "이름이 자명하면 생략"이라고 읽히는 문장은 폐기됐다.
 
 **독자:** 유지보수 개발자(신규 입사자·오랜만에 보는 사람). `//`는 구현자 메모·이슈 트래커용 약어가 아니라 **흐름·이유·단위·제약·출처**를 평문으로 남긴다.
 필드의 API 노출 의미는 `@Schema`가 SSOT이고, 주석은 그 문장을 반복하지 않고 내부 제약·출처만 보탠다. API 계약·요약은 `@Operation`·`@Parameter`가 SSOT.
 
 **원칙: 이름은 무엇(WHAT)을, 주석은 흐름·이유·단위·제약·출처를 담는다.** 둘은 대체 관계가 아니라 분담 관계다 — 이름이 자명해도 필드·의존성·상수의 목적·단위·출처는 적고, 2단계 이상 메서드는 실행 줄 위에 단계 주석을 둔다. 코드를 그대로 우리말로 옮긴 주석만 쓰지 않는다. 주석으로 이름의 결함을 메우지도 않는다(`local-spring-boot-java.md` **네이밍 우선 원칙** 절).
 
-**쓰는 원칙 — 완전한 문장으로, 산문체로 쓴다.** 화살표(`→`)로 상태 전이를 압축 표기하거나, `(idempotent)`처럼 설명 없는 영어 전문용어를 괄호로 툭 붙이지 않는다. "SCHEDULE_PENDING에서 ACTIVE로 바뀐다"처럼 우리말 문장으로 풀어 쓰고, "여러 번 호출해도 결과가 같다" 같은 표현으로 전문용어의 뜻 자체를 설명한다. 한 줄에 여러 정보를 욱여넣지 않는다 — 필요하면 두세 줄로 나눠 쓴다. `//`가 필요하면 **(1) 이름이 못 담는 전제·부작용을 문장으로** + **(2) 필요하면 Why·정책·다단계 How**를 담는다.
+**쓰는 원칙 — 완전한 문장으로, 산문체로 쓴다.** 화살표(`→`)로 상태 전이를 압축 표기하거나, `(idempotent)`처럼 설명 없는 영어 전문용어를 괄호로 툭 붙이지 않는다. "{STATE_PENDING}에서 {STATE_ACTIVE}로 바뀐다"처럼 우리말 문장으로 풀어 쓰고, "여러 번 호출해도 결과가 같다" 같은 표현으로 전문용어의 뜻 자체를 설명한다. 한 줄에 여러 정보를 욱여넣지 않는다 — 필요하면 두세 줄로 나눠 쓴다. `//`가 필요하면 **(1) 이름이 못 담는 전제·부작용을 문장으로** + **(2) 필요하면 Why·정책·다단계 How**를 담는다.
 
 ## 역할 주석 쓰는 법
 
 메서드가 **무엇을 하는지**와 **왜 그렇게 동작하는지**(전제·부작용·호출 순서 등 이름이 못 담는 것)를 완전한 문장 1~3개로 쓴다. 한 줄로 압축하려 하지 말고, 필요한 만큼 줄을 나눈다.
 
 ```java
-// 사용자가 이 방의 일정 확인을 마치면 멤버 상태를 SCHEDULE_PENDING에서
-// ACTIVE로 바꾼다. 방장과 참여자 모두 이 메서드를 거쳐 방에 들어온다.
-// 이미 ACTIVE라면 아무것도 바꾸지 않고 같은 응답을 그대로 돌려준다
+// 사용자가 이 {도메인}에서 {선행 단계}까지 마치면 멤버 상태를 {STATE_PENDING}에서
+// {STATE_ACTIVE}로 바꾼다. 소유자와 참여자 모두 이 메서드를 거쳐 {도메인}에 들어온다.
+// 이미 {STATE_ACTIVE}라면 아무것도 바꾸지 않고 같은 응답을 그대로 돌려준다
 // (여러 번 호출해도 안전하다).
 ```
 
@@ -32,8 +32,8 @@ paths:
 - `@Operation`/`@Parameter`·record 필드명과 **완전히 동일한** 문장 반복
 - 단순 `@param`/`@return` Javadoc
 - Controller에서 Service 비즈니스 로직을 장황히 반복
-- 역할 주석 본문을 `#13`, `BR-TRIP-005`, `D5`, `R-freeze` **약어만으로** 대체
-- `→` 화살표로 상태 전이를 압축 표기(`SCHEDULE_PENDING→ACTIVE`) — "SCHEDULE_PENDING에서 ACTIVE로 바뀐다"처럼 문장으로 쓴다
+- 역할 주석 본문을 `#n`, `BR-{DOMAIN}-NNN`, `{결정 ID}` **약어만으로** 대체
+- `→` 화살표로 상태 전이를 압축 표기(`{STATE_PENDING}→{STATE_ACTIVE}`) — "{STATE_PENDING}에서 {STATE_ACTIVE}로 바뀐다"처럼 문장으로 쓴다
 - `(idempotent)`처럼 설명 없는 영어 전문용어를 괄호로만 붙이기 — 그 용어가 뜻하는 효과를 우리말 문장으로 먼저 설명한다
 
 ## 역할 주석 · 본문 금지 / 허용
@@ -41,18 +41,18 @@ paths:
 | | 역할 `//` (메서드 위) | 본문 Why / `// 1.` | `// TODO` · `// FIXME` |
 |--|----------------------|-------------------|------------------------|
 | **금지** | `#n`·`BR-*`·스펙 ID만으로 설명 | 약어만으로 Why 대체 | 방향 없는 `TODO` |
-| **허용** | 도메인 용어의 **의미** (`SCHEDULE_PENDING`=일정 확인 전) | 평문 정책·에러코드명 | 말미에 스펙 경로·`#n` — `// TODO: … — docs/specs/….md (#13)` |
+| **허용** | 도메인 용어의 **의미** (`{STATE_PENDING}`={선행 단계} 완료 전) | 평문 정책·에러코드명 | 말미에 스펙 경로·`#n` — `// TODO: … — {{스펙 저장소}}/….md (#n)` |
 
 ## stub / 미구현
 
 역할 주석과 TODO를 **분리**한다. 역할 = 유스케이스 의미, TODO = 남은 작업.
 
 ```java
-// 방장이 추천 모드로 TOP3 후보를 생성한다 (미구현 stub)
+// 소유자가 {기능} 결과를 생성한다 (미구현 stub)
 @Transactional
-public void generateRecommendations(...) {
-  // TODO: 기존 추천 hard DELETE 후 TOP3 INSERT, lastRecommendationMode 갱신
-  // 상세: docs/specs/trip/trip-recommendation.md (#13)
+public void generate{Feature}(...) {
+  // TODO: 기존 {기능} 결과 hard DELETE 후 새 결과 INSERT, {column} 갱신
+  // 상세: {{스펙 저장소}}/{domain}/{feature}.md (#n)
 }
 ```
 
@@ -60,10 +60,10 @@ public void generateRecommendations(...) {
 
 | 레이어 | 주석 대상 |
 |--------|-----------|
-| **Controller** | 접근 권한(`@AuthorizedUser`, `@TripMemberOnly` 등)·인터셉터·`@Valid` 검증. **유스케이스 역할 주석 금지**(Service에 둠) |
+| **Controller** | 접근 권한(`@AuthorizedUser`, `@{Domain}MemberOnly` 등)·인터셉터·`@Valid` 검증. **유스케이스 역할 주석 금지**(Service에 둠) |
 | **Service / facade** | 이름으로 안 드러나면 역할 주석(아래 절). 분기 Why · 다단계 `// 1.` |
 | **Support / Helper / Resolver** | 공유 검증·매핑·가드의 **역할 `//`** + 정책·에러코드·배치 vs lazy Why |
-| **Interceptor / Aspect / Filter / ArgumentResolver / Scheduler** | 엔트리(`preHandle`·advice·`runForDate` 등) **역할 `//`** + 교차 관심사 Why |
+| **Interceptor / Aspect / Filter / ArgumentResolver / Scheduler** | 엔트리(`preHandle`·advice·`@Scheduled` 메서드 등) **역할 `//`** + 교차 관심사 Why |
 | **client** | Service와 동일 — 역할 `//` + 단계·catch 의도 |
 | **Repository** | `@Query` 정렬·필터·fetch 의도. **파생 API 필드용 EXISTS·집계**는 SSOT 조회 한 줄 |
 | **DTO / Entity / 공통 envelope** | 필드는 `@Schema` SSOT. Schema로 안 담기는 배경만 `//` |
@@ -76,35 +76,35 @@ public void generateRecommendations(...) {
 | 대상 | 규칙 |
 |------|------|
 | **이름·시그니처만으로 동작이 안 드러나는 public 메서드** | 역할 주석 필수 — 전제·부작용·같은 요청을 여러 번 보내도 안전한지 등 이름이 못 담는 것 |
-| **이름이 곧 설명인 facade 위임·1~2줄 자명한 메서드** | **생략 가능** — 억지로 채우지 않는다 (예: `removeMember`가 그대로 `tripCommandService.removeMember(...)`를 위임하면 주석 없이 통과) |
+| **이름이 곧 설명인 facade 위임·1~2줄 자명한 메서드** | **생략 가능** — 억지로 채우지 않는다 (예: `removeMember`가 그대로 `{domain}CommandService.removeMember(...)`를 위임하면 주석 없이 통과) |
 | **비자명 `private` 헬퍼** | live/snapshot 빌더·윈도우 검증·복합 매핑 등 — 역할 `//` |
 | **생략 가능** | 생성자 · getter/setter · 이름만으로 자명한 1라이너 메서드 (`findUser`, `normalizeX`, 단순 DTO `toXxx`). **필드·상수·주입 의존성은 예외 없이 해설한다** (`core-code-comments.md` §2 — 목적·단위·출처·제약) |
 
 **Before (금지 — 약어·기호 압축은 신규 개발자가 못 읽는다)**
 
 ```java
-// #13 stub — 추천 생성 (BR-TRIP-005 hard DELETE·TOP3)
-// 방장 SCHEDULE_PENDING → ACTIVE. 이미 ACTIVE면 idempotent (#39)
+// #n stub — {기능} 생성 (BR-{DOMAIN}-NNN hard DELETE·INSERT)
+// 소유자 {STATE_PENDING} → {STATE_ACTIVE}. 이미 {STATE_ACTIVE}면 idempotent (#n)
 ```
 
 **After — 완전한 문장으로**
 
 ```java
-// 사용자가 이 방의 일정 확인을 마치면 멤버 상태를 SCHEDULE_PENDING에서
-// ACTIVE로 바꾼다. 방장과 참여자 모두 이 메서드를 거쳐 방에 들어온다.
-// 이미 ACTIVE라면 아무것도 바꾸지 않고 같은 응답을 그대로 돌려준다
+// 사용자가 이 {도메인}에서 {선행 단계}까지 마치면 멤버 상태를 {STATE_PENDING}에서
+// {STATE_ACTIVE}로 바꾼다. 소유자와 참여자 모두 이 메서드를 거쳐 {도메인}에 들어온다.
+// 이미 {STATE_ACTIVE}라면 아무것도 바꾸지 않고 같은 응답을 그대로 돌려준다
 // (여러 번 호출해도 안전하다).
 @Transactional
-@TripActivity(tripIdParam = "tripId")
-public TripDetailResponse activateMembership(UUID tripId, UUID userId) { ... }
+@{Domain}Activity({domain}IdParam = "{domain}Id")
+public {Domain}DetailResponse activateMembership(UUID {domain}Id, UUID userId) { ... }
 
-// 멤버 목록을 조회한다. 응답에는 모집률과, 동명이인을 구분하기 위한
+// 멤버 목록을 조회한다. 응답에는 파생값 {derivedField}와, 동명이인을 구분하기 위한
 // 표시용 이름(displayName)이 포함된다 — 둘 다 이름만 봐서는 알 수 없는 정보다.
-public TripMembersResponse listMembers(UUID tripId, UUID userId) { ... }
+public {Domain}MembersResponse listMembers(UUID {domain}Id, UUID userId) { ... }
 
 // ✅ 이름이 곧 설명인 facade 위임 — 주석 없이 통과
-public TripMembersResponse removeMember(...) {
-  return tripCommandService.removeMember(...);
+public {Domain}MembersResponse removeMember(...) {
+  return {domain}CommandService.removeMember(...);
 }
 ```
 
@@ -127,8 +127,8 @@ public TripMembersResponse removeMember(...) {
 
 ```java
 // TODO: 애플 발급자(iss=https://appleid.apple.com)까지 명시적으로 검증해야 한다. 지금은 JWKS
-// 자체가 애플 전용 소스라 실질적인 위험은 낮지만, 같은 프로젝트의 AppleNotificationVerifier는
-// 이미 iss까지 검증하고 있어서 방식을 맞추는 게 낫다 — docs/specs/apple-oauth-multi-audience.md
+// 자체가 애플 전용 소스라 실질적인 위험은 낮지만, 같은 프로젝트의 다른 애플 검증 코드는
+// 이미 iss까지 검증하고 있어서 방식을 맞추는 게 낫다 — {{스펙 저장소}}/{domain}/{feature}.md
 ```
 
 이슈 번호·스펙 경로가 없는 TODO를 새로 남기게 되면, 바로 이슈를 만들지 말고(생성 전 사용자 확인 필요 — `core-workflow.md` "새 이슈·새 브랜치·새 PR 생성은 항상 먼저 확인" 절) 우선 관련 스펙에 `[미정]`으로 표기해두는 걸 검토한다 — `core-scope.md` `[미정]` 처리 절.

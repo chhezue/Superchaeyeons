@@ -1,86 +1,73 @@
-# 하네스 레이어별 상세 (`docs/harness/`)
+# 하네스 레이어 설명 (`docs/harness/`)
 
-[`docs/harness-engineering.md`](../harness-engineering.md)가 **"왜 이렇게 만들었나"의 서술형 총정리**라면, 이 폴더는 각 레이어가 **"언제 발동해서 어떤 파일의 어떤 부분을 읽고 어떻게 동작하는가"**를 실행 흐름 단위로 푼 문서입니다. 발표·면접에서 한 레이어를 깊게 파고들 때 이 파일들을 봅니다.
+하네스를 **강제력** 기준 4개 레이어로 나누고, 레이어마다 언제 발동해서 무엇을 막는지 설명하는 폴더의 입구다. 이 파일은 이 저장소의 `{{현재동작 요약}}`이기도 하다 — 훅·규칙의 동작이 바뀌면 같은 턴에 아래 "지금의 실제 동작" 절을 쉬운 말로 고친다.
 
-> **2026-09-06 — v2 구조 반영.** 이 폴더는 TripFit 시절(2026-07~09)에 쓴 서술이고, 새 프로젝트에는 배달하지 않는다(`docs/out-of-scope/README.md`). 2026-09-05~06 v2 개편으로 달라진 것만 여기 적고, 본문의 v1 서술은 이력으로 남긴다. 현행 구조의 SSOT는 [`.claude/rules/README.md`](../../.claude/rules/README.md)다.
->
-> - 규칙: `core-*` 8개(7 always-load + `core-code-comments` 소스 접근 시) + `harness-map`(축 4·슬롯 22·플래그 8) + `doc-writing` + `README`(구조 인덱스, `.claude/` 접근 시). 스택 규칙은 `examples/seeds/`로 이동
-> - **2026-09-07 감사 반영:** 아래 본문·표의 "L4 CI"·`.github/workflows/`·oasdiff는 TripFit 시절 구성이고 이 저장소에는 CI가 없다 — G3 검증은 `scripts/verify.sh`와 `Stop` 훅이 맡는다. 진입 트랙은 A·B·C·D 넷이다(D = `adopt`)
-> - 스킬: `adopt`·`ask` 신설 — 4 트랙(A 기능·B 감사·C 버그·D 하네스 이식) × 4 게이트
-> - 훅: 스택 무관 5개(`deny-dangerous-bash`·`deny-out-of-scope-write`·`deny-unverified-completion`·`ask-open-request`·`warn-unfilled-map`). 스택 훅 3개는 씨앗. 규약은 `scripts/test-hooks.sh`가 판정
-> - 검사기: `scripts/check-portability.sh`(부품 계약·always-load 예산) · `scripts/test-hooks.sh`(훅 규약) · `scripts/check-doc-style.sh`(문서 스타일) — 래퍼 `scripts/verify.sh`가 `{{테스트 명령}}`, pre-commit 연결
-> - 설계 문서: `docs/specs/cross-cutting/harness-slot-system-v2.md` · 참조한 것: `docs/references.md`
+구성 요소 목록의 SSOT는 [`.claude/rules/README.md`](../../.claude/rules/README.md)이고, 구성 요소 하나하나의 실행 시점·질문·검사는 [`component-map.md`](component-map.md)가 표로 갖는다. 이 폴더는 이 저장소의 이력이라 새 프로젝트에 배달하지 않는다.
 
-최종 포트폴리오 다이어그램인 [`architecture-diagrams.md`](architecture-diagrams.md)의 **"관심사 분리(Separation of Concerns)"** 계층과 파일별 대응 관계는 다음과 같습니다.
+## 4개 레이어 소개
 
-| 문서 | 포트폴리오 계층 | 분류 | 강제 수단 |
+레이어는 "무엇으로 강제하는가"로 갈린다. 위에서 아래로 갈수록 결정론적이다.
+
+| 레이어 | 무엇으로 강제하나 | 파일 | 설명 문서 |
 |---|---|---|---|
-| [`layer1-human-gate.md`](layer1-human-gate.md) | 1. Probabilistic / 2. Human Decision | **rule** (`.claude/rules/`) | 프롬프트 (소프트) |
-| [`layer2-workflow-skills.md`](layer2-workflow-skills.md) | 1. Probabilistic / 2. Human Decision | **skill** (`.claude/skills/`) + **agent** (`.claude/agents/`) | 절차 + 승인 게이트 · 조사·리뷰는 별도 컨텍스트 |
-| [`layer3-deterministic-hooks.md`](layer3-deterministic-hooks.md) | 3. Deterministic Layer | **hook** (`.claude/hooks/`) | **shell exit code** (하드) |
-| [`layer4-api-contract-safety.md`](layer4-api-contract-safety.md) | 4. Mechanical Verification | **CI + script** (`.github/workflows/`) | 저장소 밖 독립 3중 검증 |
+| **L1 규칙** | 프롬프트 — 에이전트가 읽고 따른다 | `.claude/rules/` | [`layer1-human-gate.md`](layer1-human-gate.md) |
+| **L2 스킬·서브에이전트** | 절차와 사람 승인 게이트 · 별도 컨텍스트 | `.claude/skills/` · `.claude/agents/` | [`layer2-workflow-skills.md`](layer2-workflow-skills.md) |
+| **L3 훅** | exit code — 도구 호출 직전·프롬프트 제출·턴 종료·세션 시작 | `.claude/hooks/` · `.claude/settings.json` | [`layer3-deterministic-hooks.md`](layer3-deterministic-hooks.md) |
+| **L4 기계 검증** | 검사기 exit code — 완료 선언 전·커밋 직전 | `scripts/` · `scripts/git-hooks/` | [`component-map.md`](component-map.md) "검사기와 git 훅" 절 |
+
+그림으로 보려면 [`architecture-diagrams.md`](architecture-diagrams.md).
+
+## 등장 배경
+
+에이전트에게 말로 "주의하라"고 하면 같은 실수가 반복된다. 그렇다고 모든 것을 훅으로 막으면 오탐이 쌓이고, 막히는 장치는 곧 우회된다. 그래서 장치마다 강제력을 다르게 줬다. 판단이 필요한 것은 규칙·스킬에 두고, 되돌리기 비싸면서 exit code로 판정할 수 있는 것만 훅·검사기로 내렸다.
 
 ## 레이어와 사이클의 관계
 
-위 표가 **무엇으로 강제하는가**(레이어)라면, 실제 작업은 **4 트랙 × 4 게이트** 사이클을 따라 흐릅니다(2026-09-03 개편, `#127`). 두 축은 직교합니다 — 같은 게이트라도 어느 레이어가 강제하는지가 다릅니다.
+위 표가 **무엇으로 강제하는가**라면, 실제 작업은 **4 트랙 × 4 게이트** 사이클을 따라 흐른다(`core-workflow.md`). 두 축은 직교한다 — 같은 게이트라도 어느 레이어가 강제하는지가 다르다.
 
 | 사이클 단계 | 담당 | 강제 레이어 |
 |---|---|---|
-| 진입 — 트랙 판정 (A 기능 / B 감사·리팩터 / C 버그 / D 하네스 이식) | `specify` · `safe-refactor` · `debug` · `adopt` | L1 규칙(프롬프트) |
-| **G1 리서치** | `researcher` 서브에이전트 | L1 규칙 — 강제 수단 없음, 절차로만 |
-| **G2 승인** | Human Gate | L1·L2 — 사람이 끊음 |
-| 구현 | AI Agent | **L3 훅**(위험 명령·DB 마이그레이션 차단) |
-| **G3 검증** | `preflight` 스킬 + `doc-reviewer` + 스택 리뷰어(플래그) | **L3 `Stop` 훅**(테스트 실행·결과 강제) + L4 기계 검증(`verify.sh` — CI가 있는 프로젝트는 CI) + advisory |
-| **G4 회고** | 문서 갱신 점검 · `defer` · `retro` | L1 규칙 + L2 절차 |
+| 진입 — 트랙 판정 (A 기능 / B 감사·리팩터 / C 버그 / D 하네스 이식) | `specify` · `safe-refactor` · `debug` · `adopt` | L1 규칙 · L3 `ask-open-request.sh`(열린 요청 알림 주입) |
+| **G1 리서치** | `researcher` 서브에이전트 | L1·L2 — 강제 수단 없음 |
+| **G2 승인** | 사람 (`ask` 인터뷰 → 트랙별 승인 산출물) | L1 `core-gates.md` 멈추는 신호 · L2 스킬 승인 단계 |
+| 구현 | 에이전트 | **L3** `deny-dangerous-bash.sh` · `deny-out-of-scope-write.sh` |
+| **G3 검증** | `preflight` + `doc-reviewer` + 스택 리뷰어(플래그) | **L3** `Stop` 훅(검증 명령 실행 여부·결과) + **L4** `scripts/verify.sh` |
+| **G4 회고** | `retro` · `defer` · `report.md` · 커밋 분할안 | L1·L2 |
+| 커밋 | git 훅 | **L4** `pre-commit`(검사기 3개) · `commit-msg`(형식) |
 
-**강제력이 가장 약한 곳은 여전히 G1과 G4입니다** — 둘 다 훅이나 CI로 판정할 수 없는 성격(조사를 했는지, 배운 걸 기록했는지)이라 규칙과 절차에만 의존합니다. 이 한계를 아는 것이 설계의 일부입니다.
+**강제력이 가장 약한 곳은 G1과 G4다.** 조사를 했는지, 배운 것을 남겼는지는 exit code로 판정할 수 없어 규칙과 절차에만 기댄다. G1에는 `researcher`, G4에는 `retro`라는 전담 도구가 있지만, 스킬은 에이전트가 부르기로 선택해야 돌아가므로 강제력을 만들지는 않는다. 도구가 있는 것과 강제되는 것을 구분하는 게 이 표의 요점이다.
 
-2026-09-04 현재 두 게이트 모두 전담 도구를 갖췄습니다 — G1은 `researcher`(2026-09-03 신설), G4는 `retro` 스킬(2026-09-04 신설)입니다. 다만 **이것이 강제력을 만들지는 않습니다.** 스킬은 에이전트가 "부르기로 선택"해야 돌아가므로, 훅(L3)이나 CI(L4)처럼 우회할 수 없는 통제와는 여전히 층이 다릅니다. 도구가 생긴 것과 강제되는 것을 구분하는 게 이 표의 요점입니다.
-
-## 한 장으로 보는 관심사 분리와 통제력 스펙트럼
+## 통제력 스펙트럼
 
 ```text
 확률적 (약한 통제) ←──────────────────────────────────────────────→ 결정론적 (강한 통제)
-Probabilistic Layer   Human Decision Layer  Deterministic Layer   Mechanical Verification
-규칙·스킬·에이전트     Human Gate (L1, L2)   로컬 훅 (L3)          CI 파이프라인 (L4)
-"AI가 맥락을 따름"    "사람이 예외를 판단"  "AI 판단과 무관하게   "AI가 관여할 수
-                                            기계가 강제 차단"     없는 곳에서 교차 검증"
+L1 규칙               L2 스킬·에이전트       L3 훅                   L4 기계 검증
+"에이전트가 맥락을     "사람이 승인하고,      "에이전트 판단과 무관하게  "저장소 상태를
+ 읽고 따른다"          별도 컨텍스트가 본다"   도구 호출을 막는다"       커밋 전에 판정한다"
 ```
 
-이 스펙트럼 자체가 설계 결과입니다 — 전부 강하게 만들지 않고, **확률적인 AI의 판단(Probabilistic) 위에 결정론적인 기계의 통제(Deterministic)를 결합**하여 통제 비용과 안전성의 균형을 맞췄습니다.
+L3와 L4의 차이는 대상이다. 훅은 **에이전트의 한 동작**을 막고, 검사기는 **저장소 상태**를 판정한다.
 
-## AI-native 엔지니어로서 강조할 우선순위 (레이어 종합)
+## 지금의 실제 동작
 
-각 문서의 마지막 절에 레이어 내부 우선순위가 있고, 여기는 **시스템 전체를 가로질러 본 포트폴리오 어필 순위**입니다.
+이 저장소에 하네스가 켜져 있을 때 실제로 일어나는 일을 쉬운 말로 적었다. 정확한 조건은 [`component-map.md`](component-map.md) 훅 표와 각 훅 본문이 SSOT다.
 
-### 1순위 — Deterministic Layer (L3): agent-type → command-type 훅 전환
-
-**왜 1순위인가:** "AI로 만들었다가 실패해서 결정론적 스크립트로 바꿨다"는 서사는 AI를 실제로 굴려본 사람만 가질 수 있습니다. LLM 기반 훅이 "절대 막지 마라"는 명시적 지시에도 커밋을 차단한 사고를 겪고, *advisory는 판단이 아니라 불변식이므로 LLM에 맡기면 안 된다*는 결론에 도달한 과정이 [`local-warn-breaking-change.sh`](../../examples/seeds/java-spring/hooks/local-warn-breaking-change.sh) 상단 주석에 코드로 남아 있습니다.
-
-**차별점:** 대부분의 "AI 활용" 사례는 AI를 더 많이 쓰는 방향입니다. 이건 **AI를 덜 쓰기로 한 판단**이고, 그 경계를 비용 기준으로 그었습니다.
-
-### 2순위 — Mechanical Verification (L4): oasdiff 한계를 알고 3중 감지를 직접 구현
-
-**왜 2순위인가:** 도구를 붙이는 건 누구나 합니다. `oasdiff`가 스키마 diff만 본다는 한계를 **실제 사고(#64: optional 필드인데 로직만 조건부 필수화)**로 확인하고, 스키마 밖에 커밋 트레일러(ErrorCode)·@ApiResponse를 얹은 **3-Tier Detection**을 구축한 게 핵심입니다. #75(신규/변경 오분류)를 `-` 줄과 교차해 고친 것도 "알림이 틀리면 팀이 알림을 무시한다"는 이해에서 나온 투자입니다.
-
-**차별점:** 단순 CI 구축이 아니라, AI가 생성한 코드로 인해 Frontend 계약이 깨지는 것을 막기 위해 **자동화의 입력이 되도록 문서 컨벤션(`@ApiResponse`의 `NAME — 설명` 형식)을 설계**한 것 — 컨벤션이 곧 파싱 가능한 인터페이스가 됐습니다.
-
-### 3순위 — Probabilistic Layer (L2): self-grading 편향의 구조적 차단
-
-**왜 3순위인가:** 방금 짠 코드를 같은 컨텍스트에서 리뷰하면 자기 판단을 재확인하게 된다는 인지적 한계를, 프롬프트("객관적으로 봐줘")가 아니라 **아키텍처**(강제로 새 서브에이전트 컨텍스트)로 풀었습니다. 검증 기준도 "breaking 없음"이 아니라 **"diff 자체가 0"**으로 못 박아 LLM이 해석할 여지를 없앴습니다.
-
-**감점 요인:** 결국 에이전트가 "절차를 따르기로 선택"해야 작동합니다. Deterministic Layer보다 한 단계 약합니다.
-
-### 4순위 — Probabilistic Layer (L1): path-scoped 규칙 로딩
-
-**왜 4순위인가:** "규칙 파일을 잘 썼다"는 프롬프트 엔지니어링에 가깝고 누구나 보여줄 수 있습니다. 여기서 그나마 차별화되는 건 **컨텍스트 예산 설계**입니다 — always-load 8개 + path-scoped 3개(v1 당시 7 + 8)로 나눠 Java를 안 건드리는 세션에는 Spring 컨벤션을, 문서를 안 건드리는 세션에는 문서 작성 규칙을 아예 싣지 않습니다.
-
-**함께 말할 것:** 문서 SSOT를 만들면서 동시에 **그 SSOT가 썩는다는 걸 전제**하고 STOP §1.5·§1.6("문서 말고 코드/생성물을 확인하라")을 넣은 점. 실제로 2026-08-28에 Redis ADR이 stale해 잘못된 답변을 했다가 그 절차로 복구하고 19개 문서를 정정했습니다.
-
-## 이 폴더를 안 만들어도 되는 것
-
-- **`docs/` 구조 자체를 별도 레이어로 강조하지 않습니다.** 폴더 정리가 잘 됐다는 건 AI-native의 증거가 아닙니다(문서 잘 쓰는 팀은 AI 없이도 많습니다). 이 저장소에서 `docs/`가 의미 있는 건 *에이전트가 매 턴 읽고 어긋나면 멈추는 제어면(Human Gate)*이기 때문이고, 그 역할은 Layer 1 문서의 STOP 표가 이미 표현합니다.
+- **세션을 열면** 규칙 파일 8개가 자동으로 실린다. 설정 값 표(`harness-map.md`)에 아직 안 정한 칸이 있으면 경고가 뜬다.
+- **"알아서", "최적화해줘"처럼 열린 요청을 보내면** 에이전트에게 "먼저 질문으로 범위를 좁혀라"는 알림이 붙는다. 요청을 막지는 않는다.
+- **되돌리기 어려운 명령은 실행 전에 막힌다.** 강제 푸시, 폴더 통째 삭제, 커밋 기록 되돌리기, 커밋 전 검사 건너뛰기, 비밀값 파일(`.env`) 커밋, DB 테이블 삭제 같은 것들이다. 명령 문장에 그 글자가 들어 있기만 해도 막히는 오탐이 있는데, 놓치는 것보다 낫다고 보고 그대로 둔다.
+- **작업 범위 밖 파일은 못 쓴다.** 이 저장소는 범위가 저장소 전체라 이 검사는 사실상 꺼져 있다.
+- **에이전트가 하네스 자신(훅 스크립트·`settings.json`)을 고칠 수 있다.** 이 저장소는 하네스를 고치는 곳이라 허용했다. 새 프로젝트에 붙이면 기본으로 막힌다.
+- **파일을 고친 뒤 검증(`scripts/verify.sh`)을 돌리지 않고 "완료"라고 하면** 대화가 끝나지 않고 되돌아온다. 돌렸는데 실패했어도 같다. 한 번만 되돌리므로 무한 반복은 없다.
+- **커밋할 때** 규칙에 프로젝트 고유 이름이 섞였는지, 훅이 약속대로 동작하는지, 문서 형식이 맞는지를 검사한다. 커밋 메시지 형식(`{Type}: {한글}`)이 틀려도 막힌다.
+- **훅이 막은 것을 풀어 달라고 말로 승인해도 훅은 모른다.** 푸는 방법은 사람이 설정 값 표(`harness-map.md`)와 훅 상수를 직접 바꾸는 것뿐이다. 에이전트가 풀 수 있는 통로를 만들면 에이전트도 그 통로를 연다.
 
 ## 유지보수
 
-이 폴더의 문서는 `.claude/` 구조가 바뀌면 stale해집니다. 훅·규칙·스킬·서브에이전트 개수가 바뀌면 [`.claude/rules/README.md`](../../.claude/rules/README.md)(구조 SSOT)를 먼저 고치고, 이 폴더와 [`harness-engineering.md`](../harness-engineering.md)를 뒤따라 갱신하세요. **내용이 어긋나면 `.claude/rules/README.md`가 맞습니다.**
+이 폴더의 문서는 `.claude/` 구조가 바뀌면 stale해진다. 훅·규칙·스킬·서브에이전트 개수가 바뀌면 [`.claude/rules/README.md`](../../.claude/rules/README.md)(구조 SSOT)를 먼저 고치고, 이 폴더와 [`harness-engineering.md`](../harness-engineering.md)를 뒤따라 갱신한다. **내용이 어긋나면 `.claude/rules/README.md`가 맞다.**
+
+## 관련 문서
+
+- [`component-map.md`](component-map.md) — 구성 요소별 실행 시점·질문·검사·수정 로드맵
+- [`architecture-diagrams.md`](architecture-diagrams.md) — 이 폴더의 내용을 그림 세 장으로
+- [`../harness-engineering.md`](../harness-engineering.md) — 왜 이렇게 만들었나 (긴 글)
+- [`../workflow-cycle.md`](../workflow-cycle.md) — 한 사이클을 10단계로 따라가기

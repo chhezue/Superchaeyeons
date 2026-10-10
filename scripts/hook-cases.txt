@@ -1,0 +1,74 @@
+# test-hooks.sh가 읽는 훅 케이스. 한 줄에 하나, `#`은 주석.
+# 형식: 훅파일<TAB>SCOPE<TAB>기대exit<TAB>stdin
+#   SCOPE: `-`면 훅 원본 그대로, 값이 있으면 훅 본문의 `SCOPE="…"` 줄을 그 값으로 바꾼 임시 복사본으로 실행
+#   stdin 안의 $REPO는 저장소 루트 절대경로, $HOME은 홈 디렉터리로 치환된다
+# 훅 공통 규약 — 모든 deny-* 훅은 (1) 정상 범위는 통과 (2) 위반은 exit 2 (3) 판정 불가(JSON 깨짐·키 없음·빈 입력·python3 없음)는 exit 2
+# python3 없음 케이스는 PATH를 바꿔야 해서 이 파일이 아니라 test-hooks.sh 내장 케이스가 deny-* 전부에 자동으로 돌린다.
+# 이 파일은 "훅이 한 번 열렸다"(baro 회고 4)를 재발 방지하는 장치다 — 새 우회 경로를 발견하면 케이스를 먼저 추가한다.
+
+# ---- deny-out-of-scope-write.sh (SCOPE=sub 로 테스트) ----
+deny-out-of-scope-write.sh	sub	2	{"tool_input":{"file_path":"other/a.md"}}
+deny-out-of-scope-write.sh	sub	2	{"tool_input":{"file_path":"$REPO/other/a.md"}}
+deny-out-of-scope-write.sh	sub	2	{"tool_input":{"file_path":"./other/a.md"}}
+deny-out-of-scope-write.sh	sub	2	{"tool_input":{"file_path":"sub/../other/a.md"}}
+deny-out-of-scope-write.sh	sub	2	{"tool_input":{"notebook_path":"other/a.ipynb"}}
+deny-out-of-scope-write.sh	sub	0	{"tool_input":{"file_path":"sub/a.md"}}
+deny-out-of-scope-write.sh	sub	0	{"tool_input":{"file_path":"./sub/deep/a.md"}}
+deny-out-of-scope-write.sh	sub	0	{"tool_input":{"file_path":".claude/rules/x.md"}}
+deny-out-of-scope-write.sh	sub	0	{"tool_input":{"file_path":"$HOME/.claude/plans/p.md"}}
+deny-out-of-scope-write.sh	sub	2	not json
+deny-out-of-scope-write.sh	sub	2	{"tool_input":{"path":"other/a.md"}}
+deny-out-of-scope-write.sh	sub	2
+deny-out-of-scope-write.sh	.	0	{"tool_input":{"file_path":"other/a.md"}}
+
+# ---- local-deny-db-migration.sh ----
+local-deny-db-migration.sh	-	2	{"tool_input":{"file_path":"src/main/resources/db/migration/V1__init.sql"}}
+local-deny-db-migration.sh	-	2	{"tool_input":{"file_path":"anywhere/V2.1__add_col.sql"}}
+local-deny-db-migration.sh	-	2	{"tool_input":{"file_path":"x/R__repeat.sql"}}
+local-deny-db-migration.sh	-	0	{"tool_input":{"file_path":"src/main/java/App.java"}}
+local-deny-db-migration.sh	-	0	{"tool_input":{"file_path":"docs/specs/a.md"}}
+local-deny-db-migration.sh	-	2	not json
+local-deny-db-migration.sh	-	2	{"tool_input":{}}
+local-deny-db-migration.sh	-	2
+
+# ---- deny-dangerous-bash.sh ----
+deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"git status"}}
+deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"rm file.txt"}}
+deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"rm -rf build"}}
+deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"rm -fr build"}}
+deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"git push --force origin main"}}
+deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"git push -f"}}
+# force push 우회 — 플래그가 remote·branch 뒤에 오거나 +refspec 형태 (2026-09-06 검수에서 발견)
+deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"git push origin main --force"}}
+deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"git push origin +main"}}
+deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"git push -u origin main -f"}}
+deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"git push --force-with-lease origin feat"}}
+deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"git push origin main"}}
+deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"git push --follow-tags origin main"}}
+deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"git push -u origin feat/1-x"}}
+deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"git reset --hard HEAD~1"}}
+deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"docker compose down -v"}}
+deny-dangerous-bash.sh	-	2	not json
+deny-dangerous-bash.sh	-	2	{"tool_input":{}}
+deny-dangerous-bash.sh	-	2
+
+# ---- local-warn-breaking-change.sh — advisory, 어떤 입력에도 exit 0 ----
+local-warn-breaking-change.sh	-	0	{"tool_input":{"command":"git commit -m \"Feat: x\""}}
+local-warn-breaking-change.sh	-	0	not json
+
+# ---- deny-unverified-completion.sh (Stop) — 픽스처 transcript는 scripts/hook-fixtures/ ----
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-tested.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-docs-only.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":true}
+# Stop 훅은 판정 불가면 통과 (명시적 예외 — 대화가 끝나지 못하는 피해가 더 크다)
+deny-unverified-completion.sh	-	0	not json
+deny-unverified-completion.sh	-	0	{"transcript_path":"/nonexistent.jsonl","stop_hook_active":false}
+
+# ---- ask-open-request.sh (UserPromptSubmit) — 항상 exit 0, 주입 여부는 stdout ----
+ask-open-request.sh	-	0	{"prompt":"이 코드 알아서 최적화해줘"}
+ask-open-request.sh	-	0	{"prompt":"오타 하나 고쳐줘"}
+ask-open-request.sh	-	0	not json
+
+# ---- warn-unfilled-map.sh (SessionStart) — 항상 exit 0 ----
+warn-unfilled-map.sh	-	0	{"session_id":"x","source":"startup"}

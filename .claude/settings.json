@@ -1,12 +1,4 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(oasdiff *)",
-      "Bash(gh label list *)",
-      "Bash(docker info*)",
-      "mcp__Claude_Browser__get_page_text"
-    ]
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -14,11 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/deny-dangerous-bash.sh"
-          },
-          {
-            "type": "command",
-            "command": ".claude/hooks/warn-breaking-change.sh"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/deny-dangerous-bash.sh"
           }
         ]
       },
@@ -27,19 +15,38 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/deny-db-migration.sh"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/deny-out-of-scope-write.sh"
           }
         ]
       }
     ],
-    "PostToolUse": [
+    "PostToolUse": [],
+    "UserPromptSubmit": [
       {
-        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/auto-format-java.sh",
-            "timeout": 60
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/ask-open-request.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/deny-unverified-completion.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/warn-unfilled-map.sh"
           }
         ]
       }

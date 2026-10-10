@@ -4,20 +4,58 @@ set -eu
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
-# src/가 stage에 없으면 Spotless 생략 — build.gradle·docs 등 인프라-only 커밋 보호
-# core.quotepath=false: 파일명에 비ASCII(한글 등)가 있어도 이스케이프 없이 그대로 받음 —
-# 이스케이프된 문자열은 아래 -e 체크·git add pathspec과 매칭되지 않아 조용히 누락됨
-staged_src="$(git -c core.quotepath=false diff --cached --name-only -- 'src/')"
-if [ -z "$staged_src" ]; then
+# ---- 하네스 검사 (스택 무관) --------------------------------------------------
+
+# 배달물이 stage에 있으면 부품 계약 검사 — 위반이면 커밋을 막는다 (scripts/check-portability.sh)
+# 이행 중 특정 분류를 빼려면 PORTABILITY_SKIP=C3 git commit ... 처럼 환경 변수로 넘긴다
+staged_core="$(git -c core.quotepath=false diff --cached --name-only -- '.claude/' 'scripts/' 'AGENTS.template.md' '*CONTRIBUTING*')"
+if [ -n "$staged_core" ] && [ -x scripts/check-portability.sh ]; then
+	if ! scripts/check-portability.sh; then
+		echo "FAIL: 부품 계약 위반 또는 always-load 예산 초과 — 위 출력을 보고 고친 뒤 다시 커밋하세요." >&2
+		exit 1
+	fi
+fi
+
+# 훅·케이스·settings.json이 stage에 있으면 훅 규약 테스트 — 한 케이스라도 실패하면 커밋을 막는다 (scripts/test-hooks.sh)
+staged_hooks="$(git -c core.quotepath=false diff --cached --name-only -- '.claude/hooks/' '.claude/settings.json' 'scripts/hook-cases.txt' 'scripts/hook-fixtures/' 'scripts/test-hooks.sh' 'examples/seeds/*/hooks/')"
+if [ -n "$staged_hooks" ] && [ -x scripts/test-hooks.sh ]; then
+	if ! scripts/test-hooks.sh >/dev/null; then
+		scripts/test-hooks.sh | grep -E 'FAIL|케이스' >&2
+		echo "FAIL: 훅 규약 테스트 실패 — 훅이 열리는 입력이 있습니다. 케이스를 통과시킨 뒤 다시 커밋하세요." >&2
+		exit 1
+	fi
+fi
+
+# stage된 마크다운은 문서 스타일 검사 — 개요 없음·H4·번역투·닫히지 않은 코드 펜스 등 E 판정이면 커밋을 막는다
+if [ -x scripts/check-doc-style.sh ]; then
+	if ! scripts/check-doc-style.sh --staged; then
+		echo "FAIL: 문서 스타일 위반 — 위 출력의 E 항목을 고친 뒤 다시 커밋하세요. 오탐이면 scripts/doc-style-patterns.txt를 고칩니다." >&2
+		exit 1
+	fi
+fi
+
+# ---- 자동 포맷 (프로젝트별) ----------------------------------------------------
+# FORMAT_CMD·FORMAT_PATHS는 harness-map.md의 {{포맷 명령}}과 같은 값이어야 한다 — 훅은 슬롯을 읽지 못하므로 여기 직접 적는다.
+# 슬롯을 바꾸면 이 두 줄도 함께 고칠 것. 비어 있으면 포맷 단계를 건너뛴다. (씨앗 예: examples/seeds/java-spring/README.md)
+FORMAT_CMD=""
+FORMAT_PATHS=""
+
+[ -n "$FORMAT_CMD" ] || exit 0
+
+# 포맷 대상 경로가 stage에 없으면 생략 — 문서·설정만 있는 커밋 보호
+# core.quotepath=false: 파일명에 비ASCII(한글 등)가 있어도 이스케이프 없이 그대로 받음
+# shellcheck disable=SC2086
+staged_fmt="$(git -c core.quotepath=false diff --cached --name-only -- $FORMAT_PATHS)"
+if [ -z "$staged_fmt" ]; then
 	exit 0
 fi
 
-# git add -p로 일부 hunk만 스테이징했거나 src/ 안에 이번 커밋과 무관한 dirty 파일이 있으면,
-# spotlessApply(전체 대상)·재add가 그 변경까지 커밋에 끌어들일 수 있다 — 워킹 디렉터리를
-# 잠깐 index 상태로만 맞춰두고, 끝나면(성공·실패 무관) 반드시 stash pop으로 복원한다
+# 일부 hunk만 스테이징했거나 대상 경로에 무관한 dirty 파일이 있으면 포맷터가 그 변경까지 커밋에 끌어들일 수 있다 —
+# 워킹 디렉터리를 잠깐 index 상태로만 맞춰 두고, 끝나면(성공·실패 무관) stash pop으로 복원한다
 stashed=0
-if ! git diff --quiet -- 'src/'; then
-	git stash push --keep-index --quiet -m "pre-commit: temp stash unstaged src/ changes"
+# shellcheck disable=SC2086
+if ! git diff --quiet -- $FORMAT_PATHS; then
+	git stash push --keep-index --quiet -m "pre-commit: temp stash unstaged changes"
 	stashed=1
 fi
 restore_stash() {
@@ -27,12 +65,11 @@ restore_stash() {
 }
 trap restore_stash EXIT
 
-./gradlew spotlessApply -q
+sh -c "$FORMAT_CMD"
 
-# git add -u src/는 src/ 전체의 수정 파일을 쓸어담아 partial commit(git commit --only -- <path>)에
-# 관련 없는 파일까지 딸려 들어가게 함 — 원래 스테이징했던 파일만 다시 add
-# 삭제된 파일은 워킹트리에 없어 최신 git의 pathspec 매칭이 실패함 — spotless 재포맷 대상도 아니므로 제외
-existing_staged_src="$(printf '%s\n' "$staged_src" | while IFS= read -r f; do if [ -e "$f" ]; then printf '%s\n' "$f"; fi; done)"
-if [ -n "$existing_staged_src" ]; then
-	printf '%s\n' "$existing_staged_src" | git add --pathspec-from-file=-
+# 원래 스테이징했던 파일만 다시 add — 대상 경로 전체를 쓸어담으면 partial commit에 무관한 파일이 딸려 들어간다
+# 삭제된 파일은 워킹트리에 없어 pathspec 매칭이 실패하므로 제외
+existing_staged="$(printf '%s\n' "$staged_fmt" | while IFS= read -r f; do if [ -e "$f" ]; then printf '%s\n' "$f"; fi; done)"
+if [ -n "$existing_staged" ]; then
+	printf '%s\n' "$existing_staged" | git add --pathspec-from-file=-
 fi

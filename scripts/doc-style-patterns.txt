@@ -1,0 +1,95 @@
+# check-doc-style.sh가 읽는 문장 검사 패턴. 한 줄에 하나, `#`은 주석.
+# 형식: 분류<TAB>심각도<TAB>정규식(Python re)<TAB>메시지
+#   심각도 E = 위반이면 exit 1 (pre-commit이 막는다) · W = 경고만
+#   분류 META 메타 담화 · TRANS 번역투 · HANJA 불필요한 한자어 · NOMINAL 명사형 남용
+# 구조 검사(제목 길이·H4 깊이·개요 유무)는 스크립트 안에 고정돼 있고, 여기는 문장 패턴만 둔다.
+# 원칙은 toss/technical-writing "문장 다듬기"에서 왔고 문장은 이 저장소가 다시 썼다 (CC BY-NC-SA — 원문 복사 금지).
+# 오탐 방지(스크립트 고정): 코드 블록·인라인 코드·따옴표 안 문자열·`채운 예` 줄·frontmatter는 검사하지 않는다.
+#
+# 약어 검사용 허용 목록: ALLOW<TAB>약어 — 이 약어는 풀어쓰지 않아도 된다 (독자가 다 아는 것만)
+
+# ---- META: 말에 대한 말 — 지워도 뜻이 같다 ----
+META	E	앞서 (설명|말)했듯이|위에서 (설명|말)했듯이|아시다시피|결론적으로 말하면|다시 말해서	메타 담화 — 지워도 뜻이 그대로면 지운다
+META	W	결론적으로|요약하면|정리하면	메타 담화일 수 있다 — 문장이 실제 결론이면 그 문장만 남긴다
+
+# ---- TRANS: 번역투 — 주체와 동사를 드러내는 우리말로 ----
+TRANS	E	되어진다|되어지는|되어졌	이중 피동 — "된다"로
+TRANS	E	에 있어서	"에서"·"에게"로
+TRANS	E	라고 할 수 있(다|습니다)|것이라 할 수 있	단정으로 — "이다"
+TRANS	E	하는 것이 가능(하다|합니다)|할 수 있는 것이다	"할 수 있다"로
+TRANS	W	에 대해서|에 대하여	목적어로 직접 쓴다 — "X를"
+TRANS	W	을 통해서|를 통해서|을 통하여|를 통하여	"으로"·"로"로
+TRANS	W	을 필요로 (한다|합니다)|를 필요로 (한다|합니다)	"필요하다"로
+TRANS	W	의 경우(에는|에)	"이면"·"일 때"로
+
+# ---- HANJA: 불필요한 한자어 — 쉬운 말이 있으면 그걸로 ----
+HANJA	W	(^|[^가-힣])상기(한|의| )	"위"·"앞의"로
+HANJA	W	(^|[^가-힣])하기(의| )(내용|항목|표)	"아래"로
+HANJA	W	등등	"등"으로
+HANJA	W	(^|[^가-힣])익일	"다음 날"로
+HANJA	W	(^|[^가-힣])금일	"오늘"로
+
+# ---- NOMINAL: 명사형 남용 — 동사로 풀어쓴다 ----
+NOMINAL	W	(수행|실시|진행)을 (한다|합니다|했다|했습니다)	동사 하나로 — "한다"
+NOMINAL	W	에 대한 (검토|확인|수정|분석)을 (한다|합니다)	"X를 검토한다"처럼 동사로
+
+# ---- ALLOW: 풀어쓰지 않아도 되는 약어 ----
+ALLOW	API
+ALLOW	DB
+ALLOW	PR
+ALLOW	CI
+ALLOW	CD
+ALLOW	URL
+ALLOW	HTTP
+ALLOW	HTTPS
+ALLOW	JSON
+ALLOW	YAML
+ALLOW	SQL
+ALLOW	ID
+ALLOW	UI
+ALLOW	SSOT
+ALLOW	ADR
+ALLOW	TTL
+ALLOW	DTO
+ALLOW	AI
+ALLOW	LLM
+ALLOW	MVP
+ALLOW	README
+ALLOW	TODO
+ALLOW	OK
+ALLOW	IO
+ALLOW	JWT
+ALLOW	ORM
+ALLOW	JPA
+ALLOW	AOP
+ALLOW	STOP
+ALLOW	WARN
+ALLOW	FAIL
+ALLOW	PDF
+ALLOW	CC
+ALLOW	BY
+ALLOW	NC
+ALLOW	SA
+ALLOW	ERE
+ALLOW	UTF
+ALLOW	KB
+ALLOW	MB
+ALLOW	BR
+ALLOW	PRD
+ALLOW	ERD
+ALLOW	FE
+ALLOW	BE
+ALLOW	UX
+ALLOW	PK
+ALLOW	FK
+ALLOW	UUID
+ALLOW	SDK
+ALLOW	REST
+ALLOW	SOLID
+ALLOW	OOP
+ALLOW	ACID
+ALLOW	YAGNI
+ALLOW	CRUD
+ALLOW	AGENTS
+ALLOW	SKILL
+ALLOW	FIXME

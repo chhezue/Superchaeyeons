@@ -1,0 +1,40 @@
+# check-portability.sh가 읽는 금지 패턴 목록.
+# 형식: 분류<TAB>정규식(POSIX ERE, awk)<TAB>메시지   — 한 줄에 하나, `#`은 주석.
+# 분류: C1 고유명사 · C2 언어·프레임워크·도구 식별자 · C3 경로 리터럴·버전 번호 · C4 팩 참조
+# 계약 원문: docs/specs/cross-cutting/harness-slot-system-v2.md "부품 계약 — core에 없어야 하는 것"
+#
+# 오탐 방지 규칙(스크립트에 고정): `채운 예`(견본 인용)·`다스택 예시`(여러 스택을 함께 나열하는 실측 안내) 줄과 frontmatter는 검사하지 않는다.
+# 정규식에 \b·\<는 쓰지 않는다 — BSD awk가 지원하지 않는다.
+
+# ---- C1 고유명사 (프로젝트·회사·제품·도메인 용어) → 슬롯 또는 local-*.md ----
+C1	TripFit|tripfit|트립핏|Central-MakeUs|CMC	프로젝트 이름(TripFit)
+C1	baro-farm|barofarm|baro-ai|Barofarm|바로팜	프로젝트 이름(baro)
+C1	touchLastActivity	TripFit 전용 메서드 (어노테이션 `@TripActivity`는 아래 클래스 패턴이 잡는다)
+C1	카카오|Kakao|Apple|애플 로그인|애플 서버|구글 로그인|구글 서버	특정 소셜 로그인 provider(예시 문장)
+C1	Discord|디스코드|Slack|슬랙	특정 알림 채널
+C1	EC2|AWS|S3|Loki|Grafana	특정 인프라 제품
+C1	#[0-9]+	특정 저장소의 이슈 번호 (자리표시자 `#n`은 허용)
+C1	how-it-works\.md|release-milestones\.md|erd\.md|platform\.md|glossary\.md	TripFit 문서 파일명 → 슬롯으로 ({{스키마 SSOT}}·{{클라이언트 전제}}·{{용어집}})
+C1	NotificationController|Trip[A-Z][A-Za-z]*	TripFit 클래스 이름
+C1	trip-[a-z]|googlecalendar|user-schedule|trip/|notification/	TripFit 도메인·스펙 파일명 (소문자 — 스펙 폴더 매핑은 {{스펙 저장소}} README가 갖는다)
+
+# ---- C2 언어·프레임워크·도구 식별자 → lang 팩 ----
+C2	Spring|스프링|Java|자바|JPA|Hibernate|Gradle|gradlew|Kotlin|코틀린	언어·프레임워크 이름
+C2	springdoc|Swagger|oasdiff|ArchUnit|Flyway|Liquibase|Spotless|spotless|Testcontainers|Lombok|JUnit	스택 전용 도구
+C2	어노테이션|AOP|Aspect|Interceptor|Javadoc|record 타입	스택 전용 개념·표기 (진입점·권한 게이트·주석처럼 스택 무관 말로)
+C2	@[A-Z][A-Za-z]+	Java 어노테이션 표기
+C2	\.java|\.kt|\.gradle	언어 전용 파일 확장자
+C2	ErrorCode|SuccessResponse	스택 전용 클래스·enum 이름
+C2	nginx|Nginx|MySQL|PostgreSQL|Redis|Kubernetes|k8s|Kafka|Elasticsearch	특정 런타임·인프라 도구 (컨테이너 런타임 자체는 스택 무관이라 제외)
+C2	Controller|Repository	특정 프레임워크 계층 이름 (진입점·저장 계층으로 풀어쓴다)
+C2	React|Vue|Angular|Flutter|SwiftUI	특정 클라이언트 프레임워크 → {{클라이언트 전제}}
+
+# ---- C3 경로 리터럴 · 버전 번호 → 슬롯 / lang 팩 ----
+C3	(^|[^A-Za-z{])(docs|src|deploy|build)/	저장소 경로 리터럴 → {{문서 루트}} 등 슬롯으로 (examples/·.claude/·scripts/는 하네스 자체 경로라 제외)
+C3	\.github/	저장소 경로 리터럴(.github) → {{Git 컨벤션 SSOT}}
+C3	[0-9]+\.[0-9]+\.[0-9]+|[0-9]+\.x	버전 번호
+C3	(Boot|Java|Node|Python|Kotlin|Gradle) ?[0-9]+([ .,)]|$)	프레임워크 버전 표기 ("Java 3파일"처럼 한글이 바로 이어지면 제외)
+
+# ---- C4 팩 참조 (core → 팩 방향 참조 금지) ----
+C4	spring-boot-java\.md|java-comments\.md|openapi-conventions\.md|testing\.md|spring-reviewer	스택 팩 파일·에이전트 이름
+C4	packs/	팩 디렉터리 참조

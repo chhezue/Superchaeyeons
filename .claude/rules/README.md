@@ -7,194 +7,181 @@ paths:
   - ".claude/rules/README.md"
 ---
 
-# `.claude/rules` — AI 에이전트 규칙
+# `.claude/rules` — 하네스 구성 요소 지도
 
-Claude Code가 이 저장소에서 작업할 때 참조하는 **프로젝트 전용 AI 설정**입니다.
-루트의 [`CLAUDE.md`](../../CLAUDE.md)(`@AGENTS.md` import)는 전체 프로젝트 지도, `.claude/`는 **에이전트 행동·워크플로·안전장치**를 담습니다.
+에이전트가 이 저장소에서 작업할 때 참조하는 **하네스**(규칙·스킬·에이전트·훅)의 구조 인덱스다. 루트 `CLAUDE.md`(AGENTS.md를 import)는 프로젝트 지도, `.claude/`는 에이전트 행동·워크플로·안전장치를 담는다. 이 파일은 사람이 보는 디렉터리 맵이라 행동 규칙이 아니며, 구성 요소를 추가·삭제할 때만 로드된다(`paths:`).
 
-이 폴더가 정의하는 "무엇을"의 서술형 총정리(왜 이렇게 됐는지, 실제 인시던트 이력, 수치)는 [`docs/harness-engineering.md`](../../docs/harness-engineering.md) 참고 — 이 README는 구조 인덱스, 그 문서는 발표·질의 대비용 내러티브다.
+하네스가 왜 이렇게 됐는지(설계 근거·사고 이력)는 이 저장소의 `{{문서 루트}}/harness/`가 갖고, 새 프로젝트에는 배달하지 않는다. 구성 요소별로 언제 실행되고 무엇을 묻고 검사하는지, 고치려면 어디를 건드리는지는 같은 폴더의 `component-map.md`가 표로 갖는다 — 구성 요소를 추가·삭제·개명하면 그 문서도 같은 턴에 갱신한다.
+
+## 3층 구조
+
+파일마다 누가 고칠 수 있는지가 다르다. 이 구분이 이식성의 근거다.
+
+| 층 | 파일 | 수정 권한 | 이유 |
+|----|------|-----------|------|
+| **core (부품)** | `rules/core-*.md` · `skills/` · `agents/` · `hooks/` · `settings.json` | **금지** — `scripts/check-portability.sh`가 고유명사·스택 식별자·경로 리터럴·팩 참조를 exit code로 막는다. 예외: `settings.json`의 훅 등록 행은 `adopt`이 플래그에 따라 씨앗 훅을 추가·해제한다 | 모든 프로젝트에서 바이트 단위로 같아야 개선이 함께 전파된다 |
+| **map (값)** | `rules/harness-map.md` | 채우기 — `adopt` 스킬 | 축·슬롯·플래그의 이 프로젝트 값 |
+| **local (고유)** | `.claude/` 안의 `local-*` 파일 전부 — `rules/local-*.md` · `agents/local-*.md` · `hooks/local-*.sh` | 자유 | 이 저장소에서만 사는 사실·복사한 lang 팩. 검사기는 접두사로 이 층을 식별해 검사에서 뺀다 |
+
+스택 규칙(lang 팩)은 배달물에 없다. `adopt`이 `examples/seeds/{스택}/`에서 복사하거나 `_template/`을 채운다 — 씨앗 파일명이 이미 `local-*`이므로 복사한 그대로 local 층이다.
 
 ## 디렉터리 구조
 
+배달물 그대로의 트리다. 스택 규칙은 없고 `local-*.md`는 프로젝트가 만들 때만 생긴다.
+
 ```
 .claude/
-├── settings.json          ← PreToolUse 훅 등록 (버전 관리)
-├── settings.local.json    ← 개인 권한 allowlist (버전 관리)
-├── hooks/
-│   ├── deny-dangerous-bash.sh
-│   ├── deny-db-migration.sh
-│   ├── warn-breaking-change.sh
-│   └── auto-format-java.sh
-├── agents/                ← 서브에이전트 정의 (파일 생성 시 즉시 등록)
-│   ├── researcher.md              # G1 외부 문서 조사 전용 (Edit/Write 없음)
-│   ├── doc-reviewer.md            # G3 문서 품질 리뷰 전용 (Edit/Write 없음)
-│   └── spring-reviewer.md         # G3 Java 변경 리뷰 전용 (Edit/Write 없음)
-├── rules/                 ← 상황별 AI 규칙 (.md + paths frontmatter)
-│   ├── README.md                  ← 이 파일 (구조·사용법)
-│   ├── core-guardrails.md         # ⛔ STOP §1~§6 · 금지 요약 (always-load)
-│   ├── core-workflow.md           # 3 트랙 × 4 게이트 사이클 (always-load)
-│   ├── core-scope.md              # priority(must/could)·[미정] 처리 (always-load)
-│   ├── core-followup.md           # 후속 제안 · Defer · ERD 제안 (always-load)
-│   ├── core-tools.md              # Claude Code 도구 매핑 (always-load)
-│   ├── core-reporting.md          # 비전공자용 쉬운 설명 (보고·채팅만, always-load)
-│   ├── harness-map.md             # 슬롯·스택 옵션 — 프로젝트가 채우는 유일한 파일 (always-load)
-│   ├── spring-boot-java.md
-│   ├── openapi-conventions.md
-│   ├── java-comments.md
-│   ├── testing.md
-│   ├── doc-writing.md             # 문서 작성 (docs/·.claude/ 마크다운, path-scoped)
-└── skills/                ← 반복 워크플로 스킬
-    ├── specify/
-    │   ├── SKILL.md
-    │   └── references/
-    │       └── spec-template.md
-    ├── safe-refactor/
-    │   ├── SKILL.md
-    │   └── references/
-    │       ├── audit-template.md
-    │       └── audit-checklist.md
-    ├── preflight/
-    │   └── SKILL.md
-    ├── defer/
-    │   └── SKILL.md
-    ├── debug/
-    │   └── SKILL.md
-    └── retro/
-        └── SKILL.md
+├── settings.json          ← 훅 등록 (버전 관리) — 스택 무관 훅만
+├── settings.local.json    ← 개인 권한 allowlist (커밋 안 됨)
+├── hooks/                 ← 결정론적 하한선. 규약: scripts/test-hooks.sh 가 판정
+│   ├── deny-dangerous-bash.sh        # 파괴적 shell 명령 차단
+│   ├── deny-out-of-scope-write.sh    # {{작업 범위}} 밖 쓰기 차단 (SCOPE=. 이면 무동작)
+│   ├── deny-unverified-completion.sh # Stop: 코드 고치고 테스트 안 돌린 완료 선언 되돌림
+│   ├── ask-open-request.sh           # UserPromptSubmit: 열린 요청이면 ask 스킬 알림 주입
+│   └── warn-unfilled-map.sh          # SessionStart: harness-map ⬜·이유 없는 (없음) 경고
+├── agents/                ← 조사·리뷰 전용 서브에이전트 (Edit/Write 없음)
+│   ├── researcher.md                 # G1 외부 문서 조사
+│   └── doc-reviewer.md               # G3 문서 품질 리뷰 (advisory)
+├── rules/
+│   ├── README.md                     ← 이 파일
+│   ├── core-guardrails.md            # ⛔ STOP §1~§3 · 플래그 판정 (always-load)
+│   ├── core-gates.md                 # 통제/위임 · 멈추는 신호 · 자동으로 하지 않는 것 (always-load)
+│   ├── core-workflow.md              # 4 트랙 × 4 게이트 (always-load)
+│   ├── core-scope.md                 # priority · [미정] (always-load)
+│   ├── core-followup.md              # 후속 제안 · Defer · ERD (always-load)
+│   ├── core-tools.md                 # 트랙·게이트 → 도구 라우터 (always-load)
+│   ├── core-reporting.md             # 비전공자용 보고 문체 (always-load)
+│   ├── harness-map.md                # 축·슬롯·플래그 값 — 프로젝트가 채우는 유일한 파일 (always-load)
+│   ├── doc-writing.md                # 문서 작성 규칙 (paths: 마크다운)
+│   ├── core-code-comments.md         # 코드 주석 원칙 — 언어 무관 (paths: 소스 파일)
+│   └── local-*.md                    # 이 저장소 고유 (있을 때만)
+└── skills/                ← 승인 게이트가 있는 반복 워크플로
+    ├── adopt/ · ask/ · specify/ · safe-refactor/ · debug/ · preflight/ · defer/ · retro/
+    └── */references/                 # 스킬이 읽는 골격 (spec-template · audit-template · audit-checklist)
 ```
 
 ## 파일별 역할
 
+종류마다 언제 로드·실행되는지가 다르다.
+
 | 경로 | 역할 | 적용 시점 |
 |------|------|-----------|
-| `settings.json` | Bash 실행 전 등 **이벤트 → 훅 스크립트** 매핑 | 에이전트가 도구를 호출하기 직전 |
-| `hooks/*.sh` | 훅 본문 — 위험 명령 차단 등 | `settings.json`이 지정한 이벤트 |
-| `rules/*.md` (frontmatter 없음) | **항상** 로드되는 코딩·도메인 규칙 | 세션 시작 시 |
+| `settings.json` | **이벤트 → 훅 스크립트** 매핑 | 에이전트가 도구를 호출하기 직전·직후, 프롬프트 제출, 턴 종료, 세션 시작 |
+| `hooks/*.sh` | 훅 본문 — 차단·경고·주입 | `settings.json`이 지정한 이벤트 |
+| `rules/*.md` (frontmatter 없음) | **항상** 로드되는 규칙 | 세션 시작 시 |
 | `rules/*.md` (`paths:` frontmatter) | **glob에 매칭되는 파일**을 읽을 때만 로드되는 규칙 | 해당 파일 접근 시 |
-| `skills/*/SKILL.md` | 다단계 워크플로 (스펙 작성 등) | 에이전트가 해당 작업을 인식할 때 |
-| `agents/*.md` | 서브에이전트 정의 (frontmatter의 `tools`·`model` + 본문=시스템 프롬프트) | **파일을 만들면 등록** — 첫 호출이 실패하면 잠시 뒤 재시도하거나 새 세션에서 확인 |
+| `skills/*/SKILL.md` | 다단계 워크플로 | 에이전트가 해당 상황을 인식할 때 (`core-tools.md` 라우터) |
+| `agents/*.md` | 서브에이전트 정의 (`tools`·`model` + 본문=시스템 프롬프트) | 파일을 만들면 등록 |
 
-## Rules (`rules/`)
+## Rules
 
-`.md` = Markdown + YAML frontmatter(`paths:`). `paths`가 없으면 세션 시작 시 항상 로드되고, 있으면 매칭 파일을 읽을 때만 로드된다 (Cursor `.mdc`의 `globs`/`alwaysApply`에 대응).
+`paths`가 없으면 세션 시작 시 항상 로드되고, 있으면 매칭 파일을 읽을 때만 로드된다. always-load 합계는 `scripts/check-portability.sh`가 예산과 대조한다.
 
-### Always-load (하네스)
+### Always-load
 
 | 파일 | 요약 | SSOT 범위 |
 |------|------|-----------|
-| `core-guardrails.md` | ⛔ 문서 정합 · ErrorCode/AOP · DB 마이그레이션 금지 · **레거시(교체=같은 PR 삭제)** · **API Breaking-Change-Reason 트레일러** · `how-it-works.md` 갱신 + 금지 요약 표 | **하지 말 것 (STOP §1~§6)** |
-| `core-workflow.md` | 진입(트랙 분류) · **3 트랙 × 4 게이트 사이클** · 구현 중 지킬 것 | **어떤 순서로 할 것** |
-| `core-scope.md` | priority(must/could) 단정 금지 · `[미정]` 문서 표기(중앙 트래커 없음) | 범위·우선순위 |
-| `{프로젝트}-release.md`(견본: `examples/tripfit/`) | 🚨 Release Gate(앱 심사) · 릴리즈 축 3개 질문 · 희망기간/조회윈도우/C1 · 도메인·배포 확정 사항 | **이 저장소 고유** — 하네스 이식 시 제외. 폐지 이력은 `docs/product/release-milestones.md` |
-| `core-followup.md` | 💡 후속 제안 · ✅ Defer 이슈 분리 · 💡 ERD 적극 제안 | 완료 후·범위 미루기 |
-| `core-tools.md` | **도구 우선순위**(Claude Code 기본 > OMC > Superpowers > 프로젝트 문서) · **트랙 × 게이트 → 도구** 매핑 | 워크플로 도구 연동·채택 판단 |
-| `core-reporting.md` | 사용자 보고(채팅·`refactor-log.md`·완료 요약)는 용어 풀어쓰기·비유 위주로 쉽게. **코드 `//` 주석은 대상 아님**(`spring-boot-java.md` Comments가 SSOT) | 사용자 대상 설명 vs 코드 주석 스타일 분리 |
+| `core-guardrails.md` | ⛔ 문서 정합(계약에 닿는 변경은 같은 턴) · 레거시 즉시 삭제 · `{{현재동작 요약}}` 갱신 · 플래그 판정 원칙 | **하지 말 것** |
+| `core-gates.md` | 통제 영역 vs 위임 영역 · 멈추는 신호 · 자동으로 하지 않는 것 · 승인 통로 = 설정 변경 | **언제 멈추는가** |
+| `core-workflow.md` | 진입(트랙 분류) · 4 트랙 × 4 게이트 · 불변 조건 · 구현 중 지킬 것 · `report.md` | **어떤 순서로** |
+| `core-scope.md` | priority(must/could) 단정 금지 · `[미정]` 표기 | 범위·우선순위 |
+| `core-followup.md` | 후속 제안 · Defer · ERD 제안 | 완료 후 |
+| `core-tools.md` | 트랙 × 게이트 → 도구·스킬·에이전트 **라우터** · 도구 채택 기준 | 무엇으로 |
+| `core-reporting.md` | 사용자 보고는 쉬운 말로 (코드 주석 제외) | 보고 문체 |
+| `harness-map.md` | 축 4 · 슬롯 22 · 능력 플래그 7의 **이 프로젝트 값** | 값 |
+| `local-*.md` | 이 저장소에서만 사는 사실 (릴리즈 게이트·도메인 용어 등) | 프로젝트 고유 — 검사 대상 아님 |
 
-우선순위: `core-guardrails` ⛔ > `core-workflow` > specify > core-tools > 일반 관례
+우선순위: `core-guardrails` ⛔ > `core-gates` > `core-workflow` > 스킬 > `core-tools` > 일반 관례
 
-### Path-scoped (`paths:` frontmatter)
+### Path-scoped
 
 | 파일 | `paths` | 요약 |
 |------|---------|------|
-| `spring-boot-java.md` | `**/*.java` | 레이어·enum·Entity·**ErrorCode·AOP**·**SOLID/OOP·ACID**·스타일·테스트 |
-| `openapi-conventions.md` | `**/*.java` | `@Schema`·`@Operation`·`@Parameter`·`@ApiResponses`(FE용 섹션 템플릿·JWT) — 2026-08-27 `spring-boot-java.md`에서 분리 |
-| `java-comments.md` | `**/*.java` | `//`·Javadoc 작성 스타일(역할 줄·다단계 Why·레이어별 초점) — 2026-08-27 `spring-boot-java.md`에서 분리 |
-| `testing.md` | `**/*Test.java`, `src/test/**` | JUnit 5·프로필·테스트 네이밍 |
-| `doc-writing.md` | `docs/**/*.md`, `.claude/**/*.md` | 문서 유형(학습·문제해결·참조·설명) → 정보 구조(개요 필수·가치 먼저·제목) → 문장(한 문장 한 생각·메타 담화 제거·용어 일관). **채팅 보고는 `core-reporting.md`, 코드 주석은 `java-comments.md`** — 독자가 달라 겹치지 않음 |
-| `README.md`(이 파일) | `agents/**`·`skills/**`·`hooks/**`·`settings*.json`·이 파일 | 구조 인덱스 — 사람이 보는 디렉터리 맵이라 행동 규칙이 아님. **구성 요소를 추가·삭제할 때**(아래 유지보수 체크리스트가 실제로 필요할 때)만 로드된다. 계기·실측: [`docs/harness/layer1-human-gate.md`](../../docs/harness/layer1-human-gate.md) §4-1 |
+| `core-code-comments.md` | 소스 파일 확장자(다스택) | 코드 주석 원칙 — 실행 줄 위 단계 주석 · 필드·의존성 해설 · 실물 대조 · 이유. 언어별 표기는 lang 팩 |
+| `doc-writing.md` | 문서 루트·`.claude/` 마크다운 · 이슈·PR 템플릿 | 문서 유형 → 정보 구조 → 문장. 기계 판정은 `scripts/check-doc-style.sh` |
+| lang 팩 (복사 후, `local-{스택}.md`) | 그 언어 확장자 | 씨앗 README 참고 |
+| `README.md`(이 파일) | `agents/**`·`skills/**`·`hooks/**`·`settings*.json`·이 파일 | 구조 인덱스 |
 
 ### 규칙 추가·분리 가이드
 
-1. **한 규칙 = 한 관심사** (코어 하네스 ~120줄, 형제 ~70줄 권장)
-2. 전역 STOP → `core-guardrails` · 작업 순서 → `core-workflow` (둘 다 frontmatter 없음, always-load)
-3. 우선순위·`[미정]` → `core-scope` · 이 저장소 고유 릴리즈 사실 → `{프로젝트}-release` · 후속/Defer/ERD → `core-followup` (**중복 금지**, 링크만)
-4. 파일 타입별 → `paths:` frontmatter
-5. 반복 실수 → 해당 규칙에 짧게 추가
+1. **한 규칙 = 한 관심사.** 새 파일보다 기존 파일의 절을 먼저 검토한다 (부품성 원칙 2 — 새 개념은 기존 개념을 대체해야 한다)
+2. 전역 STOP → `core-guardrails` · 멈추는 신호 → `core-gates` · 작업 순서 → `core-workflow`
+3. 프로젝트 고유 사실은 `core-*`에 넣지 않는다 — 경로면 슬롯, 정책이면 플래그, 둘 다 아니면 `local-*.md`
+4. 파일 타입별 규칙 → `paths:` frontmatter. 같은 glob으로 파일을 둘로 나누는 것은 토큰 효과가 없다
+5. 반복 실수 → 해당 규칙에 짧게 추가 (`retro` 스킬 절차)
 
 ## 작명 규칙
 
-구성요소를 추가할 때 이름을 정하는 기준이다. 2026-09-04 개명(`#128`)에서 확정했다 — 그 전에는 동어반복(`debug-bug`)·내부 은어(`harness-*`)·29자짜리 이름이 한 폴더에 섞여 있었다.
+구성요소를 추가할 때 이름을 정하는 기준이다.
 
 | 종류 | 규칙 | 예 |
 |------|------|-----|
-| **스킬** | 짧은 **동사** 하나 | `spec`이 아니라 `specify`, `preflight`, `defer`, `debug` |
-| **규칙** | **적용 시점·대상이 드러나는 명사구.** 프로젝트 무관은 `core-`, 이 저장소 고유는 `tripfit-` 접두사 | `core-guardrails`, `harness-map`, `spring-boot-java` |
-| **훅** | 동작을 접두사로 — 차단 `deny-`, 경고 `warn-`, 자동 실행 `auto-` | `deny-db-migration.sh`, `warn-breaking-change.sh`, `auto-format-java.sh` |
-| **에이전트** | 역할 명사, 20자 이내 | `spring-reviewer`, `doc-reviewer`, `researcher` |
+| **스킬** | 짧은 **동사** 하나 | `specify`, `preflight`, `adopt`, `ask` |
+| **규칙** | 적용 시점·대상이 드러나는 명사구. 부품은 `core-`, 고유는 `local-` (접두사로 층이 갈려 검사기가 기계적으로 구분) | `core-gates`, `harness-map`, `local-release` |
+| **훅** | 동작을 접두사로 — 차단 `deny-`, 경고 `warn-`, 자동 실행 `auto-`, 질문 유도(주입) `ask-` | `deny-out-of-scope-write.sh`, `ask-open-request.sh` |
+| **에이전트** | 역할 명사, 20자 이내 | `researcher`, `doc-reviewer`, `{스택}-reviewer` |
+| **씨앗에서 복사한 파일** | 종류 무관하게 파일명 맨 앞에 `local-` — 그 뒤는 위 규칙대로. 에이전트의 `name:` frontmatter는 접두사 없이 둔다 | `local-{스택}.md`, `local-{스택}-reviewer.md`(name: `{스택}-reviewer`), `local-deny-db-migration.sh` |
 
-**개명하지 않는 경우:** 이미 짧고 뜻이 통하면 그대로 둔다. 흔한 영어 단어를 이름으로 쓰면 문서·코드의 일반 용법과 섞여 일괄 치환이 불가능해지므로(`verify`가 Java 60여 파일에 "검증하다"로 존재했다), 새 이름을 고를 때 저장소 전체에서 그 단어가 몇 번 쓰이는지 먼저 센다.
+이미 짧고 뜻이 통하면 개명하지 않는다. 흔한 영어 단어를 이름으로 쓰면 코드의 일반 용법과 섞여 일괄 치환이 불가능해지므로, 새 이름을 고를 때 저장소 전체에서 그 단어가 몇 번 쓰이는지 먼저 센다.
 
 ## Skills
 
-에이전트가 **특정 요청**을 받으면 스킬 파일을 읽고 단계를 따른다.
+호출 주체를 표에 적는다 — 사용자가 이름을 부르는 것과 에이전트가 상황을 보고 스스로 부르는 것을 구분한다.
 
-| 스킬 | 트리거 예시 | 산출물 |
-|------|-------------|--------|
-| `specify` | **A 트랙** — 새 기능, 리팩터 계획, 아키텍처 결정 | `docs/specs/{domain}/{feature}.md` (**스펙 SSOT**, 도메인 amend 시 `ADDED`/`MODIFIED`/`REMOVED` delta 섹션) |
-| `safe-refactor` | **B 트랙** — 기존 코드 아키텍처 감사·무손실 리팩토링 (API 계약·비즈니스 로직 불변) | `docs/audits/{domain}/audit.md`(A/B/C/D 분류) · `refactor-log.md`(반영 이력) — 도메인 1개씩 순차, 매 단계 승인 게이트 |
-| `debug` | **C 트랙** — 버그 리포트·`./gradlew test` 실패 (로컬 재현 + 프로덕션 전용 재현) | 없음(재현·조사 절차) — Superpowers `systematic-debugging` 대체, 승인 게이트 없는 절차형 스킬 |
-| `preflight` | **G3 게이트** — "완료/통과" 선언 전, 특히 Must Have급·API·DB 변경 | 없음(검증 절차) — `./gradlew test` + 스펙·이슈 체크리스트 대조 + API 변경 시 `oasdiff` + 문서 50줄+ 변경 시 `doc-reviewer` |
-| `defer` | **G4 게이트** — 「다른 이슈로 빼」·「후속 이슈로」·「이번 Milestone 밖」 | Draft 스펙 + Approved 스펙 amend + `docs/specs/README.md` 갱신 + (확인 후) GitHub 이슈 |
-| `retro` | **G4 게이트** — 작업 완료 후 회고, 「이번에 배운 거 정리」 | `docs/audits/harness-retro.md` append (승인 후) — 하네스 개선 후보만, 코드·설계 개선은 `core-followup.md` 담당. **메인 컨텍스트 실행**(세션 대화 이력이 입력이라 fork 금지) |
+| 스킬 | 언제 | 호출 | 산출물 |
+|------|------|------|--------|
+| `adopt` | **D 트랙** — 하네스를 붙일 때 · `harness-map.md` 재동기화 | 사용자 | `harness-map.md` 값 · lang 팩 복사/채움 · `local-*.md` · `AGENTS.md`. 코드 불변 |
+| `ask` | **G2 앞** — 열린 요청·미명시 기본값·해석이 갈리는 범위 | 에이전트 (`ask-open-request.sh`가 알림) | 없음 — 라운드 인터뷰, 사실은 조사·결정만 질문 |
+| `specify` | **A 트랙** — 기능·API·DB·정책 변경 | 에이전트 | `{{스펙 저장소}}/{unit}/{name}.md` (불변 조건 절 포함) |
+| `safe-refactor` | **B 트랙** — 기존 코드 감사·리팩터 | 사용자 | 감사 문서 `{{감사 로그}}/{unit}/{NNN}-*.md` · `refactor-log.md` |
+| `debug` | **C 트랙** — 버그·테스트 실패 | 에이전트 | 없음 — 재현·원인 분리 절차 |
+| `preflight` | **G2 직후(사전) · G3(사후)** | 에이전트 | 없음 — 검증 절차. 미검증은 `report.md`로 |
+| `defer` | **G4** — 「다른 이슈로」 | 에이전트 | Draft 스펙 + Approved amend + (확인 후) 이슈 |
+| `retro` | **G4** — 하네스 개선 후보 | 사용자·에이전트 | `{{문서 루트}}/audits/harness-retro.md` append. 메인 컨텍스트 실행 |
 
-**워크플로:** `트랙 분류 → G1 리서치 → G2 승인 → 구현 → G3 검증 → G4 회고 → gh issue/PR`
+각 SKILL.md는 첫 줄에 **"이 스킬이 기본 동작과 다른 단 하나"**, 끝에 **"It's working if"**(파일을 열지 않고 확인 가능한 신호)를 둔다.
 
-## Agents (`agents/`)
+## Agents
 
-트랙과 무관하게 **게이트에서 호출하는 조사·리뷰 전용 서브에이전트**다. 셋 다 `tools` 화이트리스트에서 `Edit`/`Write`를 뺐고, 별도 컨텍스트에서 실행돼 메인 대화의 토큰을 아낀다.
-
-⚠️ **도구 목록이 쓰기를 완전히 막지는 못한다.** 셋 다 `Bash`를 갖고 있어 `sed -i`·리다이렉션으로 파일을 고칠 수 있고, `auto-format-java.sh` 훅은 `Edit|Write` 매처라 Bash 경유 수정을 잡지 못한다. 마지막 한 겹은 각 에이전트 지침의 "수정하지 않는다" 규범이다 — 이 층을 결정론적 차단으로 오해하지 않는다 (2026-09-04 `spring-reviewer` 스모크 테스트에서 발견).
+게이트에서 호출하는 조사·리뷰 전용 서브에이전트다. `tools`에서 `Edit`/`Write`를 뺐지만 **`Bash`가 있어 물리적으로 막혀 있지는 않다** — 마지막 한 겹은 각 지침의 "수정하지 않는다" 규범이다. 결정론적 차단으로 오해하지 않는다.
 
 | 에이전트 | 게이트 | 역할 |
 |----------|--------|------|
-| `researcher` | G1 | 외부 라이브러리·SDK·provider 문서 조사. **로컬 `build.gradle` 버전 확인 → 공식 문서(버전 고정) → 릴리즈 노트** 순서 강제, 블로그·StackOverflow 근거 인용 금지. 결론·근거 URL·문서 버전만 고정 포맷으로 반환 |
-| `doc-reviewer` | G3 | 문서 유형·정보 구조·문장 3단계 리뷰 (기준: `doc-writing.md`). advisory — 커밋을 막지 않음 |
-| `spring-reviewer` | G3 | Java 변경 diff를 트랜잭션 경계·N+1·하네스 계약(ErrorCode·`@TripActivity`·트레일러)·레이어 재사용·캡슐화 5축으로 리뷰 (기준: `spring-boot-java.md`). Critical/High/Medium/Low 4등급 + `파일:줄` 강제. **ArchUnit이 이미 검증하는 규칙은 지적 대상에서 제외** |
+| `researcher` | G1 | 외부 문서 조사. 로컬 실물 버전 → 공식 문서(버전 확인) → 릴리즈 노트 순서 강제. 규칙 파일에 박힌 버전을 믿지 않는다 |
+| `doc-reviewer` | G3 | 문서 유형·정보 구조·문장 3단계 리뷰 (기준 `doc-writing.md`). advisory |
+| `{스택}-reviewer` | G3 | **[플래그: 스택 리뷰어]** lang 팩이 지정. 정적 검사가 못 잡는 결함만 (씨앗 예: `examples/seeds/java-spring/agents/`) |
 
-**호출 기준:** 2개 이상 문서를 비교해야 하면 `researcher`, 단일 페이지면 인라인 `WebFetch`. 새 문서·50줄+ 문서 변경이면 `doc-reviewer`, 오타 수정이면 생략. Java를 3파일 이상·API·DB 범위로 고쳤으면 커밋 전 `spring-reviewer` — 범용 `code-review` 스킬과 **대체 관계가 아니다**(그쪽은 언어 무관 일반 결함, 이쪽은 이 저장소의 Spring·JPA·하네스 계약).
+**호출 규약:** 대상은 경로 목록으로만 넘기고 읽기 범위는 에이전트 지침에 맡긴다. "전문을 읽어라"는 신규 파일에만. 대상이 10개를 넘으면 나눠 부른다.
 
-상세: `.claude/rules/core-tools.md`
+## Hooks
 
-템플릿·참고 문서는 `skills/{name}/references/`에 둔다.
+배달물에 등록된 훅 5개다. 전부 스택 무관이다.
 
-## Hooks (`settings.json` + `hooks/`)
+| 이벤트 | 매처 | 훅 | 동작 |
+|--------|------|-----|------|
+| `PreToolUse` | `Bash` | `deny-dangerous-bash.sh` | force push · 재귀 강제 삭제 · hard reset · 컨테이너 볼륨 삭제 차단 (exit 2). 알려진 오탐: 명령 문자열 전체에서 패턴을 찾아 문자열로만 언급해도 막힌다 — fail-closed 의도라 유지 |
+| `PreToolUse` | `Write\|Edit` | `deny-out-of-scope-write.sh` | `{{작업 범위}}` 밖 쓰기 차단 (exit 2). 훅 상수 `SCOPE` = 슬롯 값, `.`이면 무동작. 저장소 밖 절대경로는 통과 |
+| `UserPromptSubmit` | — | `ask-open-request.sh` | 열린 표현이면 `ask` 알림 주입 (항상 exit 0 — 차단하면 프롬프트가 지워진다) |
+| `Stop` | — | `deny-unverified-completion.sh` | 코드 수정 + `TEST_CMD`(= `{{테스트 명령}}`) 미실행 + 완료 단정이면 되돌림 (exit 2). 문서만·재진입·판정 불가는 통과 |
+| `SessionStart` | — | `warn-unfilled-map.sh` | `harness-map.md`에 ⬜·이유 없는 `(없음)`이 남았으면 경고 주입 |
 
-| 이벤트 | 매처 | 현재 동작 |
-|--------|------|-----------|
-| `PreToolUse` | `Bash` | `deny-dangerous-bash.sh` — force push, `rm -rf`, `git reset --hard`, `docker compose down -v` 차단(exit 2, fail-closed) |
-| `PreToolUse` | `Bash` | `warn-breaking-change.sh` — `git commit`에 DTO/ErrorCode/Controller 변경이 스테이징됐는데 `Breaking-Change-Reason:` 트레일러가 없으면 advisory 경고(항상 exit 0, 커밋을 막지 않음) |
-| `PreToolUse` | `Write\|Edit` | `deny-db-migration.sh` — `db/migration/` 경로 또는 Flyway 네이밍(`V1__x.sql`, `R__x.sql`) 파일 생성 차단(exit 2, fail-closed) — `core-guardrails.md` STOP §3 |
-| `PostToolUse` | `Edit\|Write` | `auto-format-java.sh` — Java 파일 저장 시 `spotlessApply` 자동 포맷(non-blocking) |
+lang 팩 훅(포맷 자동 실행 · 마이그레이션 파일 차단 · 계약 변경 경고)은 씨앗에 있고, 해당 플래그가 ☑일 때 `adopt`이 복사·등록한다.
 
-**agent-type 훅 관련 교훈:** `warn-breaking-change.sh`는 처음엔 `agent`-type(서브에이전트가 diff를 읽고 판단)으로 시도했으나, staged 아닌 working tree 변경까지 오판해 "절대 막지 마라"는 명시적 지시에도 커밋을 막는 사고가 있었다 — non-blocking을 LLM 판단에 맡기지 않고 `command`-type(exit code로 결정론적 통제)으로 확정했다. advisory-only 훅은 command-type을 기본으로 한다.
+**훅 공통 규약:** `deny-*`는 정상 범위 통과, 위반 exit 2, **판정 불가(JSON 깨짐·키 없음·빈 입력·python3 없음)도 exit 2**. 경로는 실경로로 정규화한다. `settings.json`의 훅 경로는 `$CLAUDE_PROJECT_DIR` 기준이라 cwd에 기대지 않는다. `Stop` 훅만 판정 불가면 통과(대화가 끝나지 못하는 피해가 더 크다). [`scripts/test-hooks.sh`](../../scripts/test-hooks.sh)가 [`scripts/hook-cases.txt`](../../scripts/hook-cases.txt)로 판정하고, 훅·케이스가 stage되면 pre-commit이 같은 테스트를 돌린다. 새 우회 경로를 발견하면 케이스를 먼저 추가한다. 훅에 "확인받았으면 통과" 통로는 없다 — 승인은 사용자가 `harness-map.md` 값과 훅 상수를 바꾸는 행위다 (`core-gates.md` §3).
 
-## `settings.json` / `settings.local.json`
+**훅이 슬롯 값을 읽는 방법:** 훅 본문 상수(`SCOPE`·`TEST_CMD`·`FORMAT_CMD`)에 직접 적고, `harness-map.md` 해당 행이 "함께 고칠 것"이라고 가리킨다. 별도 설정 파일은 SSOT를 둘로 가른다.
 
-`settings.json`은 훅 등 팀 공통 설정으로 버전 관리한다. `settings.local.json`은 개인 권한 allowlist — **전역 `~/.config/git/ignore`로 gitignore돼 있어 실제로는 이 머신에만 있고 커밋되지 않는다**(2026-08-27 확인). 팀원 간 공유되지 않으므로 개인별로 자유롭게 정리해도 된다.
+**advisory 훅은 `command`-type으로:** 서브에이전트가 판단하는 `agent`-type 훅은 "절대 막지 마라"는 지시에도 커밋을 막은 사고가 있었다. 판단은 LLM에게, "항상 이렇게 동작해야 한다"는 결정론적 스크립트에게.
 
-## CLAUDE.md / AGENTS.md와의 관계
+## 설정 파일
 
-```
-CLAUDE.md          → "@AGENTS.md" import + Claude Code 전용 보충
-AGENTS.md          → 무엇을, 어디서 찾는지 (프로젝트 지도)
-docs/README.md     → 기획·아키텍처·스펙 문서 인덱스
-deploy/README.md   → Docker·EC2 배포
-.dev/README.md     → 임시 세션 로그 (장기 문서는 docs/로)
-.claude/rules/      → 어떻게 코딩·배포·검증하는지 (행동 규칙)
-  core-guardrails / core-workflow / core-scope / core-followup
-  core-tools / core-reporting / harness-map
-.claude/skills/    → 큰 작업의 단계별 절차 (specify = 스펙 SSOT)
-docs/specs/        → 기능별 설계 산출물 (specify 스킬 결과)
-```
+`settings.json`은 훅 등 공통 설정으로 버전 관리한다. `settings.local.json`은 개인 권한 allowlist라 커밋되지 않는다.
 
 ## 유지보수 체크리스트
 
-- [ ] 새 도메인 enum·상태 추가 시 `docs/product/glossary.md` 동기화
-- [ ] 우선순위·`[미정]` 규칙 변경 → `core-scope.md`만 · 이 저장소 고유 릴리즈 사실 → `{프로젝트}-release.md`만 (`core-*`에 중복 금지)
-- [ ] 후속·Defer·ERD 제안 규칙 변경 → `core-followup.md`만
-- [ ] 반복되는 코드 리뷰 코멘트 → 해당 `rules/*.md`에 한 줄 규칙으로 승격
-- [ ] 위험 명령 패턴 추가 필요 시 `hooks/deny-dangerous-bash.sh` + `settings.json` matcher 동시 수정
-- [ ] 훅 추가·삭제 시 이 README **디렉터리 구조 다이어그램 + Hooks 절 표**, [`docs/harness-engineering.md`](../../docs/harness-engineering.md) §5 표, [`docs/harness/layer3-deterministic-hooks.md`](../../docs/harness/layer3-deterministic-hooks.md)의 훅 표·흐름까지 **4곳** 동시 갱신 (이번 감사에서 이 README 자체의 디렉터리 다이어그램이 훅 1개 누락된 채 방치됐던 사례 있음 — 같은 파일 안에서도 표와 다이어그램이 따로 놀 수 있으니 둘 다 확인)
-- [ ] 규칙·스킬 개수가 바뀌면(추가/삭제) 이 README **Always-load 표 + Skills 표**, [`docs/harness-engineering.md`](../../docs/harness-engineering.md) §3·§4의 대응 표, [`docs/harness/layer1-human-gate.md`](../../docs/harness/layer1-human-gate.md)(규칙)·[`docs/harness/layer2-workflow-skills.md`](../../docs/harness/layer2-workflow-skills.md)(스킬)의 파일 표를 함께 갱신 (harness-engineering.md·docs/harness/는 발표·질의 대비용 서술형 문서라 별도 유지되며, 내용이 어긋나면 이 README가 맞음 — 하지만 방치하면 발표 자료가 stale해짐)
-- [ ] 서브에이전트(`agents/*.md`) 추가·삭제 시 이 README **디렉터리 구조 다이어그램 + Agents 절 표**, [`docs/harness-engineering.md`](../../docs/harness-engineering.md) §4, [`docs/harness/layer2-workflow-skills.md`](../../docs/harness/layer2-workflow-skills.md) 서브에이전트 문단을 함께 갱신. **에이전트는 파일을 만들면 같은 세션에서 즉시 등록**된다(2026-09-03 실측 정정 — 이전에는 "세션 시작 시 등록"으로 잘못 기재돼 있었음) — 첫 호출이 드물게 실패하면 잠시 뒤 재시도하거나 새 세션에서 확인
-- [ ] 레이어·PK 등 구조 규칙 변경 시 ArchUnit 구조 테스트(ArchUnit) 반영 검토 — 일부 규칙은 prose가 아니라 `./gradlew test`가 실제로 검증함
+- [ ] 스킬·에이전트를 추가·삭제·개명하면 **같은 턴에** `core-tools.md` 라우터 표와 이 README의 Skills·Agents 표, `{{문서 루트}}/harness/component-map.md`를 갱신 — 없어진 스킬로 안내하는 라우터는 거짓말을 한다
+- [ ] 훅을 추가·삭제·수정하면 `scripts/hook-cases.txt`에 케이스를 먼저 넣고 `scripts/test-hooks.sh` 통과 → 이 README Hooks 표 + 디렉터리 구조 갱신
+- [ ] 규칙 파일을 고쳤으면 `scripts/check-portability.sh` exit 0 (배달물 전체가 판정 대상)
+- [ ] 문서를 새로 만들거나 크게 고쳤으면 `scripts/check-doc-style.sh` 오류 0 + `doc-reviewer`
+- [ ] 슬롯·플래그를 늘리는 문턱: `core-*.md`에서 실제로 그 `{{슬롯}}`·`[플래그]`를 쓰는 곳이 있을 때만
+- [ ] 안 하기로 한 것은 `{{문서 루트}}/out-of-scope/README.md`에 이유와 함께

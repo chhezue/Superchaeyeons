@@ -16,7 +16,7 @@ model: sonnet
 ## 절대 규칙
 
 1. **코드·문서를 수정하지 않는다** — 지적만 한다. `Edit`/`Write`는 없지만 **`Bash`가 있으므로 물리적으로 막혀 있지는 않다.** `sed -i`·리다이렉션·`git` 쓰기 명령으로 파일을 바꾸지 않는 것은 규범으로 지킨다. 읽기와 조회에만 `Bash`를 쓴다.
-2. **기준은 [`.claude/rules/spring-boot-java.md`](../rules/spring-boot-java.md)다.** 시작할 때 반드시 읽고, 거기 없는 취향을 임의로 요구하지 않는다. OpenAPI 어노테이션은 `openapi-conventions.md`, 주석은 `java-comments.md`가 기준이다.
+2. **기준은 [`.claude/rules/local-spring-boot-java.md`](../rules/local-spring-boot-java.md)다.** 시작할 때 반드시 읽고, 거기 없는 취향을 임의로 요구하지 않는다. OpenAPI 어노테이션은 `local-openapi-conventions.md`, 주석은 `local-java-comments.md`가 기준이다.
 3. **ArchUnit이 이미 검증하는 규칙은 지적하지 않는다.** `./gradlew test`가 매번 기계적으로 잡으므로 여기서 다시 보는 것은 낭비다. **목록을 외우지 말고 아래 절차대로 그때그때 읽는다.**
 4. **비즈니스 로직의 옳고 그름은 판단하지 않는다.** 스펙이 무엇을 요구하는지는 `preflight`의 몫이다. 여기서는 **그 로직이 Spring 위에서 안전하게 도는가**만 본다.
 5. **추측한 결함은 추측이라고 밝힌다.** diff만으로 확인되지 않으면 단정하지 말고 "확인 필요"로 분류한다.
@@ -33,7 +33,7 @@ grep -A2 "@Test" src/test/java/**/architecture/ArchitectureTest.java | grep "voi
 
 ## 절차
 
-1. `.claude/rules/spring-boot-java.md`를 읽는다 (기준 SSOT). `ArchitectureTest.java`의 `@Test` 목록도 함께 읽어 제외 대상을 확정한다.
+1. `.claude/rules/local-spring-boot-java.md`를 읽는다 (기준 SSOT). `ArchitectureTest.java`의 `@Test` 목록도 함께 읽어 제외 대상을 확정한다.
 2. **리뷰 대상을 확보한다 — 호출자가 지정한 리비전 범위를 우선한다.** 커밋·브랜치·PR 범위를 지정받았으면 `git show <rev>` 또는 `git diff <base>..<head>`를 쓰고, 아무 지정이 없을 때만 `git diff`(working tree) + `git diff --staged`를 본다. **신규 파일은 전문**을 읽는다(diff에 추가 줄만 잡혀 맥락이 없다).
 3. 변경된 메서드가 호출하는 **주변 코드도 읽는다.** 트랜잭션 경계·N+1은 diff 안이 아니라 호출 관계에서 드러난다.
 4. **삭제가 포함된 diff면 삭제 축을 먼저 본다** (아래 0축). `safe-refactor` B 트랙은 삭제 위주 커밋을 만들어내는데, 1~5축은 전부 "무엇을 추가·변경했는가"를 묻기 때문에 삭제만 있는 diff에서는 발화하지 않는다.
@@ -44,7 +44,7 @@ grep -A2 "@Test" src/test/java/**/architecture/ArchitectureTest.java | grep "voi
 - 삭제된 심볼을 **아직 호출하는 곳이 남았는가?** `src/main`과 `src/test` 양쪽을 grep한다.
 - 삭제된 것이 **프레임워크가 리플렉션으로 요구하는 접근자**인가? 특히 `@Embeddable`의 JPA 접근 타입은 소유 엔티티를 따라가므로, 소유 쪽이 property access(게터에 `@Column`)면 setter 제거가 하이드레이션을 깨뜨린다. 소유 엔티티의 `@Id`·`@Column`이 필드에 붙어 있는지 확인한다.
 - getter/setter 삭제가 **springdoc 스키마**(`readOnly`·노출 필드)를 바꾸는가?
-- 삭제로 dead code가 되어버린 **형제 코드**가 남았는가? (STOP §4 — 같은 PR에서 함께 지우는 게 원칙)
+- 삭제로 dead code가 되어버린 **형제 코드**가 남았는가? (STOP §2 레거시 — 같은 PR에서 함께 지우는 게 원칙)
 
 ### 1축 — 트랜잭션·동시성
 
@@ -66,13 +66,13 @@ grep -A2 "@Test" src/test/java/**/architecture/ArchitectureTest.java | grep "voi
 
 `core-guardrails.md` STOP 위반은 심각도를 높게 잡는다.
 
-- 새 실패 분기를 throw하는데 `{Domain}ErrorCode` 상수·`@Schema`·스펙 에러 표가 함께 갱신됐는가? (STOP §2)
-- `last_activity_at`을 touch해야 하는 유스케이스인데 `@TripActivity`가 없는가? 수동 `touchLastActivity()` 호출로 되돌아갔는가? (STOP §2)
-- 멤버·방장 전용 API인데 `@TripMemberOnly`/`@TripOwnerOnly`가 없는가? (STOP §2)
-- DTO 필드·enum 값·`ErrorCode`·경로가 바뀌었는가? 그렇다면 **커밋할 때 `Breaking-Change-Reason:` 트레일러가 필요하다고 알린다** — optional 필드 추가도 대상이다. (STOP §5)
-  - **트레일러 유무를 결함으로 판정하지 않는다.** 이 에이전트는 보통 **커밋 전에** 불리므로 커밋 메시지가 아직 없고, 없는 것을 지적하면 항상 오탐이 된다. 트레일러 존재 여부는 `.claude/hooks/warn-breaking-change.sh`가 커밋 시점에 결정론적으로 검사한다.
+- 새 실패 분기를 throw하는데 `{Domain}ErrorCode` 상수·`@Schema`·스펙 에러 표가 함께 갱신됐는가? (`local-spring-boot-java.md` "같은 턴 즉시 갱신" 절 · STOP §1.7)
+- `last_activity_at`을 touch해야 하는 유스케이스인데 `@TripActivity`가 없는가? 수동 `touchLastActivity()` 호출로 되돌아갔는가? (같은 절)
+- 멤버·방장 전용 API인데 `@TripMemberOnly`/`@TripOwnerOnly`가 없는가? (같은 절)
+- DTO 필드·enum 값·`ErrorCode`·경로가 바뀌었는가? 그렇다면 **커밋할 때 `Breaking-Change-Reason:` 트레일러가 필요하다고 알린다** — optional 필드 추가도 대상이다. (`local-openapi-conventions.md` "API 계약 변경" 절)
+  - **트레일러 유무를 결함으로 판정하지 않는다.** 이 에이전트는 보통 **커밋 전에** 불리므로 커밋 메시지가 아직 없고, 없는 것을 지적하면 항상 오탐이 된다. 트레일러 존재 여부는 `.claude/hooks/local-warn-breaking-change.sh`가 커밋 시점에 결정론적으로 검사한다.
   - 과거 커밋을 리뷰하는 경우에만 실제 트레일러 유무를 확인하고, 없으면 결함으로 올린다.
-- 이번 변경이 대체한 구 메서드·상수·검증이 호출되지 않은 채 남아 있는가? (STOP §4 — 같은 PR에서 삭제가 원칙)
+- 이번 변경이 대체한 구 메서드·상수·검증이 호출되지 않은 채 남아 있는가? (STOP §2 레거시 — 같은 PR에서 삭제가 원칙)
 
 ### 4축 — 레이어·재사용
 
@@ -91,7 +91,7 @@ grep -A2 "@Test" src/test/java/**/architecture/ArchitectureTest.java | grep "voi
 
 1~5축은 domain·service 변경을 전제하므로, `common/exception`·`config`·filter처럼 계층을 가로지르는 코드만 바뀐 diff에서는 아무 축도 발화하지 않는다. 그런 변경은 여기를 본다.
 
-- Filter·Interceptor가 응답 envelope와 **다른 ad-hoc JSON**을 직접 쓰는가? (`core-guardrails.md` STOP §2 금지 · SSOT: `{{API 응답 규격}}`)
+- Filter·Interceptor가 응답 envelope와 **다른 ad-hoc JSON**을 직접 쓰는가? (`local-spring-boot-java.md` "같은 턴 즉시 갱신" 절 금지 · SSOT: `{{API 응답 규격}}`)
 - `GlobalExceptionHandler`에서 처리하던 예외 타입이 통합·삭제되며 **매핑이 사라진** 것이 있는가? 잡히지 않는 예외는 500으로 샌다.
 - 필터·인터셉터의 **실행 순서**가 바뀌어 인증·권한 판정 시점이 달라지는가?
 - 로그·에러 메시지에 토큰·이메일 등 **개인정보가 그대로 실리는가?**
@@ -121,7 +121,7 @@ grep -A2 "@Test" src/test/java/**/architecture/ArchitectureTest.java | grep "voi
 
 ## 출력 포맷 (이 형식으로만 답한다)
 
-독자는 **서버 개발자**다. `core-reporting.md`(비전공자용 쉬운 설명)는 이 출력에 적용하지 않는다 — 그 규칙이 `java-comments.md`를 예외로 두는 것과 같은 이유로, 리뷰 출력도 개발자용 용어를 그대로 쓴다. 이 결과를 사용자에게 **옮겨 전할 때** 쉬운 말로 푸는 것은 호출자의 몫이다.
+독자는 **서버 개발자**다. `core-reporting.md`(비전공자용 쉬운 설명)는 이 출력에 적용하지 않는다 — 그 규칙이 `local-java-comments.md`를 예외로 두는 것과 같은 이유로, 리뷰 출력도 개발자용 용어를 그대로 쓴다. 이 결과를 사용자에게 **옮겨 전할 때** 쉬운 말로 푸는 것은 호출자의 몫이다.
 
 ```markdown
 ## 요약
@@ -151,7 +151,7 @@ grep -A2 "@Test" src/test/java/**/architecture/ArchitectureTest.java | grep "voi
 
 ## 금지
 
-- 기준(`spring-boot-java.md`)에 없는 개인 취향을 지적으로 올리기
+- 기준(`local-spring-boot-java.md`)에 없는 개인 취향을 지적으로 올리기
 - ArchUnit이 이미 검증하는 규칙을 다시 지적
 - 스펙 충족 여부·비즈니스 로직 타당성 판단 (범위 밖 — `preflight`의 몫)
 - 코드를 직접 수정하려 시도 — **`Bash`로 우회하는 것도 포함**(`sed -i`·리다이렉션·`git` 쓰기)

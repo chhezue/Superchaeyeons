@@ -5,7 +5,7 @@ paths:
 
 # Spring Boot / Java
 
-OpenAPI 어노테이션(`@Schema`·`@Operation`·`@Parameter`·`@ApiResponses`) 규칙은 [`openapi-conventions.md`](openapi-conventions.md), 주석(`//`·Javadoc) 작성 스타일은 [`java-comments.md`](java-comments.md) — 이 파일은 레이어·Entity·Enum·SOLID/OOP/ACID·스타일·테스트를 다룬다.
+OpenAPI 어노테이션(`@Schema`·`@Operation`·`@Parameter`·`@ApiResponses`) 규칙은 [`local-openapi-conventions.md`](local-openapi-conventions.md), 주석(`//`·Javadoc) 작성 스타일은 [`local-java-comments.md`](local-java-comments.md) — 이 파일은 레이어·Entity·Enum·SOLID/OOP/ACID·스타일·테스트를 다룬다.
 
 ## Package Layout (Domain-Driven Layered Architecture)
 
@@ -53,7 +53,7 @@ AUTH_INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_INVALID_TOKEN",
 
 Spotless(Eclipse): `alignment_for_enum_constants=48`, enum 상수 인자는 wrap 안 함 (`config/{프로젝트}-java-format.xml`).
 
-**새 실패 분기 추가 시 (같은 턴):** enum 상수 → Service/Interceptor throw → 스펙 에러 표 → (필요 시) `api-response.md` 예시. Harness: `.claude/rules/core-guardrails.md` ⛔ ErrorCode 절.
+**새 실패 분기 추가 시 (같은 턴):** enum 상수 → Service/Interceptor throw → 스펙 에러 표 → (필요 시) `api-response.md` 예시. 체크 표는 아래 "같은 턴 즉시 갱신" 절.
 
 ### 교차관심사 (AOP · Interceptor)
 
@@ -67,6 +67,23 @@ Spotless(Eclipse): `alignment_for_enum_constants=48`, enum 상수 인자는 wrap
 - 방 입장 완료(`activate`)가 touch — `join`은 초대 링크를 연 시점이라 touch하지 않는다 (`TripCommandService` 주석).
 - Draft(#13) 추천 API는 stub에 `@TripActivity`만 두고, ErrorCode는 **구현 착수 시** 추가.
 
+### 같은 턴 즉시 갱신 — ErrorCode · AOP/Interceptor
+
+> **[플래그: 에러 코드 카탈로그 동시갱신]** · **[플래그: 권한 게이트·활동 기록 동시갱신]** — `harness-map.md`에서 꺼져 있으면 해당 행을 무시한다. 절은 삭제하지 않는다. 원칙 자체는 `core-guardrails.md` STOP §1.7이고, 여기는 Java·Spring에서 그 원칙이 무엇을 뜻하는지 적는다.
+
+API·BR 실패 케이스·권한 게이트·`last_activity_at` touch를 **추가·변경하면 같은 PR·같은 턴**에 끝낸다. "나중에" 금지.
+
+| 변경 | 같은 턴에 필수 | 플래그 |
+|------|----------------|--------|
+| 새 실패 분기·HTTP/`code` | `{Domain\|Feature}ErrorCode` + 도메인 예외 throw + **스펙 에러 표** + 응답 스키마 | 에러 코드 카탈로그 동시갱신 |
+| 폐기된 `code` | enum·throw·스펙·생성 문서 **삭제** (`core-guardrails.md` STOP §2 레거시) | 에러 코드 카탈로그 동시갱신 |
+| 활동 시각 touch (`{{스펙 저장소}}`의 해당 스펙) | public 유스케이스에 `@TripActivity` (생성은 엔티티 초기값) | 권한 게이트·활동 기록 동시갱신 |
+| 권한 전용 API | `@TripMemberOnly`/`@TripOwnerOnly` + Interceptor 계약 유지 · 폐기된 게이트는 삭제 | 권한 게이트·활동 기록 동시갱신 |
+
+**금지:** throw/`code`만 넣고 enum·스펙 미갱신 · touch인데 `@TripActivity` 누락(또는 수동 `touchLastActivity` 재도입) · Draft 전용 코드를 Approved 전 enum에 미리 넣기 · Filter/Interceptor에서 envelope와 다른 ad-hoc JSON
+
+SSOT: `{{API 응답 규격}}` · 위 ErrorCode enum·교차관심사 절
+
 ## Entity Conventions
 
 - 공통 베이스: `common/domain/BaseTimeEntity`, `SoftDeleteEntity`
@@ -76,7 +93,7 @@ Spotless(Eclipse): `alignment_for_enum_constants=48`, enum 상수 인자는 wrap
 - 테이블·컬럼: snake_case. 예약어 컬럼은 `@Column(name = "...")` 명시 (`rank` → `recommendation_rank`). 테이블명: **`users`**(구 `user` — MySQL 예약어 회피, Java 엔티티는 `User`)
 - `globally_quoted_identifiers: true` **사용 금지** (TEXT quoting 등과 조합 시 DDL 실패 유발). 스키마 drift 원인은 보통 **단일 설정이 아니라** TEXT quoting + 예약어 + dialect + naming strategy **조합** — Docker/배포 설정은 `deployment.md` SSOT
 - **PK / FK:** 모든 테이블 PK·FK는 **UUID v4**. Java `java.util.UUID`, DB `CHAR(36)`. `@GeneratedValue` + `@UuidGenerator` + `@JdbcTypeCode(SqlTypes.CHAR)` (`length = 36`). **`Long` / `IDENTITY` / `bigint` PK 금지.** SSOT: `docs/architecture/erd.md`, `docs/specs/cross-cutting/uuid-primary-key.md`
-- **필드 설명:** Entity·enum·베이스 클래스의 **클래스·필드·enum 상수**마다 `@Schema(description = "...")` (springdoc). nullable·example·requiredMode는 ERD·스펙과 맞출 것. 상세: `openapi-conventions.md` **OpenAPI @Schema** 절
+- **필드 설명:** Entity·enum·베이스 클래스의 **클래스·필드·enum 상수**마다 `@Schema(description = "...")` (springdoc). nullable·example·requiredMode는 ERD·스펙과 맞출 것. 상세: `local-openapi-conventions.md` **OpenAPI @Schema** 절
 - **캡슐화(상태 전이):** 클래스 레벨 `@Setter` 금지, 상태 전이는 도메인 메서드로 한다 — 상세: 아래 **SOLID / OOP 원칙** 절
 
 ```java
@@ -135,7 +152,7 @@ public enum VacationApplyPeriod {
 
 - 새 enum 상수·필드명을 짓거나 리뷰할 때: "이 이름만 보고 신규 개발자·프론트가 오해하지 않을까?"를 먼저 묻는다. 오해 소지가 있으면 `@Schema`로 땜질하지 말고 **이름을 먼저 교체**한다.
 - **같은 개념 = 같은 필드명.** 같은 enum을 가리키는데 DTO마다 `status`/`memberStatus`/`myMemberStatus`처럼 이름이 흩어지면 안 된다 — "내 것" vs "타인 것" 구분만 접두사(`my`)로 통일하고 나머지는 동일한 이름을 쓴다.
-- 이름을 바꾸면 **같은 턴에** 전부 최신화한다: enum·DTO·테스트 · `docs/specs/` · `docs/architecture/erd.md` · `docs/product/glossary.md`. 한 곳이라도 구 이름이 남으면 "구 이름 방치"로 `core-guardrails.md` STOP §4(레거시)와 동일하게 취급한다.
+- 이름을 바꾸면 **같은 턴에** 전부 최신화한다: enum·DTO·테스트 · `docs/specs/` · `docs/architecture/erd.md` · `docs/product/glossary.md`. 한 곳이라도 구 이름이 남으면 "구 이름 방치"로 `core-guardrails.md` STOP §2(레거시)와 동일하게 취급한다.
 - `@Schema`/`@Operation` 설명이 **3문단 넘게** 길어지거나 값별로 "의미"를 장황하게 반복해야 한다면, 우선 이름부터 다시 의심할 것 — 설명으로 이름의 결함을 메우지 않는다.
 - 예: `TripMemberStatus`의 구 `JOINED`→`SCHEDULE_PENDING`, 구 `RESPONDED`→`ACTIVE` 개명 — "방에 참여했다"로 오독되던 이름을 "일정 확인 대기중 / 방 활동 가능"으로 이름만으로 뜻이 드러나게 바꾼 사례 (`docs/specs/trip/trip-member-status-derive.md` 변경 이력).
 
@@ -223,9 +240,20 @@ ResponseEntity<...> updateProfile(
 - 응답 envelope: `docs/architecture/api-response.md` (확정)
 - 요청 검증: Jakarta Validation (`@Valid`)
 - 예외: `@RestControllerAdvice` + `{ code, message }`
-- 문서: springdoc — `@Tag`·`@Operation`·`@Schema` 작성 규칙은 `openapi-conventions.md`, enum 목록은 위 **Enum** 절
+- 문서: springdoc — `@Tag`·`@Operation`·`@Schema` 작성 규칙은 `local-openapi-conventions.md`, enum 목록은 위 **Enum** 절
 - Controller 파라미터 스타일: 위 **Controller 메서드 파라미터** 절 준수
-- **계약 변경(필드 추가·삭제·이름변경·타입변경·필수화, enum 값, `ErrorCode`, 경로·메서드):** optional 필드 추가라도 커밋 본문에 `Breaking-Change-Reason:` 트레일러 필수 — `core-guardrails.md` STOP §5 · `docs/api/README.md`
+- **계약 변경(필드 추가·삭제·이름변경·타입변경·필수화, enum 값, `ErrorCode`, 경로·메서드):** optional 필드 추가라도 커밋 본문에 `Breaking-Change-Reason:` 트레일러 필수 — `local-openapi-conventions.md` "API 계약 변경" 절
+
+## DB 스키마 정책 — 마이그레이션 금지 (상용 보존 데이터 없음)
+
+> **[플래그: DB 마이그레이션 금지]** 이 절은 **운영 DB에 보존할 데이터가 없다**는 전제 위에 있다. 운영 데이터가 있는 프로젝트에서는 정반대가 맞으므로 `harness-map.md`에서 이 플래그를 ❌로 두고 `local-deny-db-migration.sh` 훅을 `settings.json`에서 해제한다. 절은 삭제하지 않는다.
+
+1. Flyway / Liquibase / `V*__*.sql` / 데이터 보존 마이그레이션 **작성·커밋 금지**. 훅이 파일 생성 시점에 차단한다.
+2. 스키마 SSOT = **JPA 엔티티(최신 하나)** + Hibernate `ddl-auto` 반영 (`{{아키텍처 개요}}` · `{{스키마 SSOT}}`).
+3. 로컬·dev DB **폐기·재생성** 허용 (`docker compose down -v` 등 — 단 이 명령은 `deny-dangerous-bash.sh`가 막으므로 사용자가 직접 실행한다). orphan·구 스키마 호환 레이어 금지.
+4. "나중에 마이그레이션 도입" 식 예정 코드/파일·주석 추가 금지. prod 보존이 필요해지면 **그때** `{{결정 기록}}` + 마이그레이션 별도 결정.
+
+부수 효과: ERD는 고정 계약이 아니라 언제든 더 나은 모델을 제안해야 하는 대상이다 — `core-followup.md` 💡 ERD 절.
 
 ## Configuration
 

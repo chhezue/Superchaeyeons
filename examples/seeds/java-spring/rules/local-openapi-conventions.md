@@ -5,7 +5,7 @@ paths:
 
 # OpenAPI Conventions
 
-springdoc OpenAPI 3 + `therapi-runtime-javadoc`(build.gradle). 레이어·Entity·Enum·SOLID/OOP/ACID는 [`spring-boot-java.md`](spring-boot-java.md), 주석(`//`·Javadoc 작성 스타일)은 [`java-comments.md`](java-comments.md) 참고 — 이 파일은 **설명 문자열이 들어가는 어노테이션**(`@Schema`·`@Operation`·`@Parameter`·`@Tag`·`@ApiResponse`)만 다룬다.
+springdoc OpenAPI 3 + `therapi-runtime-javadoc`(build.gradle). 레이어·Entity·Enum·SOLID/OOP/ACID는 [`local-spring-boot-java.md`](local-spring-boot-java.md), 주석(`//`·Javadoc 작성 스타일)은 [`local-java-comments.md`](local-java-comments.md) 참고 — 이 파일은 **설명 문자열이 들어가는 어노테이션**(`@Schema`·`@Operation`·`@Parameter`·`@Tag`·`@ApiResponse`)만 다룬다.
 
 **쓰는 원칙 — 완전한 문장으로, 산문체로 쓴다.** 화살표(`→`)나 `의미:`/`언제:`/`불가:`처럼 강제로 라벨을 나열하는 미니 구조 대신, 동료 개발자에게 말로 설명하듯 자연스러운 한국어 문장 2~4개로 쓴다. 영어 전문용어(idempotent 등)를 설명 없이 괄호로 툭 붙이지 않고, 그 용어가 뜻하는 바를 우리말 문장으로 풀어서 적는다. 프론트·신규 개발자가 다른 문서를 찾아보지 않고 한 번에 읽고 이해할 수 있어야 한다는 게 기준이다 — Stripe 개발 문서가 이 방향의 참고 사례다.
 
@@ -50,7 +50,7 @@ springdoc OpenAPI 3 + `therapi-runtime-javadoc`(build.gradle). 레이어·Entity
 - API 필드: `example`, `nullable`, `requiredMode = REQUIRED` (validation `@NotNull`/`@NotBlank`와 일치)
 - **클래스 `@Schema`:** 무엇인지 + 주로 쓰이는 API 경로 (이슈 번호 금지)
 - Entity는 Swagger UI에 직접 안 나와도 **코드·ERD SSOT**로 동일하게 작성
-- Javadoc 대신 `@Schema` 우선 (필드 의미). 메서드·API 흐름 주석은 `java-comments.md` 참고
+- Javadoc 대신 `@Schema` 우선 (필드 의미). 메서드·API 흐름 주석은 `local-java-comments.md` 참고
 - 계약 값·정책 SSOT: `docs/architecture/erd.md`, 해당 `docs/specs/` — 불일치 시 문서 먼저. **스펙 경로·스펙 ID는 `@Schema` 문자열에 넣지 않음**
 
 ### 상태성 enum `@Schema` (SCHEDULE_PENDING/ACTIVE · TripStatus 등)
@@ -200,3 +200,30 @@ ResponseEntity<SuccessResponse<UserSummaryResponse>> me(@AuthorizedUser UUID use
 - **주의사항**:
   - 에러 코드명은 서버에 정의된 `ErrorCode` Enum 구현체의 실제 상수명(`[A-Z0-9_]+`)과 정확히 일치해야 합니다.
   - 괄호 안의 코드를 메모리에 로드된 `ErrorCode` 목록과 자동 매핑하므로, 별도의 `@ExampleObject`를 사용하여 예시를 하드코딩하지 마세요.
+
+## 생성 문서 검증 — `@Schema`가 있어도 노출을 단정하지 않는다
+
+> **[플래그: 생성 문서 검증]** `harness-map.md`에서 꺼져 있으면 이 절을 무시한다. 절은 삭제하지 않는다. 원칙은 `core-guardrails.md` STOP §1.6이고, 여기는 springdoc에서 스키마가 실제로 사라지는 함정을 적는다.
+
+DTO·enum에 `@Schema`가 있다고 해서 Swagger에 실제로 노출된다고 단정하지 않는다. `@ApiResponse`에서 제네릭 wrapper(`SuccessResponse<T>`)를 `schema = @Schema(implementation = SuccessResponse.class)`처럼 raw 타입으로 지정하면 springdoc이 실제 `data` 타입(리스트·필드·enum)을 못 읽어 스키마가 통째로 사라진다 — `useReturnTypeSchema = true`가 필요하다(위 "200 성공 응답" 절, 알림 API 스키마 소실 사고가 계기). "프론트가 필요한 값이 Swagger에 이미 있다"고 답하기 전에 로컬 `/v3/api-docs`, 배포 서버 `/v3/api-docs`, 또는 `{{API 문서}}`를 실제로 열어 해당 스키마·enum이 진짜 노출되는지 확인한다.
+
+## API 계약 변경 — `Breaking-Change-Reason` 트레일러 (같은 커밋 필수)
+
+> **[플래그: API 계약 보호]** OpenAPI 스펙을 내보내고 그것을 프론트가 계약으로 쓰는 프로젝트에만 해당한다. 끄면 `harness-map.md`에서 ❌로 두고 `local-warn-breaking-change.sh` 훅을 `settings.json`에서 해제한다. 절은 삭제하지 않는다.
+
+프론트가 **조금이라도 대응해야 하는** API 계약 변경은 CI의 `oasdiff breaking` 판정(좁은 스키마 기준)을 기다리지 않고 **변경을 만드는 커밋 시점에 직접** 기록한다. "필드 하나 추가일 뿐"·"optional이라 breaking 아님"·"enum 값만 늘렸을 뿐"이라는 이유로 생략하지 않는다.
+
+**대상 (하나라도 해당하면 필수):**
+
+- 요청/응답 필드 **추가·삭제·이름변경·타입변경·필수화**(optional 추가 포함)
+- enum 값 **추가·삭제·이름변경**
+- `ErrorCode` **신규·변경·삭제**, HTTP 상태 변경
+- 경로·HTTP 메서드 **변경·삭제**, 필드 의미(semantics)만 바뀌어 프론트 처리 로직이 달라지는 경우
+
+**필수 조치:** 위 변경이 포함된 커밋 본문에 `Breaking-Change-Reason: <한 줄 사유>` 트레일러 추가. 형식·예시·프론트 알림 흐름: `{{API 문서}}` "왜 변경했는가" 절.
+
+**같은 턴 체크 (`core-guardrails.md` STOP §1.7과 동일 패턴):** DTO·enum·`ErrorCode`·`@RequestMapping` 경로를 수정하는 파일을 커밋에 담기 **직전에** 이 절을 재확인한다. 커밋을 만든 뒤 사용자가 지적해서야, 또는 CI가 "⚠️ 사유 미기재"를 띄운 뒤에야 트레일러를 추가하는 흐름은 **금지** — 이미 늦은 대응이다.
+
+**검증:** `oasdiff`로 의도한 diff만 있는지 확인한다 (`preflight` 스킬). 스키마 diff가 못 보는 변경(기본값·문자열 포맷·헤더·순수 로직)은 기존 테스트 통과로 대체 검증한다.
+
+**금지:** 트레일러 없이 커밋 · oasdiff `breaking` 카테고리(스키마 파괴적 변경)에만 해당한다고 임의로 좁혀 해석 · "나중에 CI 알림 뜨면 추가" 미루기.

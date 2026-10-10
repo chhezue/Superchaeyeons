@@ -5,12 +5,14 @@ paths:
 
 # Java Comments
 
-레이어·Entity·SOLID/OOP/ACID는 [`spring-boot-java.md`](spring-boot-java.md), OpenAPI 어노테이션(`@Schema`·`@Operation` 등)은 [`openapi-conventions.md`](openapi-conventions.md) 참고 — 이 파일은 `//`·Javadoc 작성 스타일만 다룬다.
+레이어·Entity·SOLID/OOP/ACID는 [`local-spring-boot-java.md`](local-spring-boot-java.md), OpenAPI 어노테이션(`@Schema`·`@Operation` 등)은 [`local-openapi-conventions.md`](local-openapi-conventions.md) 참고 — 이 파일은 `//`·Javadoc 작성 스타일만 다룬다.
 
-**독자:** 신규 서버 개발자. `//`는 구현자 메모·이슈 트래커용 약어가 아니라 **이름만으로 안 드러나는 것**을 평문으로 남긴다.
-필드 의미는 `@Schema`, API 계약·요약은 `@Operation`·`@Parameter`가 SSOT.
+> **2026-09-06 개정:** 주석 **원칙**은 `.claude/rules/core-code-comments.md`가 SSOT다 — 실행 줄 바로 위 `// [N단계: …]` 주석, 필드·상수·의존성 해설 생략 금지, 설정·스키마 실물 대조, 이유 평문. 이 파일은 그 원칙의 **Java 표기**(`//`·Javadoc 위치, `@Schema`와의 분담)만 다룬다. 아래에서 "이름이 자명하면 생략"이라고 읽히는 문장은 폐기됐다.
 
-**원칙: 이름을 먼저 의심하고, 주석은 이름이 못 담는 것만.** 메서드명·파라미터명만 읽고 신규 개발자가 오해할 만하면 주석 누락 — 그게 아니라 이름이 이미 자명하면 **주석 없이 통과**다(`removeMember`처럼 이름이 곧 설명인 1~2줄 facade 위임 등). "이름 우선" 원칙(`spring-boot-java.md` **네이밍 우선 원칙** 절)과 같은 방향 — 주석으로 이름의 결함을 메우지 않는다.
+**독자:** 유지보수 개발자(신규 입사자·오랜만에 보는 사람). `//`는 구현자 메모·이슈 트래커용 약어가 아니라 **흐름·이유·단위·제약·출처**를 평문으로 남긴다.
+필드의 API 노출 의미는 `@Schema`가 SSOT이고, 주석은 그 문장을 반복하지 않고 내부 제약·출처만 보탠다. API 계약·요약은 `@Operation`·`@Parameter`가 SSOT.
+
+**원칙: 이름은 무엇(WHAT)을, 주석은 흐름·이유·단위·제약·출처를 담는다.** 둘은 대체 관계가 아니라 분담 관계다 — 이름이 자명해도 필드·의존성·상수의 목적·단위·출처는 적고, 2단계 이상 메서드는 실행 줄 위에 단계 주석을 둔다. 코드를 그대로 우리말로 옮긴 주석만 쓰지 않는다. 주석으로 이름의 결함을 메우지도 않는다(`local-spring-boot-java.md` **네이밍 우선 원칙** 절).
 
 **쓰는 원칙 — 완전한 문장으로, 산문체로 쓴다.** 화살표(`→`)로 상태 전이를 압축 표기하거나, `(idempotent)`처럼 설명 없는 영어 전문용어를 괄호로 툭 붙이지 않는다. "SCHEDULE_PENDING에서 ACTIVE로 바뀐다"처럼 우리말 문장으로 풀어 쓰고, "여러 번 호출해도 결과가 같다" 같은 표현으로 전문용어의 뜻 자체를 설명한다. 한 줄에 여러 정보를 욱여넣지 않는다 — 필요하면 두세 줄로 나눠 쓴다. `//`가 필요하면 **(1) 이름이 못 담는 전제·부작용을 문장으로** + **(2) 필요하면 Why·정책·다단계 How**를 담는다.
 
@@ -76,7 +78,7 @@ public void generateRecommendations(...) {
 | **이름·시그니처만으로 동작이 안 드러나는 public 메서드** | 역할 주석 필수 — 전제·부작용·같은 요청을 여러 번 보내도 안전한지 등 이름이 못 담는 것 |
 | **이름이 곧 설명인 facade 위임·1~2줄 자명한 메서드** | **생략 가능** — 억지로 채우지 않는다 (예: `removeMember`가 그대로 `tripCommandService.removeMember(...)`를 위임하면 주석 없이 통과) |
 | **비자명 `private` 헬퍼** | live/snapshot 빌더·윈도우 검증·복합 매핑 등 — 역할 `//` |
-| **생략 가능** | 생성자 · getter/setter · 이름만으로 자명한 1라이너 (`findUser`, `normalizeX`, 단순 DTO `toXxx`) |
+| **생략 가능** | 생성자 · getter/setter · 이름만으로 자명한 1라이너 메서드 (`findUser`, `normalizeX`, 단순 DTO `toXxx`). **필드·상수·주입 의존성은 예외 없이 해설한다** (`core-code-comments.md` §2 — 목적·단위·출처·제약) |
 
 **Before (금지 — 약어·기호 압축은 신규 개발자가 못 읽는다)**
 
@@ -133,6 +135,6 @@ public TripMembersResponse removeMember(...) {
 
 ## Javadoc (`/** */`)
 
-- **Controller 메서드:** `@Operation` `description`을 대체하는 용도로 Javadoc을 쓴다 — `openapi-conventions.md`의 **OpenAPI @Operation · JWT** 절 참고(`therapi-runtime-javadoc`이 Swagger로 읽어감).
+- **Controller 메서드:** `@Operation` `description`을 대체하는 용도로 Javadoc을 쓴다 — `local-openapi-conventions.md`의 **OpenAPI @Operation · JWT** 절 참고(`therapi-runtime-javadoc`이 Swagger로 읽어감).
 - **Service/Support 등 나머지 레이어:** 역할·Why를 `//`로 쓰거나 Javadoc으로 써도 된다 — **자유롭게 선택한다**(한 메서드에 둘 다 쓸 필요는 없다). 어느 쪽을 쓰든 위 절들의 산문체 원칙(완전한 문장, 화살표·설명 없는 전문용어 금지)은 동일하게 적용된다. 다만 `@param`/`@return`처럼 시그니처가 이미 보여주는 걸 그대로 반복하는 형식 태그는 여전히 쓰지 않는다 — 이름·시그니처로 못 담는 내용을 자유 서술로 담는 게 핵심이다.
 - 어느 쪽이든 `#n`·`BR-*`만으로 쓰지 말 것.

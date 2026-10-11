@@ -3,5 +3,6 @@
 되돌리기 비싼 선택을 남긴다. `{{결정 기록}}` 슬롯의 기본값.
 
 - 파일명: `{번호}-{kebab-case}.md` (예: `001-db-engine.md`)
+- 골격: [`docs/templates/explanation-doc.md`](../templates/explanation-doc.md) "작업 산출물로 쓸 때 — 아키텍처 결정 기록" (설명 유형)
 - 한 번 `확정`된 결정은 새 결정으로만 뒤집는다 — 조용히 수정하지 않는다
 - `core-guardrails.md` ⛔ §1이 이 폴더를 구현보다 우선하는 근거로 삼는다

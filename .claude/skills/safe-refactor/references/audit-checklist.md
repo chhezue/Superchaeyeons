@@ -1,77 +1,63 @@
 # Audit Checklist
 
-`safe-refactor` 스킬의 1단계(Audit) 서브에이전트 프롬프트에 그대로 포함하는 점검 항목 15개. 절대 원칙·A/B/C/D 분류·산출물 포맷은 [`SKILL.md`](../SKILL.md)·[`audit-template.md`](audit-template.md)가 SSOT — 여기서는 중복하지 않는다.
+`safe-refactor` 스킬의 1단계(Audit) 서브에이전트 프롬프트에 그대로 포함하는 점검 항목 14개. 스택 무관하게 쓴 목록이라, 프레임워크별 구체 관례(트랜잭션 표기·ORM 설정·주입 방식)는 lang 팩 규칙이 채우고 감사 프롬프트에 그 파일을 함께 넘긴다. 불변 조건은 [`SKILL.md`](../SKILL.md)가, A/B/C/D 분류 기준과 산출물 포맷은 [`audit-template.md`](audit-template.md)가 SSOT다.
 
-## 1. 중복 코드 제거
+## 1. 중복 코드
 
-중복 validation · 중복 try-catch · 중복 logging · 중복 DTO 변환 · 중복 Exception 생성 · 중복 Repository 호출 · 중복 Stream 코드 · 중복 Optional 처리.
+중복 검증 · 중복 예외 처리 · 중복 로깅 · 중복 변환(DTO↔도메인) · 중복 예외 생성 · 중복 저장 계층 호출 · 중복 컬렉션 처리. 가능하면 private 함수 · 공용 모듈 · 횡단 관심사 분리(lang 팩이 정한 메커니즘)로 개선. **과도한 추상화는 금지.**
 
-가능하면 private method · Utility · Component · AOP · 공통 Service로 개선. **과도한 추상화는 금지.**
+## 2. Dead Code
 
-## 2. Dead Code 제거
+사용되지 않는 클래스·함수·DTO·모델 필드·저장 계층 메서드·설정·의존성 주입 대상·열거 값·상수. 삭제 가능하면 이유를 설명.
 
-사용되지 않는 클래스 · 메서드 · DTO · Entity Field · Repository Method · Config · Bean · Enum · Constant. 삭제 가능하면 이유를 설명.
+## 3. Legacy 코드
 
-## 3. Legacy 코드 제거
+deprecated 로직 · 임시 코드 · TODO · FIXME · 더 이상 호출되지 않는 분기 · 현행 스펙과 다른 호환 레이어 (`core-guardrails.md` STOP §2).
 
-deprecated 로직 · 임시 코드 · TODO · FIXME · 더 이상 호출되지 않는 분기.
+## 4. 프레임워크 관례
 
-## 4. Spring Best Practice
+트랜잭션 경계 위치 · 읽기 전용 표시 · 의존성 주입 방식 · 컴포넌트 수명 · null/옵셔널 처리 · N+1 가능성 · 로딩 전략 · 모델 직접 반환 여부 · 변환 위치 · 검증 위치 · 예외 처리 · 계층별 책임. **구체 관례는 lang 팩 규칙이 SSOT** — 정적 검사(린터·아키텍처 테스트)가 이미 잡는 것은 지적하지 않는다.
 
-`@Transactional` 위치 · `readOnly` 적용 여부 · 생성자 주입 · Bean Scope · Optional 사용 · Stream 남용 여부 · N+1 가능성 · Fetch 전략 · Entity 직접 반환 여부 · DTO 변환 위치 · Mapper 개선 · Validation 위치 · Exception 처리 · Controller/Service/Repository 책임.
+## 5. 횡단 관심사 분리 가능성
 
-## 5. AOP 적용 가능성
+반복되는 로깅 · 실행 시간 측정 · 검증 · 권한 · 감사 기록이 있으면 lang 팩이 정한 메커니즘(데코레이터·미들웨어·인터셉터 등)으로 분리할 가치를 평가한다. 무조건 적용하지 말고 **"적용 가치가 있는 경우"에만** 제안.
 
-반복되는 Logging · Execution Time · Validation · Authorization · Audit가 있으면 AOP 분리 가능성을 평가한다. 무조건 적용하지 말고 **"적용 가치가 있는 경우"에만** 제안.
+## 6. 성능
 
-## 6. 성능 최적화
+불필요한 객체 생성 · 중복 DB 조회 · 동일 데이터 반복 조회 · 컬렉션 순회 중복 · O(n²) 코드 · 메모리 낭비 · 목록 페이지네이션 누락.
 
-불필요한 객체 생성 · 불필요한 Stream · 중복 DB 조회 · 동일 데이터 반복 조회 · 불필요한 Optional · Collection 순회 중복 · O(n²) 코드 · 메모리 낭비.
+## 7. 데이터 접근 계층
 
-## 7. JPA 점검
+(객체-관계 매핑(ORM)을 쓰는 프로젝트만 — 아니면 "해당 없음"으로 넘긴다.) 연관 로딩 전략 · 연쇄 삭제 · 동등성 정의 · 변경 감지 · 불필요한 저장 호출 · 쿼리 최적화 · 필요한 필드만 읽는 조회 가능 여부.
 
-Lazy/Eager · Cascade · orphanRemoval · equals/hashCode · Entity 변경 감지 · 불필요한 `save()` 호출 · `flush()` 남용 · JPQL 최적화 · Projection 가능 여부.
+## 8. 예외 구조
 
-## 8. Exception 구조
+범용 예외 남용 · 예외 중복 · 전역 예외 처리 · 에러 코드 카탈로그 설계 · 로깅 레벨.
 
-RuntimeException 남용 · Exception 중복 · GlobalExceptionHandler · ErrorCode 설계 · Logging 레벨.
+## 9. 패키지·모듈 구조
 
-## 9. 패키지 구조
+책임이 맞는 위치인가 · 너무 큰 서비스 · God Object · 유틸 남용 · 설정 분리.
 
-책임이 맞는 위치인가 · 너무 큰 Service · God Object · Utility 남용 · Config 분리.
+## 10. 보일러플레이트
 
-## 10. 보일러플레이트 제거
+반복 빌더 · 반복 생성자 · 반복 매핑 · 반복 null 체크 · 반복 if.
 
-반복 Builder · 반복 생성자 · 반복 Mapping · 반복 null 체크 · 반복 if.
+## 11. 네이밍
 
-## 11. Naming
+클래스·함수·변수·패키지 이름이 lang 팩의 관례에 맞게 개선 가능한지.
 
-클래스명 · 메서드명 · 변수명 · 패키지명이 Spring 관례에 맞게 개선 가능한지.
+## 12. 불필요한 의존성
 
-## 12. 불필요한 의존성 제거
+사용되지 않는 의존성·라이브러리 · `{{의존성 조회}}`로 확인.
 
-사용되지 않는 Gradle Dependency · 라이브러리 · Starter.
+## 13. 보안
 
-## 13. Security
-
-민감정보 로그 · JWT 처리 · Validation 누락 · SQL Injection 위험 · Path Traversal · Null 처리.
+민감 정보 로그 · 토큰 처리 · 검증 누락 · 인젝션 위험 · 경로 조작 · null 처리.
 
 ## 14. 테스트 가능성
 
-Mocking하기 어려운 구조인지, DI 개선이 필요한지.
+모킹하기 어려운 구조인지, 주입 개선이 필요한지. "유의미한 테스트만" 원칙(lang 팩 테스트 규칙)과 충돌하지 않게.
 
-## 15. 백엔드 아키텍처 개선 제안 (선택 — 실제 적용 가치가 있는 경우만)
+## 참고 — 아키텍처 개선 제안 (선택)
 
-"최신 기술이라서"·"많은 회사가 쓰니까"는 금지. 아래 카테고리 중 **이 도메인에 실제 효과가 있다고 판단되는 것만**, 각각 왜 필요한지 · 도입 시 장단점 · 구현 난이도 · **Now/Later/Never** + 이유를 포함해 제안한다.
-
-| 카테고리 | 예시 기술 |
-|----------|-----------|
-| Concurrency | Optimistic/Pessimistic Lock, Distributed Lock(Redis), Version Column |
-| Redis | Cache, Session, Refresh Token, Rate Limiting, Distributed Lock, Pub/Sub |
-| Event Architecture | Domain/Application/Transaction Event, Outbox Pattern |
-| Async Processing | `@Async`, Message Queue, Kafka, RabbitMQ |
-| Database | Index 개선, Query 최적화, Projection, Batch 처리 |
-| Monitoring | Micrometer, Prometheus, Grafana, Loki, OpenTelemetry, Distributed Tracing |
-| Resilience | Retry, Circuit Breaker, Timeout, Bulkhead |
-| Security | Rate Limiting, Idempotency Key, CSRF, XSS, Audit Log |
-| API | Cursor Pagination, ETag, Conditional Request, Compression |
+"최신 기술이라서"·"많이 쓰니까"는 금지. 동시성 제어 · 캐시 · 이벤트 아키텍처 · 비동기 처리 · DB 인덱스/쿼리 · 모니터링 · 복원력(재시도·서킷 브레이커) · 보안(멱등 키·감사 로그) · API(커서 페이지네이션·조건부 요청) 중 **이 작업 단위에 실제 효과가 있다고 판단되는 것만**, 왜 필요한지 · 장단점 · 난이도 · **Now/Later/Never** + 이유를 포함해 제안한다. 새 의존성·계약 변경이 필요한 제안은 B 트랙에서 구현하지 않고 **A 트랙 승격 후보**로 표시한다. 외부 사례를 조사했으면 `## 참고 — 외부 사례` 절에 `## 근거`와 분리해 둔다.

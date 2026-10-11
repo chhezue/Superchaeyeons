@@ -2,7 +2,7 @@
 
 > 분류: **rule** (`.claude/rules/`) · 강제 수단: 프롬프트(소프트 가드레일) · 대응 다이어그램: "Layer 1: Human Gate"
 
-> **2026-09-06 — v2 반영.** 아래 표·흐름은 TripFit 시절 always-load 7개(`tripfit-release` 포함)·Java 규칙 기준이다. 현행: `core-*` 8개 + `core-gates`(멈추는 신호) 신설, STOP은 §1~§3, 스택 절은 씨앗(`examples/seeds/java-spring/`)으로 이사, `local-*.md`가 저장소 고유 층. 컨텍스트 예산은 `scripts/check-portability.sh`가 상한 65,000B로 판정한다. 현행 목록은 [`.claude/rules/README.md`](../../.claude/rules/README.md).
+> **2026-09-06 — v2 반영.** 아래 표·흐름은 TripFit 시절 always-load 7개(`tripfit-release` 포함)·Java 규칙 기준이다. 현행: `core-*` 8개 + `core-gates`(멈추는 신호) 신설, STOP은 §1~§3, 스택 절은 씨앗(`examples/seeds/java-spring/`)으로 이사, `local-*.md`가 저장소 고유 층. 컨텍스트 예산은 `scripts/check-portability.sh`가 상한 52,000B로 판정한다(2026-09-06 토큰 최적화 후). 현행 목록은 [`.claude/rules/README.md`](../../.claude/rules/README.md).
 
 ## 1. 기본 사항
 

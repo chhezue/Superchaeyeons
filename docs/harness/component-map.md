@@ -38,9 +38,9 @@
 | `core-guardrails.md` | 항상 | ⛔ STOP §1 문서·구현 정합 · §2 레거시 즉시 삭제 · §3 보안 변경 시 `{{현재동작 요약}}` 갱신 · 플래그 판정 원칙 | 문서끼리 값이 다를 때 어느 쪽이 맞는지 · 문서와 다른 값을 쓰려 할 때 승인 | 다른 모든 규칙보다 우선하므로 절을 늘리기보다 기존 절에 붙인다. `[플래그: X]` 배지를 새로 달면 `harness-map.md` 플래그 표에도 행 |
 | `core-gates.md` | 항상 | §1 통제/위임 영역 · §2 멈추는 신호(기본값·열린 표현·파일 3개+·의존성 추가·트랙 변경·훅 차단) · §3 자동으로 하지 않는 것 | 기본값 후보와 권장값 · 새 파일·삭제·의존성 목록 승인 · 트랙 승격 여부 | 멈추는 신호를 추가·삭제하는 곳. 훅이 막은 것의 승인 통로는 설정 변경뿐이라는 원칙도 여기 |
 | `core-workflow.md` | 항상 | 4 트랙 × 4 게이트 순서 · 불변 조건 · 구현 중 지킬 것 · 이슈·브랜치·PR 생성 전 확인 · 커밋 분할 최대 5개 | 트랙별 승인 대상(스펙·감사 항목·가설·슬롯 제안) · 이슈·브랜치·PR을 만들지 · 커밋 분할안 | 게이트 내용의 SSOT. 스킬 본문에 게이트를 중복 정의하지 않는다 — 스킬은 여기를 가리킨다 |
-| `core-scope.md` | 항상 | priority 라벨 단정 금지(`{{우선순위 SSOT}}`가 `(없음)`이면 절 무시) · `[미정]`은 문서에 표기만 | 라벨을 붙여도 되는지 · `[미정]`을 확정해도 되는지 | 라벨 체계가 있는 프로젝트에서만 의미 있다. 이 저장소에서는 `[미정]` 절만 살아 있다 |
+| `core-scope.md` | 항상 | `[미정]`은 문서에 표기만 · 중앙 트래커 금지 · 라벨은 `{{우선순위 SSOT}}`가 정한 것만 | `[미정]`을 확정해도 되는지 · 라벨을 붙여도 되는지 | 우선순위 라벨 정책(must/could)은 부품에 없다 — 라벨 체계가 있는 프로젝트가 `local-priority.md`를 둔다(견본 `examples/tripfit/local-priority.md`) |
 | `core-followup.md` | 항상 | 완료 후 💡 후속 제안 형식(3~8개) · Defer는 `defer` 스킬 · ERD 적극 제안 | 후속 제안을 진행할지 (같은 턴에 구현 금지) | 코드·설계 개선 제안의 형식. 하네스 자체 개선은 `retro` 몫 — 경계를 흐리지 않는다 |
-| `core-tools.md` | 항상 | 트랙·게이트 → 스킬·에이전트·도구 **라우터** · 서브에이전트 호출 규약 · 서드파티 채택 기준 | — (라우팅만) | 스킬·에이전트를 추가·삭제·개명하면 **같은 턴에** 이 표를 갱신 |
+| `core-tools.md` | 항상 | 서브에이전트 호출 규약 · 별도 컨텍스트 리뷰(`code-review`/`simplify`) · 서드파티 도구 채택·배제 기준 | — | 트랙·게이트별 도구 라우팅은 `core-workflow.md` 트랙 표("Claude Code 도구" 열)와 게이트 절이 직접 적는다 — 스킬·에이전트를 추가·삭제·개명하면 그쪽을 갱신 |
 | `core-reporting.md` | 항상 | 사용자 보고는 비전공자 문체(용어 풀어쓰기·결과 중심·과장 금지) | — | 코드 주석·문서 본문에는 적용하지 않는다 |
 | `harness-map.md` | 항상 | 축 4 · 슬롯 22 · 플래그 7의 **값**. 규칙 5개(빈 슬롯 `(없음)` 명시 · `(없음)` 요구 시 질문 · 슬롯 문턱 · 절 삭제 금지 · core 불가침) | `(없음)` 슬롯을 규칙이 요구할 때 값 | 새 프로젝트가 채우는 유일한 파일. 슬롯·플래그 추가는 `core-*`에서 실제로 쓰는 곳이 생겼을 때만. 훅 상수(`SCOPE`·`TEST_CMD`·`commit-msg` 정규식)와 같이 고친다 |
 | `core-code-comments.md` | 소스 파일 접근 시 | 실행 줄 위 단계 주석 · 필드·의존성 해설 · 주석도 실물 대조 · 이유 평문 | — | 언어별 표기는 lang 팩 "주석 규칙" 절. 여기는 원칙만 |
@@ -48,11 +48,11 @@
 | `README.md` | `.claude/` 구성 요소 접근 시 | 구조 인덱스 · 3층 · 작명 규칙 · 유지보수 체크리스트 | — | 구성 요소를 추가·삭제하면 디렉터리 트리와 표를 같이 갱신 |
 | `local-*.md` | 파일이 있을 때만 | 저장소 고유 사실 · 복사한 lang 팩 | — | 검사기가 보지 않는 층. 자유롭게 고친다 |
 
-**규칙을 고친 뒤 돌릴 것:** `scripts/check-portability.sh` (고유명사·스택 식별자·경로 리터럴·팩 참조, always-load 65,000B 예산). pre-commit이 같은 검사를 한다.
+**규칙을 고친 뒤 돌릴 것:** `scripts/check-portability.sh` (고유명사·스택 식별자·경로 리터럴·팩 참조, always-load 52,000B 예산). pre-commit이 같은 검사를 한다.
 
 ## 스킬 (`.claude/skills/`)
 
-스킬은 다단계 절차이고 중간에 승인 게이트가 있다. 에이전트가 상황을 보고 부르거나(`core-tools.md` 라우터) 사용자가 이름을 부른다. 각 `SKILL.md`는 첫 줄에 "기본 동작과 다른 단 하나", 끝에 "It's working if"를 둔다.
+스킬은 다단계 절차이고 중간에 승인 게이트가 있다. 에이전트가 상황을 보고 부르거나(`core-workflow.md` 트랙 표·게이트 절이 라우터) 사용자가 이름을 부른다. 각 `SKILL.md`는 첫 줄에 "기본 동작과 다른 단 하나", 끝에 "It's working if"를 둔다.
 
 | 스킬 | 언제 (누가) | 묻는 것 (승인 게이트) | 검사하는 것 | 산출물 | 고칠 때 |
 |------|-------------|----------------------|-------------|--------|---------|
@@ -65,7 +65,7 @@
 | `defer` | G4 — "다른 이슈로" (에이전트) | 4단계 `gh issue create` 전 확인 (사용자가 "이슈 만들어줘"까지 말했으면 생략) | Draft 스펙·Approved amend·README 갱신·구현 트림이 같은 턴에 전부 있는지 | Draft 스펙 + 이슈 | 이슈 양식은 `{{Git 컨벤션 SSOT}}`·이슈 템플릿이 SSOT — 스킬에 라벨 이름을 적지 않는다 |
 | `retro` | G4 — Must Have급 완료 후·회고 요청 시 (사용자·에이전트) | 5단계: 후보 3~8개 승인 후에만 기록 · 7단계: 규칙 실제 반영은 별도 승인 | "같은 실수 2회+" 근거 2건 · exit code 판정 가능한 것만 훅 후보 | `{{문서 루트}}/audits/harness-retro.md` append | 메인 컨텍스트에서만 실행 — 서브에이전트는 대화 이력에 접근 못 함 |
 
-**스킬을 고친 뒤 돌릴 것:** `scripts/check-portability.sh` (스킬 본문도 배달물이라 검사 대상). 스킬을 추가·삭제·개명하면 `core-tools.md` 라우터 표 + `.claude/rules/README.md` Skills 표를 같은 턴에.
+**스킬을 고친 뒤 돌릴 것:** `scripts/check-portability.sh` (스킬 본문도 배달물이라 검사 대상). 스킬을 추가·삭제·개명하면 `core-workflow.md` 트랙 표·게이트 절 + `.claude/rules/README.md` Skills 표를 같은 턴에.
 
 ## 에이전트 (`.claude/agents/`)
 
@@ -77,7 +77,7 @@
 | `doc-reviewer` (sonnet) | G3 — 새 문서 또는 50줄+ 수정 (advisory, 커밋 안 막음) | 1단계 유형(4유형 필수 섹션) · 2단계 정보 구조(개요·H4·제목 30자·표 앞 설명) · 3단계 문장(메타 담화·약어·피동) | 요약 · 반드시 고칠 것 · 고치면 좋을 것 · 용어 일관성 · 좋았던 점 | 기술적 사실·설계 판단 · 문서 수정 · 기준(`doc-writing.md`)에 없는 취향 | 심각도 등급 표가 이 파일에 있다 — 같은 문서를 두 번 리뷰해도 흔들리지 않게 |
 | `{스택}-reviewer` (씨앗) | G3 — **[플래그: 스택 리뷰어]** ☑이고 스택 코드 3파일+·API·DB 변경 | 정적 검사(아키텍처 테스트·린터)가 못 잡는 결함 — 트랜잭션 경계·N+1·에러 코드·권한 게이트 누락 | 결함 목록 (서버 개발자 독자) | 정적 검사가 이미 잡는 규칙 중복 지적 · 트레일러 유무 판정 | 배달물에 없다. `examples/seeds/{스택}/agents/local-*-reviewer.md`를 복사해 `name:`은 접두사 없이 |
 
-**에이전트를 고친 뒤 돌릴 것:** `scripts/check-portability.sh`. 추가·삭제하면 `core-tools.md` G1·G3 행 + `.claude/rules/README.md` Agents 표.
+**에이전트를 고친 뒤 돌릴 것:** `scripts/check-portability.sh`. 추가·삭제하면 `core-workflow.md` G1·G3 절 + `.claude/rules/README.md` Agents 표.
 
 ## 훅 (`.claude/hooks/`)
 
@@ -119,8 +119,8 @@
 | 에이전트가 특정 상황에서 **멈추고 묻게** | `core-gates.md` §2 멈추는 신호에 행 추가 | 상황이 표현(단어)으로 잡히면 `ask-open-request.sh` 패턴도 | `check-portability.sh` |
 | 특정 명령·쓰기를 **무조건 막게** | 기존 `deny-*` 훅에 패턴 추가, 또는 새 `deny-*.sh` + `settings.json` 등록 | `hook-cases.txt` 케이스 먼저 · `.claude/rules/README.md` Hooks 표·트리 · 훅 공통 규약(판정 불가 = 차단) 준수 | `test-hooks.sh` |
 | 완료 선언 전 **다른 검증**도 강제 | `{{테스트 명령}}`을 그 검증까지 포함하는 래퍼로 (이 저장소는 `verify.sh`) | `harness-map.md` 명령 슬롯 · `deny-unverified-completion.sh`의 `TEST_CMD` · 픽스처의 Bash 명령 | `test-hooks.sh` |
-| 새 **워크플로 절차** (여러 단계 + 승인) | `.claude/skills/{동사}/SKILL.md` — 첫 줄 "기본 동작과 다른 단 하나", 끝 "It's working if", 어느 트랙·게이트인지 | `core-tools.md` 라우터 표 · `.claude/rules/README.md` Skills 표 · 산출물이 md면 `docs/templates/README.md` 등록부 행 | `check-portability.sh` |
-| 새 **조사·리뷰 역할** | `.claude/agents/{역할}.md` — `tools`에서 `Edit`/`Write` 제외, 출력 포맷 고정 | `core-tools.md` G1/G3 행 · README Agents 표 | `check-portability.sh` |
+| 새 **워크플로 절차** (여러 단계 + 승인) | `.claude/skills/{동사}/SKILL.md` — 첫 줄 "기본 동작과 다른 단 하나", 끝 "It's working if", 어느 트랙·게이트인지 | `core-workflow.md` 트랙 표·게이트 절 · `.claude/rules/README.md` Skills 표 · 산출물이 md면 `docs/templates/README.md` 등록부 행 | `check-portability.sh` |
+| 새 **조사·리뷰 역할** | `.claude/agents/{역할}.md` — `tools`에서 `Edit`/`Write` 제외, 출력 포맷 고정 | `core-workflow.md` G1/G3 절 · README Agents 표 | `check-portability.sh` |
 | 규칙에 **프로젝트 경로·명령**이 필요 | `core-*.md`에 `{{슬롯}}`으로 쓰고 `harness-map.md`에 행 추가 (실제로 쓰는 곳이 있을 때만 — 규칙 3) | 훅이 그 값을 쓰면 훅 상수 + "함께 고칠 것" 표기 · `examples/*/harness-map.md` 견본 | `check-portability.sh` |
 | 규칙에 **켜고 끌 정책**이 필요 | `core-*.md` 절에 `[플래그: X]` 배지 + `harness-map.md` 플래그 표 행 (절은 절대 지우지 않는다) | lang 팩이 구현하는 절이면 `_template/rules/lang-conventions.md`에 같은 이름의 절 | `check-portability.sh` |
 | **스택 규칙** 추가·변경 | `examples/seeds/{스택}/`의 `local-*` 파일 (배달물 아님). 새 스택은 `_template/`을 채운 뒤 실제 프로젝트에서 한 사이클 굴린 후에만 씨앗으로 | 씨앗 README "무엇을 어디에 복사하나"·"씨앗 대조" 표 · `examples/seeds/README.md` 목록 | `check-doc-style.sh` · 훅이 있으면 `test-hooks.sh` |
@@ -131,7 +131,7 @@
 | 안 하기로 한 것을 기록 | `docs/out-of-scope/README.md` 행 (이유·다시 볼 조건·결정일) | 출처가 외부면 `docs/references.md` "자른 것" | `check-doc-style.sh` |
 | 이번 세션에서 하네스 결함을 발견 | `retro` 스킬 → 승인 후 `docs/audits/harness-retro.md` → 반영은 다시 승인 | 반영 층(규칙/스킬/훅/문서 SSOT)을 `retro` 4단계 표로 고른다 | 반영한 층의 검증 |
 
-**구성 요소를 추가·삭제·개명한 뒤 반드시 확인하는 표 세 곳:** `core-tools.md` 라우터 · `.claude/rules/README.md`(트리·Skills·Agents·Hooks) · 이 문서. 라우터가 없어진 스킬로 안내하면 거짓말을 한다.
+**구성 요소를 추가·삭제·개명한 뒤 반드시 확인하는 표 세 곳:** `core-workflow.md` 트랙 표·게이트 절 · `.claude/rules/README.md`(트리·Skills·Agents·Hooks) · 이 문서. 라우터가 없어진 스킬로 안내하면 거짓말을 한다.
 
 ## 예시 — 훅 하나를 추가하는 순서
 

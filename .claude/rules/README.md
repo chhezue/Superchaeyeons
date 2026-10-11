@@ -47,9 +47,9 @@ paths:
 │   ├── core-guardrails.md            # ⛔ STOP §1~§3 · 플래그 판정 (always-load)
 │   ├── core-gates.md                 # 통제/위임 · 멈추는 신호 · 자동으로 하지 않는 것 (always-load)
 │   ├── core-workflow.md              # 4 트랙 × 4 게이트 (always-load)
-│   ├── core-scope.md                 # priority · [미정] (always-load)
+│   ├── core-scope.md                 # [미정] 처리 · 라벨은 local-priority (always-load)
 │   ├── core-followup.md              # 후속 제안 · Defer · ERD (always-load)
-│   ├── core-tools.md                 # 트랙·게이트 → 도구 라우터 (always-load)
+│   ├── core-tools.md                 # 서브에이전트 규약 · 별도 컨텍스트 리뷰 · 도구 채택 기준 (always-load)
 │   ├── core-reporting.md             # 비전공자용 보고 문체 (always-load)
 │   ├── harness-map.md                # 축·슬롯·플래그 값 — 프로젝트가 채우는 유일한 파일 (always-load)
 │   ├── doc-writing.md                # 문서 작성 규칙 (paths: 마크다운)
@@ -70,7 +70,7 @@ paths:
 | `hooks/*.sh` | 훅 본문 — 차단·경고·주입 | `settings.json`이 지정한 이벤트 |
 | `rules/*.md` (frontmatter 없음) | **항상** 로드되는 규칙 | 세션 시작 시 |
 | `rules/*.md` (`paths:` frontmatter) | **glob에 매칭되는 파일**을 읽을 때만 로드되는 규칙 | 해당 파일 접근 시 |
-| `skills/*/SKILL.md` | 다단계 워크플로 | 에이전트가 해당 상황을 인식할 때 (`core-tools.md` 라우터) |
+| `skills/*/SKILL.md` | 다단계 워크플로 | 에이전트가 해당 상황을 인식할 때 (`core-workflow.md` 트랙 표·게이트 절이 라우터) |
 | `agents/*.md` | 서브에이전트 정의 (`tools`·`model` + 본문=시스템 프롬프트) | 파일을 만들면 등록 |
 
 ## Rules
@@ -84,14 +84,14 @@ paths:
 | `core-guardrails.md` | ⛔ 문서 정합(계약에 닿는 변경은 같은 턴) · 레거시 즉시 삭제 · `{{현재동작 요약}}` 갱신 · 플래그 판정 원칙 | **하지 말 것** |
 | `core-gates.md` | 통제 영역 vs 위임 영역 · 멈추는 신호 · 자동으로 하지 않는 것 · 승인 통로 = 설정 변경 | **언제 멈추는가** |
 | `core-workflow.md` | 진입(트랙 분류) · 4 트랙 × 4 게이트 · 불변 조건 · 구현 중 지킬 것 · `report.md` | **어떤 순서로** |
-| `core-scope.md` | priority(must/could) 단정 금지 · `[미정]` 표기 | 범위·우선순위 |
+| `core-scope.md` | `[미정]` 표기만 · 우선순위 라벨은 `local-priority.md`(견본은 `examples/`) | 범위 미확정 |
 | `core-followup.md` | 후속 제안 · Defer · ERD 제안 | 완료 후 |
-| `core-tools.md` | 트랙 × 게이트 → 도구·스킬·에이전트 **라우터** · 도구 채택 기준 | 무엇으로 |
+| `core-tools.md` | 서브에이전트 호출 규약 · 별도 컨텍스트 리뷰 · 서드파티 도구 채택 기준 (트랙·게이트별 도구는 `core-workflow`가 직접 적는다) | 도구 규약 |
 | `core-reporting.md` | 사용자 보고는 쉬운 말로 (코드 주석 제외) | 보고 문체 |
 | `harness-map.md` | 축 4 · 슬롯 22 · 능력 플래그 7의 **이 프로젝트 값** | 값 |
 | `local-*.md` | 이 저장소에서만 사는 사실 (릴리즈 게이트·도메인 용어 등) | 프로젝트 고유 — 검사 대상 아님 |
 
-우선순위: `core-guardrails` ⛔ > `core-gates` > `core-workflow` > 스킬 > `core-tools` > 일반 관례
+우선순위: `core-guardrails` ⛔ > `core-gates` > `core-workflow` > 스킬 > 일반 관례
 
 ### Path-scoped
 
@@ -179,7 +179,7 @@ lang 팩 훅(포맷 자동 실행 · 마이그레이션 파일 차단 · 계약 
 
 ## 유지보수 체크리스트
 
-- [ ] 스킬·에이전트를 추가·삭제·개명하면 **같은 턴에** `core-tools.md` 라우터 표와 이 README의 Skills·Agents 표, `{{문서 루트}}/harness/component-map.md`를 갱신 — 없어진 스킬로 안내하는 라우터는 거짓말을 한다
+- [ ] 스킬·에이전트를 추가·삭제·개명하면 **같은 턴에** `core-workflow.md` 트랙 표·게이트 절과 이 README의 Skills·Agents 표, `{{문서 루트}}/harness/component-map.md`를 갱신 — 없어진 스킬로 안내하는 라우터는 거짓말을 한다
 - [ ] 훅을 추가·삭제·수정하면 `scripts/hook-cases.txt`에 케이스를 먼저 넣고 `scripts/test-hooks.sh` 통과 → 이 README Hooks 표 + 디렉터리 구조 갱신
 - [ ] 규칙 파일을 고쳤으면 `scripts/check-portability.sh` exit 0 (배달물 전체가 판정 대상)
 - [ ] 문서를 새로 만들거나 크게 고쳤으면 `scripts/check-doc-style.sh` 오류 0 + `doc-reviewer`

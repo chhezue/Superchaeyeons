@@ -30,7 +30,7 @@ TripFit 백엔드 API 서버. AI 에이전트가 작업할 때 참고하는 프�
 - **문서·스펙·결정 정합 최우선** — 문서 간·문서-구현 간 충돌 시 질문 없이 구현·기본값 변경 금지 (`.claude/rules/core-guardrails.md` ⛔ 섹션)
 - **ErrorCode·AOP** — 실패 분기·`last_activity_at` touch·권한 게이트 변경 시 **같은 턴**에 enum·어노테이션·스펙 갱신 (하네스 ⛔ ErrorCode 절)
 - **`[미정]` 항목:** 중앙 트래커(구 `#2`) 폐지(2026-08-19) — 기획 미확정 항목은 해당 문서에 표기만 남김 (하네스 `core-scope` · CONTRIBUTING)
-- **priority: must/could:** 근거 없이 단정 금지, 애매하면 사용자 확인 — `core-scope.md`
+- **priority: must/could:** 근거 없이 단정 금지, 애매하면 사용자 확인 — `local-priority.md`
 - **DB:** 상용 보존 데이터 없음 → Flyway/SQL 마이그레이션 **작성 금지**. 엔티티 최신본 + `ddl-auto`, 필요 시 DB 리셋 (`.claude/rules/core-guardrails.md`)
 - **레거시:** 현행 Approved와 다른 코드·호환 레이어·**교체된 구 메서드/상수**는 **같은 PR에서 즉시 삭제** (dev·구 클라/DB 호환 금지 — `core-guardrails` STOP §4)
 - **ERD:** 고정이 아님 — 스키마 개선을 **적극 제안**, 승인 시 엔티티+`erd.md`만 최신화 (`core-followup.md`)

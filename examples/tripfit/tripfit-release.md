@@ -2,7 +2,7 @@
 
 이 저장소에만 해당하는 **릴리즈·배포·도메인 용어** 사실을 모았다. 스토어 심사 요건(Release Gate)·Milestone·여행 일정 용어를 다룰 때 연다. 하네스를 다른 프로젝트로 옮길 때 **가져가지 않는 파일**이다.
 
-일반 원칙(우선순위 라벨·`[미정]` 처리)은 `core-scope.md`가 담당한다.
+일반 원칙은 `core-scope.md`(`[미정]` 처리)와 `local-priority.md`(우선순위 라벨)가 담당한다.
 
 ## 🚨 Release Gate — 앱 배포·심사 필수 체크리스트
 
@@ -24,7 +24,7 @@
 |---|---|
 | MVP 범위인가? | `mvp.md` In/Out |
 | 출시 전/후? | Milestone `MVP 출시` / `출시 이후` |
-| 기능·버그(must) vs 성능·구조정리(could)? | `core-scope.md` ⛔ (단정 금지) |
+| 기능·버그(must) vs 성능·구조정리(could)? | `local-priority.md` ⛔ (단정 금지) |
 
 ## 일정·기간 용어 — TripFit 도메인 (혼동 금지 — glossary SSOT)
 

@@ -9,7 +9,7 @@
 ## How We Build
 
 **0. 문서·구현 정합 (최우선)** — 스펙·결정·문서 간 값·계약이 어긋나면 **구현하지 말고 사용자에게 질문**. 상세: `.claude/rules/core-guardrails.md` ⛔ STOP.
-**priority: must/could** — 판단 기준·용어를 임의 재서술하지 말고 SSOT 확인. SSOT: `{{우선순위 SSOT}}` · `.claude/rules/core-scope.md`.
+**priority 라벨** — 라벨 체계가 있으면 `{{우선순위 SSOT}}`와 `.claude/rules/local-priority.md`(견본은 `examples/`)가 SSOT. 에이전트가 스스로 부여·변경하지 않는다.
 
 기획·검증 기준을 먼저 고정하고, 그에 맞춰 구현합니다. **계획 축**은 `{{우선순위 SSOT}}`, **기획**은 `{{제품 범위}}`, **기능 설계**는 `{{스펙 저장소}}`, **아키텍처 선택**은 `{{결정 기록}}`에 둡니다. DB·인증·다파일 변경 시 스펙 필수 (`core-workflow` 규칙). 구현 후 `{{테스트 명령}}`과 PR·CI로 검증합니다.
 
@@ -63,7 +63,7 @@
 3. **실행** — Agent 모드, 필요 시 `Agent` 서브에이전트
 4. **검증** — `{{테스트 명령}}` 통과, 변경 범위 최소화
 
-상세: `.claude/rules/core-workflow.md` (4 트랙 × 4 게이트) · 도구 매핑 `core-tools.md`
+상세: `.claude/rules/core-workflow.md` (4 트랙 × 4 게이트 — 트랙·게이트별 도구 포함) · `core-tools.md` (서브에이전트 규약·도구 채택 기준)
 
 ## Commands
 

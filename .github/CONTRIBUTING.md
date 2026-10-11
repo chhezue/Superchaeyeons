@@ -88,7 +88,7 @@ Squash merge는 `main`과 feature 브랜치에 **동일 작업이 이중 히스�
 
 | prefix | 값 | 용도 |
 |--------|-----|------|
-| `priority:` | must, could | 성능 개선·구조 정리·리팩터·최적화만 could, 그 외 기능 구현·버그 수정은 must. **에이전트는 스스로 부여하지 않는다 — 항상 사용자 확인** (`core-scope.md`) |
+| `priority:` | must, could | 성능 개선·구조 정리·리팩터·최적화만 could, 그 외 기능 구현·버그 수정은 must. **에이전트는 스스로 부여하지 않는다 — 항상 사용자 확인** (`local-priority.md`, 견본은 `examples/`) |
 | `kind:` | feature, bug, chore, docs | 이슈 종류 |
 | `meta:` | blocked, duplicate, wontfix | 상태 |
 

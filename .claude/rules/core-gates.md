@@ -2,8 +2,6 @@
 
 **언제 멈추고 사람에게 묻는지**(통제 영역 · 멈추는 신호 · 자동으로 하지 않는 것)를 한 곳에 모았다. `core-guardrails.md` STOP §1.4 "불확실하면 질문"이라는 일반 원칙을 재현 가능한 신호 목록으로 구체화한 것이다. `core-guardrails.md`가 "문서와 어긋나면 멈춘다"를 다룬다면, 이 파일은 그 밖의 멈춤을 다룬다 — 멈추는 이유는 표현이 모호해서가 아니라 **변경이 통제 영역에 닿기 때문**이다. 이 구분이 있어야 판정이 재현되고, 위임 영역에서는 덜 묻게 된다. 무조건적 마찰은 곧 무시당하므로, 선택적 마찰이어야 실제로 지켜진다.
 
-**형제 규칙:** `core-guardrails.md`(⛔ STOP) · `core-workflow.md`(트랙·게이트) · `core-scope.md`(priority·`[미정]`) · `core-followup.md`(후속·Defer) · `core-tools.md`(도구 매핑) · `harness-map.md`(슬롯·플래그)
-
 ## 1. 통제 영역과 위임 영역
 
 변경이 어느 열에 속하는지로 G2 승인이 필요한지가 갈린다. 두 열에 걸치면 통제 쪽으로 본다.
@@ -39,7 +37,7 @@
 | 하지 않는다 | SSOT |
 |------|------|
 | 커밋 · 이슈 · 브랜치 · PR 생성 | `core-workflow.md` G2·G4 |
-| priority 라벨 부여·변경 · `[미정]` 임의 확정 | `core-scope.md` |
+| `[미정]` 임의 확정 · priority 라벨 부여·변경 | `core-scope.md` · `local-priority.md`(있을 때) |
 | `.claude/rules/` 자동 추가 | `core-workflow.md` G4 · `retro` 스킬 |
 | **훅이 막은 것을 우회** (`Bash`로 같은 일을 하는 것 포함) | 이 절 |
 | **`{{작업 범위}}` 밖 파일 수정** | 이 절 · `deny-out-of-scope-write.sh`(훅 본문 상수 `SCOPE` = 이 슬롯 값) |

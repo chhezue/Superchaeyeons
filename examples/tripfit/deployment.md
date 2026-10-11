@@ -30,7 +30,7 @@ paths:
 
 ## MySQL / JPA 주의
 
-Entity 작성 시 지켜야 할 예약어·quoting 규칙은 `spring-boot-java.md` Entity Conventions로 이동(`**/*.java` 저장 시 자동 로드되도록 — 이 파일은 Docker/EC2 파일에만 스코프돼 Entity 편집만으로는 로드되지 않음).
+Entity 작성 시 지켜야 할 예약어·quoting 규칙은 `local-spring-boot-java.md` Entity Conventions로 이동(`**/*.java` 저장 시 자동 로드되도록 — 이 파일은 Docker/EC2 파일에만 스코프돼 Entity 편집만으로는 로드되지 않음).
 
 ## 환경변수 관리 (GitHub Secrets가 SSOT)
 

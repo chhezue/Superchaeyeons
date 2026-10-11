@@ -3,7 +3,7 @@
 {한 줄 설명}. AI 에이전트가 작업할 때 참고하는 프로젝트 지도입니다.
 
 > **이 파일은 템플릿입니다.** `AGENTS.md`로 복사한 뒤 `{...}` 자리를 채우고 이 인용문을 지우세요.
-> 함께 채울 것: [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md) (슬롯 17개·스택 옵션 7개)
+> 함께 채울 것: [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md) (축 4개·슬롯 22개·능력 플래그 7개)
 > 채운 예: [`examples/tripfit/AGENTS.md`](examples/tripfit/AGENTS.md)
 
 ## How We Build
@@ -30,11 +30,11 @@
 - 범위 밖 리팩터링·포맷 변경 금지 — 요청된 작업만 수정
 - **절대 마음대로 커밋하지 않는다** — 사용자가 명시적으로 요청할 때만 실행
 - 목적·주제별로 나눠 **최대 5개**까지 커밋할 수 있다
-- **작업이 끝나면 묻지 않아도 커밋 분할안을 먼저 제안한다** (제안 ≠ 실행 — 승인 후 실행) (상세: `.github/CONTRIBUTING.md`, `.claude/rules/core-workflow.md`)
+- **작업이 끝나면 묻지 않아도 커밋 분할안을 먼저 제안한다** (제안 ≠ 실행 — 승인 후 실행) (상세: `{{Git 컨벤션 SSOT}}`, `.claude/rules/core-workflow.md`)
 - **문서·스펙·결정 정합 최우선** — 문서 간·문서-구현 간 충돌 시 질문 없이 구현·기본값 변경 금지 (`.claude/rules/core-guardrails.md` ⛔ 섹션)
 - **`[미정]` 항목:** 기획 미확정 항목은 해당 문서에 표기만 남김 (`core-scope`)
-- **DB:** {마이그레이션 정책 — `harness-map.md`의 "DB 마이그레이션 금지" 옵션과 일치시킬 것}
-- **레거시:** 현행 Approved와 다른 코드·호환 레이어·**교체된 구 메서드/상수**는 **같은 PR에서 즉시 삭제** (`core-guardrails` STOP §4)
+- **DB:** {마이그레이션 정책 — `harness-map.md`의 "DB 마이그레이션 금지" 플래그와 일치시킬 것}
+- **레거시:** 현행 Approved와 다른 코드·호환 레이어·**교체된 구 메서드/상수**는 **같은 PR에서 즉시 삭제** (`core-guardrails` STOP §2)
 - 비밀값(`.env`, API 키)은 코드·커밋에 포함하지 않음
 
 ## Important Paths
@@ -45,9 +45,9 @@
 | `{설정 루트}` | 환경별 설정 |
 | `{테스트 루트}` | 단위·통합 테스트 |
 | [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md) | **슬롯 SSOT** — 규칙이 부르는 역할 → 실제 경로 |
-| [`docs/README.md`](docs/README.md) | **문서 SSOT** |
+| `{{문서 루트}}/README.md` | **문서 SSOT** |
 | [`.claude/rules/README.md`](.claude/rules/README.md) | 규칙·스킬·훅 구조 |
-| [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) | **Git SSOT** — 브랜치·커밋·PR |
+| `{{Git 컨벤션 SSOT}}` | **Git SSOT** — 브랜치·커밋·PR (없으면 `core-workflow.md` G2·G4) |
 
 ## Product Context
 
@@ -63,7 +63,7 @@
 3. **실행** — Agent 모드, 필요 시 `Agent` 서브에이전트
 4. **검증** — `{{테스트 명령}}` 통과, 변경 범위 최소화
 
-상세: `.claude/rules/core-workflow.md` (3 트랙 × 4 게이트) · 도구 매핑 `core-tools.md`
+상세: `.claude/rules/core-workflow.md` (4 트랙 × 4 게이트) · 도구 매핑 `core-tools.md`
 
 ## Commands
 

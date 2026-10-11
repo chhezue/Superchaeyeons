@@ -22,7 +22,7 @@ TripFit 백엔드 API 서버. AI 에이전트가 작업할 때 참고하는 프�
 
 - 패키지: `com.tripfit.tripfit` — 도메인 기반 레이어드 (`{domain}/controller|dto|service|domain|repository|client`, 필요 시 `{domain}/{feature}/…`, 공통 `common/`)
 - DB/API 네이밍은 기능 추가 시 `docs/architecture.md` 기준으로 통일
-- Java 주석: Swagger·`@Schema`와 중복 금지, **완전한 문장으로 쓰는 산문체** — **이름·시그니처만으로 안 드러나는 것만** 메서드 위 `//` 역할 주석(이름이 곧 설명인 facade·자명한 위임은 생략 가능) · 다단계는 `// 1.`+Why · Controller는 권한·검증만, API 설명은 `@Operation(summary)` + Javadoc(`therapi-runtime-javadoc`) — `.claude/rules/java-comments.md`·`.claude/rules/openapi-conventions.md`
+- Java 주석: Swagger·`@Schema`와 중복 금지, **완전한 문장으로 쓰는 산문체** — **이름·시그니처만으로 안 드러나는 것만** 메서드 위 `//` 역할 주석(이름이 곧 설명인 facade·자명한 위임은 생략 가능) · 다단계는 `// 1.`+Why · Controller는 권한·검증만, API 설명은 `@Operation(summary)` + Javadoc(`therapi-runtime-javadoc`) — `.claude/rules/local-java-comments.md`·`.claude/rules/local-openapi-conventions.md`
 - 범위 밖 리팩터링·포맷 변경 금지 — 요청된 작업만 수정
 - **절대 마음대로 커밋하지 않는다** — 사용자가 명시적으로 요청할 때만 실행
 - 목적·주제별로 나눠 **최대 5개**까지 커밋할 수 있다

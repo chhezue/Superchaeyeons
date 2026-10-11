@@ -2,6 +2,8 @@
 
 > 분류: **rule** (`.claude/rules/`) · 강제 수단: 프롬프트(소프트 가드레일) · 대응 다이어그램: "Layer 1: Human Gate"
 
+> **2026-09-06 — v2 반영.** 아래 표·흐름은 TripFit 시절 always-load 7개(`tripfit-release` 포함)·Java 규칙 기준이다. 현행: `core-*` 8개 + `core-gates`(멈추는 신호) 신설, STOP은 §1~§3, 스택 절은 씨앗(`examples/seeds/java-spring/`)으로 이사, `local-*.md`가 저장소 고유 층. 컨텍스트 예산은 `scripts/check-portability.sh`가 상한 65,000B로 판정한다. 현행 목록은 [`.claude/rules/README.md`](../../.claude/rules/README.md).
+
 ## 1. 기본 사항
 
 ### 이 레이어가 나타내는 것
@@ -14,8 +16,8 @@
 |---|---|---|---|
 | [`CLAUDE.md`](../../CLAUDE.md) | rule (진입점) | 세션 시작 시 항상 | `@AGENTS.md` import + Claude Code 전용 보충 |
 | [`AGENTS.md`](../../AGENTS.md) | rule (프로젝트 지도) | 세션 시작 시 항상 | 기술 스택·컨벤션·경로 맵 |
-| [`.claude/rules/core-guardrails.md`](../../.claude/rules/core-guardrails.md) | rule (**코어**) | 세션 시작 시 항상 | ⛔ STOP §1~§6 · 금지 요약 |
-| [`.claude/rules/core-workflow.md`](../../.claude/rules/core-workflow.md) | rule (**코어**) | 세션 시작 시 항상 | 3 트랙 × 4 게이트 사이클 · 구현 중 지킬 것 |
+| [`.claude/rules/core-guardrails.md`](../../.claude/rules/core-guardrails.md) | rule (**코어**) | 세션 시작 시 항상 | ⛔ STOP §1~§3 · 플래그 판정 · 금지 요약 (2026-09-05 스택 절은 lang 팩으로 이사) |
+| [`.claude/rules/core-workflow.md`](../../.claude/rules/core-workflow.md) | rule (**코어**) | 세션 시작 시 항상 | 4 트랙 × 4 게이트 사이클 · 구현 중 지킬 것 |
 | [`.claude/rules/core-scope.md`](../../.claude/rules/core-scope.md) | rule | 세션 시작 시 항상 | priority(must/could) 단정 금지 · `[미정]` 처리 |
 | [`examples/tripfit/tripfit-release.md`](../../examples/tripfit/tripfit-release.md) | rule (**저장소 고유**) | 세션 시작 시 항상 | Release Gate · 일정 용어 · 도메인·배포 확정 사항 |
 | [`.claude/rules/core-followup.md`](../../.claude/rules/core-followup.md) | rule | 세션 시작 시 항상 | 후속 제안 · Defer · ERD 개선 제안 |
@@ -65,11 +67,11 @@ STOP은 성격이 3가지로 갈립니다. 다이어그램은 가독성을 위�
 | §1 문서·구현 정합 | 스펙·ADR·기획 문서와 코드의 TTL·enum·env·경로가 다름 | `docs/specs/{domain}/*.md`, `docs/decisions/*.md`, `docs/architecture.md` | **중단 → 충돌 목록화 → 사용자 질문** |
 | §1.5 | "미구현"이라고 보고하기 직전 | 관련 Controller·Service·테스트를 **직접 grep/Read** | 스펙 문구만으로 단정 금지 |
 | §1.6 | "Swagger에 있다"고 보고하기 직전 | `/v3/api-docs` 또는 `docs/api/openapi.json` **실제 생성 문서** | `@Schema` 존재만으로 단정 금지 |
-| §2 ErrorCode·AOP | 새 실패 분기·권한 게이트·`last_activity_at` touch 추가 | `{Domain}ErrorCode.java`, 스펙 에러 표 | **같은 턴에** enum+throw+스펙 동시 갱신 (미루기 금지) |
-| §3 DB | Flyway·`V1__*.sql` 작성 시도 | — | **금지** (Layer 3 훅이 물리적으로도 차단) |
-| §4 레거시 | 경로·상수·API를 교체 | 교체된 구 메서드·상수·테스트 assert | **같은 PR에서 삭제** (호환 레이어 금지) |
-| §5 API 계약 | DTO·enum·ErrorCode·경로 변경 | — | 커밋 본문에 `Breaking-Change-Reason:` 트레일러 |
-| §6 보안·아키텍처 | 토큰·세션·결제·개인정보 저장 방식 변경 | `{{현재동작 요약}}` | **같은 턴에** 쉬운 말로 갱신 |
+| §1.7 계약에 닿는 변경 | 새 실패 분기·권한 게이트·활동 시각 기록 추가 | 에러 코드 enum, 스펙 에러 표, 응답 스키마 | **같은 턴에** 전부 갱신 (미루기 금지). 스택별 체크 표는 lang 팩 "같은 턴 즉시 갱신" 절 (2026-09-05 §2에서 이사) |
+| §2 레거시 | 경로·상수·API를 교체 | 교체된 구 메서드·상수·테스트 assert | **같은 PR에서 삭제** (호환 레이어 금지) |
+| §3 보안·아키텍처 | 토큰·세션·결제·개인정보 저장 방식 변경 | `{{현재동작 요약}}` | **같은 턴에** 쉬운 말로 갱신 |
+| lang 팩 [플래그: DB 마이그레이션 금지] | 마이그레이션 파일 작성 시도 | — | **금지** (Layer 3 훅이 물리적으로도 차단). 2026-09-05 core §3에서 `spring-boot-java.md`로 이사 |
+| lang 팩 [플래그: API 계약 보호] | DTO·enum·에러 코드·경로 변경 | — | 커밋 본문에 `Breaking-Change-Reason:` 트레일러. 2026-09-05 core §5에서 `openapi-conventions.md`로 이사 |
 | 별도 | 새 이슈·브랜치·PR 생성 | — | 실행 전 채팅으로 먼저 확인 |
 | 별도 | priority must/could 판단 | 이슈의 `priority:` 라벨 | 에이전트가 임의 부여 금지 |
 

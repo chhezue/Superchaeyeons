@@ -2,6 +2,14 @@
 
 [`docs/harness-engineering.md`](../harness-engineering.md)가 **"왜 이렇게 만들었나"의 서술형 총정리**라면, 이 폴더는 각 레이어가 **"언제 발동해서 어떤 파일의 어떤 부분을 읽고 어떻게 동작하는가"**를 실행 흐름 단위로 푼 문서입니다. 발표·면접에서 한 레이어를 깊게 파고들 때 이 파일들을 봅니다.
 
+> **2026-09-06 — v2 구조 반영.** 이 폴더는 TripFit 시절(2026-07~09)에 쓴 서술이고, 새 프로젝트에는 배달하지 않는다(`docs/out-of-scope/README.md`). 2026-09-05~06 v2 개편으로 달라진 것만 여기 적고, 본문의 v1 서술은 이력으로 남긴다. 현행 구조의 SSOT는 [`.claude/rules/README.md`](../../.claude/rules/README.md)다.
+>
+> - 규칙: `core-*` 8개(7 always-load + `core-code-comments` 소스 접근 시) + `harness-map`(축 4·슬롯 22·플래그 7) + `doc-writing`. 스택 규칙은 `examples/seeds/`로 이동
+> - 스킬: `adopt`·`ask` 신설 — 4 트랙(A 기능·B 감사·C 버그·D 하네스 이식) × 4 게이트
+> - 훅: 스택 무관 5개(`deny-dangerous-bash`·`deny-out-of-scope-write`·`deny-unverified-completion`·`ask-open-request`·`warn-unfilled-map`). 스택 훅 3개는 씨앗. 규약은 `scripts/test-hooks.sh`가 판정
+> - 검사기: `scripts/check-portability.sh`(부품 계약·always-load 예산) · `scripts/test-hooks.sh`(훅 규약) · `scripts/check-doc-style.sh`(문서 스타일) — 래퍼 `scripts/verify.sh`가 `{{테스트 명령}}`, pre-commit 연결
+> - 설계 문서: `docs/specs/cross-cutting/harness-slot-system-v2.md` · 참조한 것: `docs/references.md`
+
 최종 포트폴리오 다이어그램인 [`architecture-diagrams.md`](architecture-diagrams.md)의 **"관심사 분리(Separation of Concerns)"** 계층과 파일별 대응 관계는 다음과 같습니다.
 
 | 문서 | 포트폴리오 계층 | 분류 | 강제 수단 |
@@ -13,7 +21,7 @@
 
 ## 레이어와 사이클의 관계
 
-위 표가 **무엇으로 강제하는가**(레이어)라면, 실제 작업은 **3 트랙 × 4 게이트** 사이클을 따라 흐릅니다(2026-09-03 개편, `#127`). 두 축은 직교합니다 — 같은 게이트라도 어느 레이어가 강제하는지가 다릅니다.
+위 표가 **무엇으로 강제하는가**(레이어)라면, 실제 작업은 **4 트랙 × 4 게이트** 사이클을 따라 흐릅니다(2026-09-03 개편, `#127`). 두 축은 직교합니다 — 같은 게이트라도 어느 레이어가 강제하는지가 다릅니다.
 
 | 사이클 단계 | 담당 | 강제 레이어 |
 |---|---|---|
@@ -21,7 +29,7 @@
 | **G1 리서치** | `researcher` 서브에이전트 | L1 규칙 — 강제 수단 없음, 절차로만 |
 | **G2 승인** | Human Gate | L1·L2 — 사람이 끊음 |
 | 구현 | AI Agent | **L3 훅**(위험 명령·DB 마이그레이션 차단) |
-| **G3 검증** | `preflight` 스킬 + `doc-reviewer` + `spring-reviewer` | **L4 CI**(oasdiff·테스트) + advisory |
+| **G3 검증** | `preflight` 스킬 + `doc-reviewer` + 스택 리뷰어(플래그) | **L4 CI**(계약 diff·테스트) + advisory |
 | **G4 회고** | 문서 갱신 점검 · `defer` · `retro` | L1 규칙 + L2 절차 |
 
 **강제력이 가장 약한 곳은 여전히 G1과 G4입니다** — 둘 다 훅이나 CI로 판정할 수 없는 성격(조사를 했는지, 배운 걸 기록했는지)이라 규칙과 절차에만 의존합니다. 이 한계를 아는 것이 설계의 일부입니다.
@@ -46,7 +54,7 @@ Probabilistic Layer   Human Decision Layer  Deterministic Layer   Mechanical Ver
 
 ### 1순위 — Deterministic Layer (L3): agent-type → command-type 훅 전환
 
-**왜 1순위인가:** "AI로 만들었다가 실패해서 결정론적 스크립트로 바꿨다"는 서사는 AI를 실제로 굴려본 사람만 가질 수 있습니다. LLM 기반 훅이 "절대 막지 마라"는 명시적 지시에도 커밋을 차단한 사고를 겪고, *advisory는 판단이 아니라 불변식이므로 LLM에 맡기면 안 된다*는 결론에 도달한 과정이 [`warn-breaking-change.sh`](../../.claude/hooks/warn-breaking-change.sh) 상단 주석에 코드로 남아 있습니다.
+**왜 1순위인가:** "AI로 만들었다가 실패해서 결정론적 스크립트로 바꿨다"는 서사는 AI를 실제로 굴려본 사람만 가질 수 있습니다. LLM 기반 훅이 "절대 막지 마라"는 명시적 지시에도 커밋을 차단한 사고를 겪고, *advisory는 판단이 아니라 불변식이므로 LLM에 맡기면 안 된다*는 결론에 도달한 과정이 [`local-warn-breaking-change.sh`](../../examples/seeds/java-spring/hooks/local-warn-breaking-change.sh) 상단 주석에 코드로 남아 있습니다.
 
 **차별점:** 대부분의 "AI 활용" 사례는 AI를 더 많이 쓰는 방향입니다. 이건 **AI를 덜 쓰기로 한 판단**이고, 그 경계를 비용 기준으로 그었습니다.
 

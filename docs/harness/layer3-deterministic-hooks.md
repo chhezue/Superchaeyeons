@@ -2,6 +2,8 @@
 
 > 분류: **hook** (`.claude/settings.json` + `.claude/hooks/*.sh`) · 강제 수단: **shell exit code** · 대응 다이어그램: "Layer 3: Deterministic Guardrails"
 
+> **2026-09-06 — v2 반영.** 아래 서술은 훅 4개 시절이다. 현행 배달물 훅은 스택 무관 5개이고 스택 훅 3개는 씨앗에 있다. 새로 생긴 것: **훅 공통 규약**(판정 불가 = 차단, 실경로 정규화)과 그것을 판정하는 `scripts/test-hooks.sh` + `scripts/hook-cases.txt`(케이스 파일 + python3 부재 내장 케이스), `Stop` 훅으로 G3를 처음 결정론적으로 강제, 승인 통로는 설정 변경(`core-gates.md` §3). 현행 표는 [`.claude/rules/README.md`](../../.claude/rules/README.md) Hooks 절.
+
 ## 1. 기본 사항
 
 ### 이 레이어가 나타내는 것
@@ -15,15 +17,21 @@ Layer 1(규칙)·Layer 2(스킬)는 결국 **에이전트가 읽고 따라줘야
 | 훅 | 파일 | 이벤트 | 매처 | 동작 |
 |---|---|---|---|---|
 | 위험 명령 차단 | [`.claude/hooks/deny-dangerous-bash.sh`](../../.claude/hooks/deny-dangerous-bash.sh) | `PreToolUse` | `Bash` | **exit 2 (차단)** |
-| Breaking-Change 경고 | [`.claude/hooks/warn-breaking-change.sh`](../../.claude/hooks/warn-breaking-change.sh) | `PreToolUse` | `Bash` | **항상 exit 0** (advisory) |
-| DB 마이그레이션 차단 | [`.claude/hooks/deny-db-migration.sh`](../../.claude/hooks/deny-db-migration.sh) | `PreToolUse` | `Write\|Edit` | **exit 2 (차단)** |
-| Java 자동 포맷 | [`.claude/hooks/auto-format-java.sh`](../../.claude/hooks/auto-format-java.sh) | `PostToolUse` | `Edit\|Write` | **항상 exit 0** (non-blocking) |
+| Breaking-Change 경고 | [`local-warn-breaking-change.sh`](../../examples/seeds/java-spring/hooks/local-warn-breaking-change.sh) (씨앗) | `PreToolUse` | `Bash` | **항상 exit 0** (advisory) |
+| 작업 범위 밖 쓰기 차단 | [`.claude/hooks/deny-out-of-scope-write.sh`](../../.claude/hooks/deny-out-of-scope-write.sh) | `PreToolUse` | `Write\|Edit` | **exit 2 (차단)** — `SCOPE`가 `.`이면 무동작. 2026-09-05 baro에서 회수(모노레포 부분 소유) |
+| 미검증 완료 선언 되돌림 | [`.claude/hooks/deny-unverified-completion.sh`](../../.claude/hooks/deny-unverified-completion.sh) | `Stop` | — | **exit 2 (되돌림)** — 코드 수정 + 테스트 미실행 + 완료 단정일 때만. 2026-09-05 신설, G3를 처음으로 결정론적으로 강제 |
+| 열린 요청 알림 | [`.claude/hooks/ask-open-request.sh`](../../.claude/hooks/ask-open-request.sh) | `UserPromptSubmit` | — | **항상 exit 0** (컨텍스트 주입) |
+| 미채움 맵 경고 | [`.claude/hooks/warn-unfilled-map.sh`](../../.claude/hooks/warn-unfilled-map.sh) | `SessionStart` | — | **항상 exit 0** (컨텍스트 주입) |
+| DB 마이그레이션 차단 | [`local-deny-db-migration.sh`](../../examples/seeds/java-spring/hooks/local-deny-db-migration.sh) (씨앗) | `PreToolUse` | `Write\|Edit` | **exit 2 (차단)** |
+| Java 자동 포맷 | [`local-auto-format-java.sh`](../../examples/seeds/java-spring/hooks/local-auto-format-java.sh) (씨앗) | `PostToolUse` | `Edit\|Write` | **항상 exit 0** (non-blocking) |
 
 등록 위치: [`.claude/settings.json`](../../.claude/settings.json) (팀 공통, 버전 관리됨)
 
 **파일명이 강도를 말합니다 (2026-09-04 `#128`에서 규칙화):** 차단은 `deny-`, 경고는 `warn-`, 자동 실행은 `auto-`. 이전 이름(`block-dangerous.sh`·`format-java.sh`)은 그 훅이 커밋을 막는지 그냥 도와주는지를 파일명만 보고 알 수 없었습니다. 아래 fail-closed / fail-open 비대칭이 이름에 그대로 드러나도록 맞춘 것입니다 — `deny-`는 exit 2로 막고, `warn-`은 무조건 exit 0입니다.
 
-> **다이어그램을 볼 때 주의:** 훅은 "하나의 관문"이 아니라 **트리거가 서로 다른 4개의 독립 스크립트**입니다. `rm -rf`는 Bash 경로에만 걸리고 파일 변경 경로로는 애초에 지나가지 않습니다. `deny-db-migration.sh`는 그 반대입니다.
+> **2026-09-05 이후:** 스택 훅 3개(마이그레이션 차단·계약 변경 경고·자동 포맷)는 배달물이 아니라 씨앗(`examples/seeds/java-spring/hooks/`)에 있고, `adopt`이 플래그에 따라 복사·등록한다. 배달물 훅 5개는 스택 무관이다.
+
+> **다이어그램을 볼 때 주의:** 훅은 "하나의 관문"이 아니라 **트리거가 서로 다른 여러 개의 독립 스크립트**입니다. `rm -rf`는 Bash 경로에만 걸리고 파일 변경 경로로는 애초에 지나가지 않습니다. `local-deny-db-migration.sh`는 그 반대입니다.
 
 ## 2. 언제 발동하고, 어떤 흐름을 타는가
 
@@ -54,7 +62,7 @@ print(data.get('tool_input', {}).get('command', ''))
      매칭 → stderr에 한국어 사유 출력 + exit 2  → 명령 실행 안 됨
      미매칭 → exit 0
   ↓
-[2] warn-breaking-change.sh
+[2] local-warn-breaking-change.sh
      'git commit' 이 아니면 즉시 exit 0
      'Breaking-Change-Reason:' 가 이미 있으면 exit 0
      git diff --cached --name-only 로 스테이징된 파일만 검사
@@ -69,7 +77,7 @@ print(data.get('tool_input', {}).get('command', ''))
 ```
 에이전트가 Write 또는 Edit 도구 호출
   ↓
-[1] deny-db-migration.sh (PreToolUse)
+[1] local-deny-db-migration.sh (PreToolUse)
      tool_input.file_path 를 검사
      패턴: /db/migration/  또는  V1__x.sql · V1.2__x.sql · R__x.sql
      매칭 → exit 2 → 파일 생성 안 됨
@@ -78,7 +86,7 @@ print(data.get('tool_input', {}).get('command', ''))
   ↓
 파일 저장
   ↓
-[2] auto-format-java.sh (PostToolUse)
+[2] local-auto-format-java.sh (PostToolUse)
      .java 가 아니면 즉시 exit 0 (비용 0)
      git rev-parse --show-toplevel 으로 repo root 이동
      ./gradlew -PspotlessIdeHook=<file> ... 으로 그 파일 하나만 포맷
@@ -91,7 +99,7 @@ print(data.get('tool_input', {}).get('command', ''))
 
 이 레이어에서 **가장 설명 가치가 큰** 사건입니다.
 
-**1) 처음 설계:** `warn-breaking-change.sh`를 `agent`-type 훅으로 만들었습니다 — 서브에이전트가 diff를 읽고 "이게 breaking change인가"를 **판단**하게 했습니다. LLM이 문맥을 이해하니 더 똑똑하게 잡을 거라고 봤습니다.
+**1) 처음 설계:** `local-warn-breaking-change.sh`를 `agent`-type 훅으로 만들었습니다 — 서브에이전트가 diff를 읽고 "이게 breaking change인가"를 **판단**하게 했습니다. LLM이 문맥을 이해하니 더 똑똑하게 잡을 거라고 봤습니다.
 
 **2) 사고:** 이 훅이 staged가 아닌 **working tree의 무관한 변경까지** 읽고 오판해서, "이 훅은 절대 커밋을 막으면 안 된다"는 명시적 지시가 프롬프트에 있었는데도 **커밋을 차단**했습니다.
 
@@ -114,9 +122,9 @@ print(data.get('tool_input', {}).get('command', ''))
 | 훅 | 실패 시 | 이유 |
 |---|---|---|
 | `deny-dangerous-bash.sh` | **fail-closed** (막음) | 오탐으로 한 번 막히는 비용 < `rm -rf`가 한 번 통과하는 비용 |
-| `deny-db-migration.sh` | **fail-closed** (막음) | 위와 동일. 정말 필요하면 사람이 확인 후 진행 |
-| `warn-breaking-change.sh` | **fail-open** (통과) | 커밋을 막는 건 워크플로 파괴. 놓쳐도 CI([Layer 4](layer4-api-contract-safety.md))가 다시 잡음 |
-| `auto-format-java.sh` | **fail-open** (통과) | 포맷 실패로 작업을 막을 이유가 없음 |
+| `local-deny-db-migration.sh` | **fail-closed** (막음) | 위와 동일. 정말 필요하면 사람이 확인 후 진행 |
+| `local-warn-breaking-change.sh` | **fail-open** (통과) | 커밋을 막는 건 워크플로 파괴. 놓쳐도 CI([Layer 4](layer4-api-contract-safety.md))가 다시 잡음 |
+| `local-auto-format-java.sh` | **fail-open** (통과) | 포맷 실패로 작업을 막을 이유가 없음 |
 
 이 비대칭이 의도적이라는 점이 중요합니다 — "전부 차단"이 아니라 **되돌리기 비용에 따라 차단 강도를 다르게** 설계했습니다.
 

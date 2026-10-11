@@ -2,6 +2,8 @@
 
 > 분류: **skill** (`.claude/skills/*/SKILL.md`) · 강제 수단: 절차 + 사용자 승인 게이트 · 대응 다이어그램: "Layer 2: safe-refactor 플로우"
 
+> **2026-09-06 — v2 반영.** 아래 서술은 스킬 6개·3 트랙 시절이다. 현행: `adopt`(D 트랙)·`ask`(G2 앞) 추가로 스킬 8개 · 4 트랙. `safe-refactor`의 "절대 원칙"은 G2에서 확정하는 **불변 조건(Invariant)**으로 바뀌었고 감사 중 `researcher` 호출·A 트랙 승격 경로가 열렸다. `preflight`는 사전 모드(G2 직후)와 `report.md`("검증하지 못한 것" 절)를 얻었다. 스택 리뷰어는 씨앗으로 이동. 현행 표는 [`.claude/rules/README.md`](../../.claude/rules/README.md) Skills·Agents 절.
+
 ## 1. 기본 사항
 
 ### 이 레이어가 나타내는 것
@@ -101,7 +103,7 @@
 1. `./gradlew test` 실제 실행
 2. 스펙·이슈 체크리스트를 **실제 코드**와 대조 (STOP §1.5)
 3. API 계약 변경 시 트레일러 필요 여부 재확인 + `oasdiff`로 의도한 diff만 있는지
-4. 레거시 재점검 (STOP §4)
+4. 레거시 재점검 (STOP §2)
 5. 문서를 새로 만들었거나 50줄 이상 고쳤으면 `doc-reviewer` 서브에이전트 (advisory, 2026-09-03 추가)
 6. Java를 3파일 이상·API·DB 범위로 고쳤으면 `spring-reviewer` 서브에이전트 (2026-09-04 추가)
 7. Must Have급이면 `code-review`/`simplify`를 서브에이전트로 한 번 더
@@ -137,7 +139,7 @@
 
 > 카카오/구글/애플 서버에 로그인 확인을 받는 동안(느려질 수 있음) 우리 DB 접속 자리를 계속 붙잡고 있었어요. 카카오가 느려지면 로그인과 상관없는 다른 기능까지 다 같이 느려질 위험이 있었는데, 이제 확인부터 먼저 받고 DB 저장은 그다음에 짧게 하도록 순서를 바꿔서 그 위험을 줄였어요.
 
-→ 외부 API 호출을 `@Transactional` 밖으로 빼는 변경. 현재는 [`spring-boot-java.md`](../../.claude/rules/spring-boot-java.md) "ACID / 트랜잭션 경계 — Atomicity" 절에 규칙으로 승격돼 있습니다.
+→ 외부 API 호출을 `@Transactional` 밖으로 빼는 변경. 현재는 [`local-spring-boot-java.md`](../../examples/seeds/java-spring/rules/local-spring-boot-java.md) "ACID / 트랜잭션 경계 — Atomicity" 절에 규칙으로 승격돼 있습니다.
 
 ## 4. AI-native 관점에서의 강조 포인트
 

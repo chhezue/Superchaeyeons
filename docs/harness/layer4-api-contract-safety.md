@@ -2,6 +2,8 @@
 
 > 분류: **CI 워크플로 + shell script** (`.github/workflows/ci-cd.yml` + `scripts/notify-api-breaking-change.sh`) · 짝이 되는 규칙: `core-guardrails.md` STOP §5 · 대응 다이어그램: "API Contract Safety"
 
+> **2026-09-06 — v2 반영.** 이 레이어 전체가 **[플래그: API 계약 보호]**로 게이트되며, 규칙·훅은 씨앗 `examples/seeds/java-spring/`에 있다. 외부 클라이언트가 없는 프로젝트(예: 게이트웨이 뒤 내부 서비스)는 플래그 ❌로 두면 이 레이어가 통째로 꺼진다. 아래는 TripFit에서 실제로 굴린 구성의 기록이다.
+
 ## 1. 기본 사항
 
 ### 이 레이어가 나타내는 것
@@ -14,8 +16,8 @@
 
 | 구성요소 | 파일 | 분류 | 역할 |
 |---|---|---|---|
-| 트레일러 규칙 | [`.claude/rules/core-guardrails.md`](../../.claude/rules/core-guardrails.md) STOP §5 | rule | 커밋 시 `Breaking-Change-Reason:` 작성 강제 |
-| 로컬 경고 훅 | [`.claude/hooks/warn-breaking-change.sh`](../../.claude/hooks/warn-breaking-change.sh) | hook | 트레일러 누락 시 advisory 경고 (막지 않음) |
+| 트레일러 규칙 | [`local-openapi-conventions.md`](../../examples/seeds/java-spring/rules/local-openapi-conventions.md) (씨앗) "API 계약 변경" 절 **[플래그: API 계약 보호]** (2026-09-05 core STOP §5에서 이사) | rule (lang 팩) | 커밋 시 `Breaking-Change-Reason:` 작성 강제 |
+| 로컬 경고 훅 | [`local-warn-breaking-change.sh`](../../examples/seeds/java-spring/hooks/local-warn-breaking-change.sh) (씨앗) | hook | 트레일러 누락 시 advisory 경고 (막지 않음) |
 | CI 파이프라인 | [`.github/workflows/ci-cd.yml`](../../.github/workflows/ci-cd.yml) | CI | 스펙 export → base 비교 → 알림 |
 | 감지·알림 스크립트 | [`scripts/notify-api-breaking-change.sh`](../../scripts/notify-api-breaking-change.sh) | script | 3중 감지 + Discord 웹훅 |
 | 기준 스냅샷 | [`docs/api/openapi.json`](../api/openapi.json) | 산출물 | `main` push마다 CI가 자동 갱신 (**손편집 금지**) |
@@ -25,17 +27,17 @@
 
 ### 방어선 순서 (다이어그램의 핵심)
 
-**CI는 1차 방어선이 아닙니다.** STOP §5 원문은 "CI의 `oasdiff` 판정을 **기다리지 않고** 변경을 만드는 커밋 시점에 직접 기록한다"입니다. CI는 놓쳤을 때의 안전망입니다.
+**CI는 1차 방어선이 아닙니다.** "API 계약 변경" 절 원문은 "CI의 `oasdiff` 판정을 **기다리지 않고** 변경을 만드는 커밋 시점에 직접 기록한다"입니다. CI는 놓쳤을 때의 안전망입니다.
 
 ```
 [1차] 커밋 작성 시점 — 사람/에이전트가 직접
       DTO·enum·ErrorCode·경로를 건드리는 커밋을 만들기 "직전"에
-      STOP §5를 재확인하고 커밋 본문에 트레일러 추가
+      "API 계약 변경" 절을 재확인하고 커밋 본문에 트레일러 추가
         Breaking-Change-Reason: <한 줄 사유>
       ⚠ 대상은 oasdiff의 breaking 카테고리보다 넓음 —
         optional 필드 추가, enum 값 추가도 포함
 
-[2차] 로컬 훅 — warn-breaking-change.sh (Layer 3)
+[2차] 로컬 훅 — local-warn-breaking-change.sh (Layer 3)
       트레일러 없이 커밋하려 하면 stderr 경고. 막지는 않음
 
 [3차] CI — 저장소 밖에서 독립 검증  ← 아래 상세
@@ -89,7 +91,7 @@ push 또는 pull_request
 | **2차 — ErrorCode 신규/변경** | `**/*ErrorCode.java` diff에서 `NAME(HttpStatus...` 한 줄 컨벤션으로 추출. **`-`(제거) 줄에도 같은 이름이 있으면 "변경", 없으면 "신규"로 구분** | **#75** — `+` 줄만 보면 "기존 상수의 HttpStatus만 바뀐 것"도 "완전 신규"로 오판. `AUTH_FORBIDDEN`에서 재현 확인 |
 | **3차 — 상태 코드 교차검증** | `ErrorCode.getHttpStatus()` vs Controller `@ApiResponse(responseCode=...)` 리터럴 대조. **diff가 아니라 현재 트리 전체를 매번 검사** | `ErrorResponse.code`가 String이라 컴파일 타임 연결이 없음. enum만 바꾸고 컨트롤러를 깜빡하면 위 감지 둘 다 못 잡음. "enum은 그대로 두고 컨트롤러만 잘못 손댄" 경우까지 잡으려면 커밋 범위로는 부족 |
 
-이 3차 감지가 성립하는 이유는 [`openapi-conventions.md`](../../.claude/rules/openapi-conventions.md)가 `@ApiResponse` description에 `NAME — 설명` 형태로 ErrorCode 이름을 쓰도록 고정해뒀기 때문입니다 — **컨벤션이 곧 파싱 가능한 인터페이스**가 된 사례입니다.
+이 3차 감지가 성립하는 이유는 [`local-openapi-conventions.md`](../../examples/seeds/java-spring/rules/local-openapi-conventions.md)가 `@ApiResponse` description에 `NAME — 설명` 형태로 ErrorCode 이름을 쓰도록 고정해뒀기 때문입니다 — **컨벤션이 곧 파싱 가능한 인터페이스**가 된 사례입니다.
 
 ## 3. 프론트와의 계약 전달 방식
 

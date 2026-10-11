@@ -6,6 +6,9 @@
 
 | 슬롯 | TripFit 경로 |
 |------|-------------|
+| `{{문서 루트}}` | `docs/` |
+| `{{작업 범위}}` | `.` (모놀리스, 저장소 전체) |
+| `{{Git 컨벤션 SSOT}}` | `.github/CONTRIBUTING.md` |
 | `{{스펙 저장소}}` | `docs/specs/{domain}/` |
 | `{{현재동작 요약}}` | `docs/how-it-works.md` |
 | `{{우선순위 SSOT}}` | `docs/product/release-milestones.md` |
@@ -29,20 +32,27 @@
 | `{{포맷 명령}}` | `./gradlew spotlessApply` |
 | `{{의존성 조회}}` | `./gradlew dependencies` |
 
-## 스택 옵션
+## 형식 슬롯
 
-| 옵션 | TripFit | 근거 |
+| 슬롯 | TripFit 형식 | 실측 근거 |
+|------|-------------|-----------|
+| `{{브랜치명 형식}}` | `{type}/{issue-number}-{description}` | `git branch -r` 전수 — 예 `feat/64-apple-auth-code` |
+| `{{커밋 메시지 형식}}` | `{Type}: {한글}` | `git log --oneline` 383건 중 Merge 제외 전부 이 형식 — `commit-msg` 훅이 강제 |
+
+## 능력 플래그
+
+| 플래그 | TripFit | 근거 |
 |------|---------|------|
 | DB 마이그레이션 금지 | ☑ 켬 | 상용 보존 데이터 없음 → 엔티티 + `ddl-auto`가 스키마 SSOT. Flyway 작성 금지 |
-| 에러코드 enum 동시갱신 | ☑ 켬 | `{Domain}ErrorCode` + `TripFitException` |
-| 권한·활동 어노테이션(AOP) | ☑ 켬 | `@TripActivity`(last_activity_at touch) · `@TripMemberOnly` / `@TripOwnerOnly` |
-| OpenAPI 계약 보호 | ☑ 켬 | `oasdiff` + 커밋 트레일러 `Breaking-Change-Reason:` + Discord 알림 |
+| 에러 코드 카탈로그 동시갱신 | ☑ 켬 | `{Domain}ErrorCode` + `TripFitException` |
+| 권한 게이트·활동 기록 동시갱신 | ☑ 켬 | `@TripActivity`(last_activity_at touch) · `@TripMemberOnly` / `@TripOwnerOnly` |
+| API 계약 보호 | ☑ 켬 | `oasdiff` + 커밋 트레일러 `Breaking-Change-Reason:` + Discord 알림 |
 | 생성 문서 검증 | ☑ 켬 | springdoc — `@Schema` 존재만으로 노출을 단정하지 않고 `/v3/api-docs` 실물 확인 |
-| 스택 함정 메모 | ☑ 켬 | Spring Boot 4.1.0 — 웹 예제 대다수가 3.x ([`g1-stack-trap.md`](g1-stack-trap.md)) |
+| 스택 함정 메모 | ☑ 켬 | Spring Boot 4.1.0 — 웹 예제 대다수가 3.x ([`local-g1-stack-trap.md`](../seeds/java-spring/rules/local-g1-stack-trap.md)) |
 | 스택 리뷰어 | ☑ 켬 | `spring-reviewer` — Java 3파일+·API·DB 변경 시 |
 
 ## 저장소 고유 규칙
 
-슬롯으로도 옵션으로도 안 빠지는 **그 저장소만의 사실**은 `{프로젝트}-release.md`로 따로 뺀다. TripFit 판이 [`tripfit-release.md`](tripfit-release.md)다 — 스토어 심사 게이트, 릴리즈 축 3질문, 여행 일정 도메인 용어, 배포 도메인이 들어 있다.
+슬롯으로도 플래그로도 안 빠지는 **그 저장소만의 사실**은 `local-*.md`(예: `local-release.md`)로 따로 뺀다. TripFit 판이 [`tripfit-release.md`](tripfit-release.md)다 (개명 전 이름 그대로 둔 견본) — 스토어 심사 게이트, 릴리즈 축 3질문, 여행 일정 도메인 용어, 배포 도메인이 들어 있다.
 
 이 파일은 `.claude/rules/`에 두면 always-load 된다. **다른 프로젝트로 옮길 때 가져가지 않는 유일한 규칙 파일**이다.

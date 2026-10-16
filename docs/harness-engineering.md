@@ -101,6 +101,7 @@ core에 프로젝트 사실이 새면 `scripts/check-portability.sh`가 커밋�
 | 2026-10-05 | 파일 쓰기 훅의 매처가 `Write\|Edit`라서 `MultiEdit`·`NotebookEdit` 쓰기는 훅을 거치지 않았다. 붙여 쓰는 프로젝트의 자기 수정 금지가 이 두 도구로 뚫려 있었다 | 매처를 네 도구로 넓히고 `test-hooks.sh` 등록 대조에 매처 검사 |
 | 2026-10-05 | 구성 요소 목록을 다시 적은 문서가 13개였고, 스킬 하나를 추가할 때 10곳을 손으로 고쳐야 했다 | 목록 문서 6개를 지우고, `check-portability.sh`가 실제 구성 요소와 목록 SSOT·문서 속 참조를 대조 |
 | 2026-10-05 | 새 프로젝트는 `examples/`를 복사하지 않는데 훅 케이스 파일에 씨앗 훅 케이스가 있어 `verify.sh`가 처음부터 실패했다 | 복사하지 않은 씨앗 훅(`local-*`)의 케이스는 건너뛴다 |
+| 2026-10-16 | TripFit 백엔드 사본에 붙이고 `adopt`로 채우자 `check-portability.sh`가 부품 계약 위반 21건으로 실패했다. `adopt`이 채우게 설계된 훅 상수(`TEST_CMD`·`FORMAT_CMD`·`FORMAT_PATHS`)와, 그 프로젝트의 Git 규칙 문서인 `.github/CONTRIBUTING.md`를 core로 검사했기 때문이다 | 하네스 자기 수정 ❌인 프로젝트에서는 (파일, 상수) 쌍으로 정한 훅 상수의 값과 `CONTRIBUTING.md`를 검사에서 뺀다. 원본 저장소에서는 둘 다 견본이라 계속 검사한다. `commit-msg` 정규식은 `COMMIT_RE` 상수로 뺐다 |
 
 마지막 행이 보여 주는 것처럼, 배너는 문제를 표시할 뿐 없애지 않는다. 읽는 쪽은 배너 아래 본문을 그대로 믿는다.
 

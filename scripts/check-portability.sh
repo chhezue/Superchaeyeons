@@ -73,6 +73,18 @@ fi
 # 배달물 = 새 프로젝트로 그대로 복사되는 것 전부. 프로젝트가 고유 사실을 적는 자리(harness-map.md · .claude/ 안의 local-* 파일)와
 # 견본(examples/)만 제외한다. 스택 씨앗은 examples/seeds/ 에 살고, adopt이 .claude/rules·agents·hooks로 복사할 때도 local- 접두사를
 # 유지하므로(씨앗 파일명이 이미 local-*) 복사 뒤에도 검사 밖이다 — 접두사가 곧 층 표시다.
+# 붙여 쓰는 프로젝트(하네스 자기 수정 ❌ = HARNESS_SELF_EDIT "0")에서는 두 가지가 프로젝트 값 자리라 검사 밖이다.
+#   .github/CONTRIBUTING.md — 그 프로젝트의 {{Git 컨벤션 SSOT}}. 원본 저장소(☑)에서는 견본이라 검사한다
+#   훅 상수 대입 줄의 값 — harness-map.md "훅 상수와 짝". 원본 저장소에서는 기본값도 견본이라 검사한다 (아래 awk)
+# 2026-10-16 TripFit 사본에 붙였을 때 이 둘이 위반 21건(CONTRIBUTING 17 · 상수 4)으로 잡혀 verify.sh가 처음부터 실패했다.
+# 값을 읽지 못하면 원본 저장소로 보고 더 많이 검사한다 — 놓치는 쪽보다 오탐이 보이는 쪽이 낫다.
+self_edit="$(sed -n -E "s/^[[:space:]]*(export[[:space:]]+)?HARNESS_SELF_EDIT=[\"']?([01])[\"']?[[:space:]]*(#.*)?$/\2/p" .claude/hooks/deny-out-of-scope-write.sh 2>/dev/null | head -n 1)"
+adopted=0
+if [ "$self_edit" = "0" ]; then
+	adopted=1
+elif [ -z "$self_edit" ]; then
+	echo "경고: .claude/hooks/deny-out-of-scope-write.sh에서 HARNESS_SELF_EDIT를 읽지 못해 원본 저장소로 보고 CONTRIBUTING·훅 상수까지 검사합니다" >&2
+fi
 targets=""
 for f in .claude/rules/core-*.md; do
 	[ -f "$f" ] && targets="$targets $f"
@@ -82,6 +94,7 @@ if [ "$scope" = "all" ]; then
 		[ -f "$f" ] || continue
 		case "$f" in
 		.claude/rules/core-*.md | .claude/rules/harness-map.md | .claude/*/local-*) continue ;;
+		.github/CONTRIBUTING.md) [ "$adopted" = 1 ] && continue ;;
 		esac
 		targets="$targets $f"
 	done
@@ -98,9 +111,10 @@ fi
 # ---- 2. 금지 패턴 스캔 -------------------------------------------------------
 # awk 하나로 끝낸다: 패턴 파일을 먼저 읽고(FNR==NR), 이어지는 파일들을 줄 단위로 대조한다.
 # 오탐 방지: `채운 예`(견본 인용)·`다스택 예시`(여러 스택을 나열하는 실측 안내) 줄과 YAML frontmatter(`paths:` glob)는 건너뛴다.
+# 붙여 쓰는 프로젝트에서는 "훅 상수와 짝"(harness-map.md)의 (파일, 상수) 쌍 대입 줄에서 값만 지우고 나머지(줄 끝 주석)를 검사한다.
 violations="$(
 	# shellcheck disable=SC2086
-	awk -v skip="$skip" '
+	awk -v skip="$skip" -v adopted="$adopted" '
 		BEGIN { FS = "\t"; n = 0; split(skip, s, ","); for (i in s) skipc[s[i]] = 1 }
 		FNR == NR {
 			if ($0 ~ /^[ \t]*(#|$)/) next
@@ -114,6 +128,11 @@ violations="$(
 		infm { next }
 		{
 			if (index($0, "채운 예") > 0 || index($0, "다스택 예시") > 0) next
+			if (adopted == 1 && ((FILENAME == ".claude/hooks/deny-out-of-scope-write.sh" && $0 ~ /^(SCOPE|HARNESS_SELF_EDIT)=/) ||
+			    (FILENAME == ".claude/hooks/deny-unverified-completion.sh" && $0 ~ /^TEST_CMD=/) ||
+			    (FILENAME == "scripts/git-hooks/pre-commit" && $0 ~ /^FORMAT_(CMD|PATHS)=/) ||
+			    (FILENAME == "scripts/git-hooks/commit-msg" && $0 ~ /^COMMIT_RE=/)))
+				sub(/^[A-Z_]+=("[^"]*"|\047[^\047]*\047|[^ \t]*)/, "")
 			for (i = 1; i <= n; i++) {
 				if (match($0, re[i])) {
 					printf "%s\t%s:%d\t%s\t%s\n", cls[i], FILENAME, FNR, substr($0, RSTART, RLENGTH), msg[i]
@@ -162,7 +181,7 @@ done
 #     `.md`·`.sh`까지 쓴 표기만 보고, 저장소 어딘가에 같은 이름의 파일이 있으면 통과시킨다.
 # 스킬·에이전트는 이름이 내장·플러그인과 겹치므로 git 이력에서 **지워진** 하네스 스킬·에이전트를 가리킬 때만 잡는다.
 # 기록 문서(reports·specs·audits·out-of-scope·references·harness-engineering)는 지운 것을 이력으로 말하는 게 정상이라 대상이 아니다.
-cross_out="$(python3 - <<'PY_CROSS'
+cross_out="$(ADOPTED="$adopted" python3 - <<'PY_CROSS'
 import glob, os, re, subprocess
 out = []
 def files(patterns):
@@ -183,7 +202,9 @@ project_files = files(["AGENTS.md", "CLAUDE.md", "README.md", ".github/CONTRIBUT
 META = {"{{슬롯}}", "{{역할 이름}}", "{{…}}", "{{역할}}"}
 defined = set(re.findall(r"^\| `(\{\{[^}]+\}\})`", open(".claude/rules/harness-map.md", encoding="utf-8").read(), re.M))
 used = {}
-for f in [f for f in harness_files if f != ".claude/rules/harness-map.md" and not f.startswith("examples/")] + files([".github/CONTRIBUTING.md"]):
+# 붙여 쓰는 프로젝트의 CONTRIBUTING은 프로젝트 문서라 슬롯 사용처로 보지 않는다 (금지 패턴 검사와 같은 조건)
+contributing = [] if os.environ.get("ADOPTED") == "1" else files([".github/CONTRIBUTING.md"])
+for f in [f for f in harness_files if f != ".claude/rules/harness-map.md" and not f.startswith("examples/")] + contributing:
     for m in re.finditer(r"\{\{[^}]+\}\}", open(f, encoding="utf-8").read()):
         used.setdefault(m.group(0), f)
 for slot in sorted(set(used) - defined - META):

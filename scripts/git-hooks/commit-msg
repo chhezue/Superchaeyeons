@@ -11,7 +11,10 @@ Merge\ * | Revert\ *)
 	;;
 esac
 
-if ! printf '%s' "$first_line" | grep -Eq '^(Feat|Fix|Refactor|Docs|Chore|Test): .+'; then
+# COMMIT_RE는 harness-map.md의 {{커밋 메시지 형식}}과 짝이다 — 훅은 슬롯을 읽지 못하므로 여기 직접 적는다.
+COMMIT_RE='^(Feat|Fix|Refactor|Docs|Chore|Test): .+'
+
+if ! printf '%s' "$first_line" | grep -Eq "$COMMIT_RE"; then
 	echo "FAIL: 커밋 메시지는 '{Type}: {설명}' 형식이어야 합니다 (CONTRIBUTING.md)." >&2
 	echo "  Type: Feat | Fix | Refactor | Docs | Chore | Test" >&2
 	echo "  예:   Fix: 마이페이지 응답 필드명 정리" >&2

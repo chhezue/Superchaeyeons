@@ -43,10 +43,10 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 
 승인된 값으로 아래를 만든다. `core-*.md`는 손대지 않는다 (`harness-map.md` 규칙 5).
 
-1. `harness-map.md` — 축·슬롯·플래그 값. 플래그 ❌면 해당 씨앗 훅을 등록하지 않는다 (규칙 절은 지우지 않는다). 그 파일의 "훅 상수와 짝" 목록(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`commit-msg` 정규식·`FORMAT_CMD`)을 값과 같은 턴에 고친다
+1. `harness-map.md` — 축·슬롯·플래그 값. 플래그 ❌면 해당 씨앗 훅을 등록하지 않는다 (규칙 절은 지우지 않는다). 그 파일의 "훅 상수와 짝" 목록(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`)을 값과 같은 턴에 고친다. `HARNESS_SELF_EDIT="0"`이면 `check-portability.sh`는 이 대입 줄의 값과 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`를 프로젝트 값 자리로 보고 검사하지 않는다
 2. **lang 팩** — `.claude/`에는 스택 파일이 없다. 실측한 lang 축에 맞는 씨앗이 `examples/seeds/{스택}/`에 있으면 그 README의 "무엇을 어디에 복사하나" 표대로 복사하고, 없으면 `examples/seeds/_template/`을 복사해 실측값으로 채운다. **파일명의 `local-` 접두사를 떼지 않는다** — `scripts/check-portability.sh`가 그 접두사로 local 층을 식별해 검사에서 빼므로, 접두사가 빠지면 복사 직후부터 검사기와 pre-commit이 막힌다. **복사한 씨앗은 즉시 대조한다** — 씨앗 README의 "씨앗 대조" 표에 있는 전제(의존성·버전·기반 클래스·표기 방식)마다 빌드 파일·코드를 열어 확인하고, 다르면 씨앗 본문을 고치고 근거 파일을 표에 적는다. 확인하지 않은 전제를 남기지 않는다 — 검증 없이 물려받은 전제가 같은 실수를 세 번 낳은 사례가 계기다. 씨앗 훅은 해당 플래그가 ☑일 때만 `.claude/hooks/`로 복사하고 `settings.json`에 등록한다
 3. `local-*.md` — 슬롯으로도 플래그로도 안 빠지는 **그 저장소만의 사실**이 있을 때만. `AGENTS.md`와 중복이면 만들지 않는다
-4. `AGENTS.template.md` → `AGENTS.md` 채움 · `./scripts/install-git-hooks.sh` · `commit-msg` 훅 정규식이 `{{커밋 메시지 형식}}`과 일치하는지 확인
+4. `AGENTS.template.md` → `AGENTS.md` 채움 · `./scripts/install-git-hooks.sh` · `commit-msg` 훅의 `COMMIT_RE`가 `{{커밋 메시지 형식}}`과 일치하는지 확인
 
 **산출물 체크리스트** — 전부 통과해야 완료다. `pack.md` 계약 대신 이 목록이 생성물 품질을 지킨다.
 

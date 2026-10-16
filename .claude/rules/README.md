@@ -17,7 +17,7 @@ paths:
 
 | 층 | 파일 | 수정 | 이유 |
 |----|------|------|------|
-| **core** | `rules/core-*.md` · `skills/` · `agents/` · `hooks/` · `settings.json` | 금지 — `check-portability.sh`가 고유명사·스택 식별자·경로 리터럴·팩 참조를 막는다. 예외: `adopt`이 플래그에 따라 `settings.json`에 씨앗 훅 등록을 추가·해제 | 모든 프로젝트에서 같아야 개선이 함께 전파된다 |
+| **core** | `rules/core-*.md` · `skills/` · `agents/` · `hooks/` · `settings.json` | 금지 — `check-portability.sh`가 고유명사·스택 식별자·경로 리터럴·팩 참조를 막는다. 예외: `adopt`이 플래그에 따라 `settings.json`에 씨앗 훅 등록을 추가·해제 · 붙여 쓰는 프로젝트(하네스 자기 수정 ❌)에서는 `harness-map.md` "훅 상수와 짝"의 대입 값과 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`가 프로젝트 값 자리라 검사 밖 | 모든 프로젝트에서 같아야 개선이 함께 전파된다 |
 | **map** | `rules/harness-map.md` | `adopt`이 채운다 | 이 프로젝트의 축·슬롯·플래그 값 |
 | **local** | `.claude/` 안의 `local-*` 전부 | 자유 | 저장소 고유 사실·복사한 lang 팩. 검사기가 접두사로 이 층을 뺀다 |
 

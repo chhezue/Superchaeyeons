@@ -15,8 +15,8 @@
 - `{{작업 범위}}` ↔ `deny-out-of-scope-write.sh`의 `SCOPE`
 - "하네스 자기 수정" ↔ 같은 훅의 `HARNESS_SELF_EDIT`
 - `{{테스트 명령}}` ↔ `deny-unverified-completion.sh`의 `TEST_CMD`
-- `{{커밋 메시지 형식}}` ↔ `scripts/git-hooks/commit-msg` 정규식
-- `{{포맷 명령}}` ↔ `scripts/git-hooks/pre-commit`의 `FORMAT_CMD`와 씨앗 포맷 훅
+- `{{커밋 메시지 형식}}` ↔ `scripts/git-hooks/commit-msg`의 `COMMIT_RE`
+- `{{포맷 명령}}` ↔ `scripts/git-hooks/pre-commit`의 `FORMAT_CMD`·`FORMAT_PATHS`와 씨앗 포맷 훅
 
 ## 축
 

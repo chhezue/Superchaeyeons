@@ -4,7 +4,7 @@
 # 지워 버려 오탐 대가가 너무 크다. core-gates.md "멈추는 신호 — 열린 표현"의 결정론적 알림 장치다.
 #
 # 언어가 다른 프로젝트는 아래 두 변수만 바꾼다. (훅 공통 규약의 예외: 이 훅은 deny-가 아니라 ask-라 판정 불가면 조용히 통과)
-OPEN_PATTERNS='알아서|적당히|최적화(해|하|좀)|개선(해|하|좀)|정리(해|좀) ?줘|리팩터(링)? ?(좀|해)|더 (낫|좋)게|깔끔하게|전반적으로|보기 좋게'
+OPEN_PATTERNS='알아서|적당히|최적화(해|하|좀)|개선(해|하|좀)|정리(해|좀) ?줘|리팩(터|토)링? ?(좀|해)|다듬(어|고)|간단하게|더 (낫|좋)게|깔끔하게|전반적으로|보기 좋게|clean( [a-z]+)? ?up|refactor|improve|make it (better|cleaner|nicer)|tidy|optimi[sz]e|simplify'
 SMALL_FIX_PATTERNS='오타|typo|한 줄|한줄|이름만|주석만|로그 한|버전만'
 #
 # Hook input: JSON with "prompt" on stdin. stdout → 모델 컨텍스트에 추가된다.

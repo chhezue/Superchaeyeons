@@ -125,6 +125,8 @@ deny-unverified-completion.sh	-	0	{"transcript_path":"/nonexistent.jsonl","stop_
 # ---- ask-open-request.sh (UserPromptSubmit) — 항상 exit 0, 주입 여부는 stdout ----
 ask-open-request.sh	-	0	{"prompt":"이 코드 알아서 최적화해줘"}
 ask-open-request.sh	-	0	{"prompt":"오타 하나 고쳐줘"}
+ask-open-request.sh	-	0	{"prompt":"이 모듈 리팩토링해줘"}
+ask-open-request.sh	-	0	{"prompt":"please clean up this code"}
 ask-open-request.sh	-	0	not json
 
 # ---- warn-unfilled-map.sh (SessionStart) — 항상 exit 0 ----

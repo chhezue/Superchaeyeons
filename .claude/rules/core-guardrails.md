@@ -48,4 +48,4 @@
 
 **금지:** `{{스펙 저장소}}`에만 적어두고 `{{현재동작 요약}}`은 방치 · "사소한 변경"이라며 임의로 갱신 생략 · 기술 용어를 그대로 옮겨적기(사용자가 다른 문서 없이도 읽히게 — `core-reporting.md` 준수).
 
-**환경 금지 (훅이 차단):** `git push --force` · `rm -rf` 류 재귀 강제 삭제 · `git reset --hard` · 운영 DB 파괴 · `.env`·API 키 커밋.
+**환경 금지 (훅이 차단):** force push · `rm -rf`·`find -delete` · `git reset --hard`·`clean -f`·`branch -D`·`stash drop`·`filter-branch` · `git commit --no-verify` · `.env` add/commit · SQL `DROP` · 컨테이너 볼륨 삭제 · `curl | sh` · `chmod -R 777` · `dd of=/dev` (SSOT: 훅의 `PATTERNS`). **훅이 못 보는 것 — 규칙으로만 금지:** API 키를 파일·로그에 쓰기, 변수·`eval`·별도 스크립트로 감싼 간접 실행.

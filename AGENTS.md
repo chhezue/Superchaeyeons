@@ -13,7 +13,8 @@ Claude Code용 **하네스**(규칙·스킬·훅·에이전트) 템플릿 저장
 | `examples/seeds/` | **씨앗** — 검증된 lang 팩(`java-spring/`)과 스택 무관 골격(`_template/`). `adopt`이 복사하거나 채운다. 배달물 아님 |
 | `.claude/skills/` | `adopt` · `ask` · `specify` · `safe-refactor` · `debug` · `preflight` · `defer` · `retro` |
 | `.claude/agents/` | `researcher`(G1) · `doc-reviewer`(G3). 스택 리뷰어는 씨앗 |
-| `.claude/hooks/` | `deny-*` 3 · `warn-*` 1 · `ask-*` 1 — 스택 무관. 규약은 `scripts/test-hooks.sh`가 판정 |
+| `.claude/hooks/` | `deny-*` 3 · `warn-*` 1 · `ask-*` 1 — 스택 무관. 규약과 `settings.json` 등록은 `scripts/test-hooks.sh`가 판정 |
+| `.claude/settings.json` | 훅 등록 + `permissions.deny`(훅과 이중) |
 | `docs/harness/` | 하네스 4개 레이어 설명 (이 저장소 이력 — 배달 안 함) |
 | `docs/out-of-scope/` | 검토 후 안 하기로 한 것과 이유 |
 | `docs/harness-engineering.md` | 왜 이렇게 만들었는지 (긴 글) |

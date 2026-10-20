@@ -159,10 +159,10 @@ paths:
 
 | 이벤트 | 매처 | 훅 | 동작 |
 |--------|------|-----|------|
-| `PreToolUse` | `Bash` | `deny-dangerous-bash.sh` | force push · 재귀 강제 삭제 · hard reset · 컨테이너 볼륨 삭제 차단 (exit 2). 알려진 오탐: 명령 문자열 전체에서 패턴을 찾아 문자열로만 언급해도 막힌다 — fail-closed 의도라 유지 |
-| `PreToolUse` | `Write\|Edit` | `deny-out-of-scope-write.sh` | `{{작업 범위}}` 밖 쓰기 차단 (exit 2). 훅 상수 `SCOPE` = 슬롯 값, `.`이면 무동작. 저장소 밖 절대경로는 통과 |
-| `UserPromptSubmit` | — | `ask-open-request.sh` | 열린 표현이면 `ask` 알림 주입 (항상 exit 0 — 차단하면 프롬프트가 지워진다) |
-| `Stop` | — | `deny-unverified-completion.sh` | 코드 수정 + `TEST_CMD`(= `{{테스트 명령}}`) 미실행 + 완료 단정이면 되돌림 (exit 2). 문서만·재진입·판정 불가는 통과 |
+| `PreToolUse` | `Bash` | `deny-dangerous-bash.sh` | 파괴·우회·시크릿 명령 차단 (exit 2) — force push · `rm -rf`·`find -delete` · `git reset --hard`·`clean -f`·`branch -D`·`stash drop`·`filter-branch` · `git commit --no-verify` · `.env` add/commit · SQL DROP · 컨테이너 볼륨 삭제 · `curl \| sh` · `chmod -R 777` · `dd of=/dev`. 정확한 목록은 훅의 `PATTERNS` 배열. 알려진 오탐: 명령 문자열 전체에서 패턴을 찾아 문자열로만 언급해도 막힌다 — fail-closed 의도라 유지. 못 보는 것: 변수·`eval`·별도 스크립트 간접 실행 |
+| `PreToolUse` | `Write\|Edit` | `deny-out-of-scope-write.sh` | (1) **[플래그: 하네스 자기 수정]** ❌면 `.claude/hooks/`·`settings.json` 쓰기 차단 (2) `{{작업 범위}}` 밖 쓰기 차단 (exit 2). 훅 상수 `HARNESS_SELF_EDIT`·`SCOPE` = 플래그·슬롯 값. 저장소 밖 절대경로는 통과 |
+| `UserPromptSubmit` | — | `ask-open-request.sh` | 열린 표현(한국어·영어)이면 `ask` 알림 주입 (항상 exit 0 — 차단하면 프롬프트가 지워진다) |
+| `Stop` | — | `deny-unverified-completion.sh` | 코드 수정(도구 편집 + Bash `sed -i`·리다이렉션·`tee`) 뒤 `TEST_CMD`(= `{{테스트 명령}}`)를 **그 다음에** 실행한 기록이 없거나 결과가 실패인데 완료 단정이면 되돌림 (exit 2). 문서만·재진입·판정 불가는 통과 |
 | `SessionStart` | — | `warn-unfilled-map.sh` | `harness-map.md`에 ⬜·이유 없는 `(없음)`이 남았으면 경고 주입 |
 
 lang 팩 훅(포맷 자동 실행 · 마이그레이션 파일 차단 · 계약 변경 경고)은 씨앗에 있고, 해당 플래그가 ☑일 때 `adopt`이 복사·등록한다.
@@ -175,7 +175,7 @@ lang 팩 훅(포맷 자동 실행 · 마이그레이션 파일 차단 · 계약 
 
 ## 설정 파일
 
-`settings.json`은 훅 등 공통 설정으로 버전 관리한다. `settings.local.json`은 개인 권한 allowlist라 커밋되지 않는다.
+`settings.json`은 훅 등록과 **`permissions.deny`**(도구 권한 층의 차단 목록 — `.env` 읽기·쓰기, `git push --force`·`git reset --hard`·`rm -rf`·`git commit --no-verify` 접두사)를 담아 버전 관리한다. deny는 allow보다 먼저 판정되므로 개인 allowlist로 풀리지 않는다. 훅과 같은 항목을 두 층에 두는 이유는 훅이 문자열을 보는 하한선이고 권한 규칙은 도구 호출 자체를 막기 때문이다. `settings.local.json`은 개인 권한 allowlist라 커밋되지 않는다.
 
 ## 유지보수 체크리스트
 

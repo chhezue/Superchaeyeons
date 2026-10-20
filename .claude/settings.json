@@ -1,4 +1,18 @@
 {
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(**/.env)",
+      "Edit(./.env)",
+      "Write(./.env)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(rm -rf:*)",
+      "Bash(git commit --no-verify:*)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {

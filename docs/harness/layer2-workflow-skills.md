@@ -129,10 +129,10 @@
 
 `safe-refactor`을 처음 전체 사이클 적용한 사례입니다.
 
-- 신선한 서브에이전트로 `auth` 패키지 읽기 전용 감사 → [`docs/audits/auth/audit.md`](../audits/auth/audit.md)
+- 신선한 서브에이전트로 `auth` 패키지 읽기 전용 감사 → `docs/audits/auth/audit.md` (TripFit 문서 — 이 저장소에 없음)
 - A/B 9건을 사용자에게 요약 보고 → 승인
 - 구현 → `./gradlew test` 통과
-- 기록 → [`docs/audits/auth/refactor-log.md`](../audits/auth/refactor-log.md)
+- 기록 → `docs/audits/auth/refactor-log.md` (TripFit 문서 — 이 저장소에 없음)
 - **미완 부분도 그대로 기록:** `oasdiff` 검증은 당시 로컬 샌드박스의 Docker 제약으로 보류
 
 대표적 개선 1건 (사용자 보고문에서 발췌한 표현):

@@ -55,7 +55,7 @@ description: 이번 세션에서 드러난 하네스(규칙·스킬·에이전�
    | 훅(`.claude/hooks/`) | **exit code로 판정 가능함** | 금지 패턴 차단 |
    | 문서 SSOT | 값·계약이 어긋남 | 스펙·ERD amend |
 
-   판정 불가능한 것을 훅으로 만들지 않는다 — 계약 변경 경고 훅을 LLM 판단(agent-type)에 맡겼다가 실패한 이력이 있다(`.claude/rules/README.md`).
+   판정 불가능한 것을 훅으로 만들지 않는다 — 계약 변경 경고 훅을 LLM 판단(agent-type)에 맡겼다가 실패한 이력이 있다(`.claude/rules/README.md` "Hooks" 절의 "advisory 훅은 command-type으로" 문단).
 
 5. **⛔ 승인 게이트** — 후보를 사용자에게 **짧게 보고하고 승인을 받는다.** 파일에 쓰기 전에 멈춘다.
    - 각 후보: **무엇이 문제였나 → 어느 층으로 → 근거(이번 세션의 어느 지점)**

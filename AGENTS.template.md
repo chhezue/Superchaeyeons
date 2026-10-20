@@ -3,7 +3,7 @@
 {한 줄 설명}. AI 에이전트가 작업할 때 참고하는 프로젝트 지도입니다.
 
 > **이 파일은 템플릿입니다.** `AGENTS.md`로 복사한 뒤 `{...}` 자리를 채우고 이 인용문을 지우세요.
-> 함께 채울 것: [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md) (축 4개·슬롯 22개·능력 플래그 7개)
+> 함께 채울 것: [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md) (축 4개·슬롯 22개·능력 플래그 8개 — "하네스 자기 수정"은 ❌가 기본)
 > 채운 예: [`examples/tripfit/AGENTS.md`](examples/tripfit/AGENTS.md)
 
 ## How We Build

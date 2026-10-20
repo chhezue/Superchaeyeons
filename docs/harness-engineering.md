@@ -63,7 +63,7 @@ Always-load 규칙 7개(`core-guardrails`·`core-workflow`·`core-scope`·`core-
 
 ### 실제 적용 사례 — `auth` 도메인 리팩터 감사 (2026-08-04)
 
-`safe-refactor` 스킬을 처음으로 전체 사이클 적용한 사례: 신선한 서브에이전트로 `auth` 패키지를 읽기 전용 감사 → A/B 9건을 사용자에게 요약 보고·승인 → 구현 → `./gradlew test` 통과 확인까지 진행했습니다(`oasdiff` 검증은 로컬 샌드박스의 Docker 제약으로 보류). 기록: [`docs/audits/auth/audit.md`](audits/auth/audit.md), [`docs/audits/auth/refactor-log.md`](audits/auth/refactor-log.md). 나머지 도메인(`user`, `user-schedule`, `trip`, `notification`, `cross-cutting`)은 아직 미시작 — 진행 현황 SSOT: [`docs/audits/README.md`](audits/README.md).
+`safe-refactor` 스킬을 처음으로 전체 사이클 적용한 사례: 신선한 서브에이전트로 `auth` 패키지를 읽기 전용 감사 → A/B 9건을 사용자에게 요약 보고·승인 → 구현 → `./gradlew test` 통과 확인까지 진행했습니다(`oasdiff` 검증은 로컬 샌드박스의 Docker 제약으로 보류). 기록: `docs/audits/auth/audit.md`(TripFit — 이 저장소에 없음), `docs/audits/auth/refactor-log.md`(TripFit — 이 저장소에 없음). 나머지 도메인(`user`, `user-schedule`, `trip`, `notification`, `cross-cutting`)은 아직 미시작 — 진행 현황 SSOT: [`docs/audits/README.md`](audits/README.md).
 
 ## 5. 훅 (`.claude/hooks/`) — 프롬프트로 안 되는 결정론적 하한선
 
@@ -71,7 +71,7 @@ Always-load 규칙 7개(`core-guardrails`·`core-workflow`·`core-scope`·`core-
 
 ### 인시던트에서 배운 것 — "판단이 필요 없는 곳엔 LLM을 쓰지 않는다"
 
-`warn-breaking-change.sh`는 처음엔 `agent`-type(서브에이전트가 diff를 읽고 breaking 여부를 판단)으로 만들었다가, working tree의 무관한 변경까지 오판해 "절대 막지 마라"는 지시에도 커밋을 막는 사고를 낸 뒤 `command`-type(exit code로 결정론적 통제)으로 전환했습니다 — "판단"은 LLM에게, "항상 이렇게 동작해야 한다"는 결정론적 스크립트에게 맡기는 경계를 이 사고로 얻었습니다. 전체 경위: [`.claude/rules/README.md`](../.claude/rules/README.md) "agent-type 훅 관련 교훈" 절(SSOT).
+`warn-breaking-change.sh`는 처음엔 `agent`-type(서브에이전트가 diff를 읽고 breaking 여부를 판단)으로 만들었다가, working tree의 무관한 변경까지 오판해 "절대 막지 마라"는 지시에도 커밋을 막는 사고를 낸 뒤 `command`-type(exit code로 결정론적 통제)으로 전환했습니다 — "판단"은 LLM에게, "항상 이렇게 동작해야 한다"는 결정론적 스크립트에게 맡기는 경계를 이 사고로 얻었습니다. 전체 경위: [`.claude/rules/README.md`](../.claude/rules/README.md) "Hooks" 절의 "advisory 훅은 command-type으로" 문단(SSOT).
 
 ## 6. 실제 인시던트가 규칙이 된 사례들
 
@@ -97,9 +97,9 @@ push/PR → OpenApiSpecExportTest → oasdiff breaking (스키마 diff)
                                         → Discord #frontend 알림 (CI는 항상 통과, deploy 안 막음)
 ```
 
-- 기준 스냅샷: [`docs/api/openapi.json`](api/openapi.json) — `main` push마다 CI가 자동 갱신, 손편집 금지
+- 기준 스냅샷: `docs/api/openapi.json`(TripFit — 이 저장소에 없음) — `main` push마다 CI가 자동 갱신, 손편집 금지
 - 프론트는 이 파일을 인증 없이 raw fetch해 codegen 소스로 사용
-- 상세·실제 사고 히스토리: [`docs/api/README.md`](api/README.md) (§6 표의 절반이 여기서 나온 인시던트)
+- 상세·실제 사고 히스토리: `docs/api/README.md`(TripFit — 이 저장소에 없음) (§6 표의 절반이 여기서 나온 인시던트)
 
 ## 8. DB 스키마 — 마이그레이션 대신 "엔티티가 유일한 SSOT"
 
@@ -127,7 +127,7 @@ push/PR → OpenApiSpecExportTest → oasdiff breaking (스키마 diff)
 
 ## 11. 실행 가능한 규칙 — prose가 아니라 테스트로
 
-레이어 의존 방향·PK 전략 같은 구조 규칙 일부는 `spring-boot-java.md`에 글로만 적어두지 않고 [`ArchitectureTest.java`](../src/test/java/com/tripfit/tripfit/architecture/ArchitectureTest.java)(ArchUnit)가 `./gradlew test`마다 실제로 검증합니다 — 에이전트가 규칙을 "깜빡"해도 CI가 기계적으로 잡아냅니다.
+레이어 의존 방향·PK 전략 같은 구조 규칙 일부는 `spring-boot-java.md`에 글로만 적어두지 않고 `ArchitectureTest.java`(TripFit 소스 — 이 저장소에 없음)(ArchUnit)가 `./gradlew test`마다 실제로 검증합니다 — 에이전트가 규칙을 "깜빡"해도 CI가 기계적으로 잡아냅니다.
 
 ## 12. 외부 도구 채택 기준 — 안 쓰기로 한 것도 기록
 

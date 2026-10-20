@@ -9,8 +9,8 @@ Claude Code용 **AI 하네스 템플릿** — 규칙·스킬·훅·에이전트 
 - 문서와 구현이 어긋나면 → 조용히 맞추지 않고 **질문**
 - 요청이 "알아서·적당히"처럼 열려 있으면 → 구현 전에 **라운드 인터뷰**(`ask`)
 - API 계약·에러코드·권한이 바뀌면 → **같은 턴에** 스펙·enum까지 갱신 (미루기 금지)
-- 위험한 shell 명령·범위 밖 쓰기 → 훅이 **결정적으로 차단** (판단에 맡기지 않음)
-- 코드를 고치고 테스트를 안 돌린 채 "완료"라고 하면 → `Stop` 훅이 **되돌림**
+- 위험한 shell 명령(force push·재귀 삭제·hard reset·`git clean -f`·`--no-verify` 커밋·`.env` 커밋·SQL DROP·볼륨 삭제·`curl | sh` 등)·범위 밖 쓰기·**자기 훅 수정** → 훅이 **결정적으로 차단** (판단에 맡기지 않음). 같은 항목이 `settings.json`의 `permissions.deny`에도 있어 이중으로 막힘
+- 코드를 고치고(도구 편집이든 Bash `sed -i`·리다이렉션이든) 테스트를 **그 뒤에** 돌리지 않았거나 실패했는데 "완료"라고 하면 → `Stop` 훅이 **되돌림**
 - 커밋·이슈·PR 생성 → **항상 먼저 확인**
 
 강제력이 다른 4개 레이어(규칙 → 스킬·에이전트 → 훅 → 기계 검증)로 나뉘어 있습니다. **구성 요소 하나하나가 언제 실행되고 무엇을 묻고 검사하는지, 고치려면 어디를 건드리는지**는 [`docs/harness/component-map.md`](docs/harness/component-map.md)에 있습니다. 설계 근거는 [`docs/harness/`](docs/harness/README.md), 왜 이렇게 만들었는지 긴 글은 [`docs/harness-engineering.md`](docs/harness-engineering.md).
@@ -23,7 +23,7 @@ Claude Code용 **AI 하네스 템플릿** — 규칙·스킬·훅·에이전트 
 cp -R .claude docs/templates scripts <새-프로젝트>/   # .github/CONTRIBUTING.md 는 루트에 둘 수 있을 때만
 ```
 
-그다음 새 프로젝트에서 **`adopt` 스킬을 돌립니다.** 저장소를 실측해(`scripts/adopt-probe.sh`) [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md)의 축 4개 · 슬롯 22개 · 능력 플래그 7개를 **제안**하고, 승인하면 채웁니다. 스택에 맞는 씨앗이 `examples/seeds/`에 있으면 `local-*` 이름 그대로 복사해 실물과 대조하고, 없으면 `_template/`을 실측으로 채웁니다. `AGENTS.template.md` → `AGENTS.md`도 이 단계에서 만듭니다. 규칙 파일(`core-*.md`)은 건드리지 않습니다.
+그다음 새 프로젝트에서 **`adopt` 스킬을 돌립니다.** 저장소를 실측해(`scripts/adopt-probe.sh`) [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md)의 축 4개 · 슬롯 22개 · 능력 플래그 8개를 **제안**하고, 승인하면 채웁니다. 붙여 쓰는 프로젝트는 "하네스 자기 수정" 플래그를 ❌로 두어 에이전트가 훅·`settings.json`을 고치지 못하게 합니다. 스택에 맞는 씨앗이 `examples/seeds/`에 있으면 `local-*` 이름 그대로 복사해 실물과 대조하고, 없으면 `_template/`을 실측으로 채웁니다. `AGENTS.template.md` → `AGENTS.md`도 이 단계에서 만듭니다. 규칙 파일(`core-*.md`)은 건드리지 않습니다.
 
 마지막으로 git 훅을 설치합니다. 커밋 형식과 부품 계약·문서 스타일·훅 규약을 커밋 전에 검사합니다.
 
@@ -42,7 +42,8 @@ cp -R .claude docs/templates scripts <새-프로젝트>/   # .github/CONTRIBUTIN
 | `.claude/rules/` | `harness-map`(축·슬롯·플래그 값) + `core-*` 8개(프로젝트 무관 — 7개 always-load, `core-code-comments`는 소스 파일 접근 시) + `doc-writing` + `README`(구조 인덱스). 스택 규칙 없음 |
 | `.claude/skills/` | `adopt` · `ask` · `specify` · `safe-refactor` · `debug` · `preflight` · `defer` · `retro` |
 | `.claude/agents/` | `researcher`(G1 외부 문서 조사) · `doc-reviewer`(G3 문서 리뷰) |
-| `.claude/hooks/` | 스택 무관 5개 — `deny-*` 3 · `warn-*` 1 · `ask-*` 1. 규약은 `scripts/test-hooks.sh`가 판정 |
+| `.claude/hooks/` | 스택 무관 5개 — `deny-*` 3 · `warn-*` 1 · `ask-*` 1. 규약과 `settings.json` 등록은 `scripts/test-hooks.sh`가 판정 |
+| `.claude/settings.json` | 훅 등록 5개 + `permissions.deny`(`.env` 읽기·쓰기, force push·hard reset·`rm -rf`·`--no-verify` 접두사) |
 | `scripts/` | 검사기 3개(`check-portability` · `test-hooks` · `check-doc-style`)와 그 래퍼 `verify.sh`, 실측 `adopt-probe.sh`, git 훅 |
 | `examples/seeds/` | 검증된 lang 팩 씨앗(`java-spring/`) + 스택 무관 골격(`_template/`). 파일명이 전부 `local-*`라 복사 뒤에도 검사기가 core로 오인하지 않음 |
 | `examples/tripfit/` · `examples/baro/` | 실제로 채운 모습 두 가지 (참고용, 이 저장소의 규칙 아님) |
@@ -61,7 +62,7 @@ cp -R .claude docs/templates scripts <새-프로젝트>/   # .github/CONTRIBUTIN
 
 ## 이 저장소의 검증 명령
 
-부품 계약·always-load 예산(`check-portability`), 훅 규약 케이스 파일과 python3 부재 케이스(`test-hooks`), 문서 스타일(`check-doc-style --all`)을 한 번에 돌리는 명령입니다. 이것이 이 저장소의 `{{테스트 명령}}`이고, `Stop` 훅은 코드를 고친 턴에 이 명령의 실행 기록이 있는지 봅니다.
+부품 계약·always-load 예산(`check-portability`), 훅 규약 케이스 파일과 python3 부재 케이스와 훅 등록 대조(`test-hooks`), 문서 스타일(`check-doc-style --all`)을 한 번에 돌리는 명령입니다. 이것이 이 저장소의 `{{테스트 명령}}`이고, `Stop` 훅은 코드를 고친 턴에 이 명령의 실행 기록이 있는지 봅니다.
 
 ```bash
 scripts/verify.sh

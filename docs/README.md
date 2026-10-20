@@ -21,6 +21,6 @@
 
 ## 시작하기
 
-1. `adopt` 스킬을 돌린다 — 저장소를 실측해 [`harness-map.md`](../.claude/rules/harness-map.md)의 축 4개·슬롯 22개·능력 플래그 7개를 제안하고, 승인 후 채운다. 스택 씨앗 복사(`local-*` 이름 유지)와 `AGENTS.md` 채움도 이 단계에서 한다
+1. `adopt` 스킬을 돌린다 — 저장소를 실측해 [`harness-map.md`](../.claude/rules/harness-map.md)의 축 4개·슬롯 22개·능력 플래그 8개를 제안하고, 승인 후 채운다. 스택 씨앗 복사(`local-*` 이름 유지)와 `AGENTS.md` 채움도 이 단계에서 한다
 2. 새 문서를 만들 때는 [`templates/README.md`](templates/README.md) 산출물 등록부에서 유형과 저장 경로를 먼저 찾는다
 3. `./scripts/install-git-hooks.sh` — 커밋 메시지·pre-commit(부품 계약·문서 스타일 검사) 훅 설치

@@ -79,7 +79,7 @@ STOP은 성격이 3가지로 갈립니다. 다이어그램은 가독성을 위�
 
 이 레이어가 **실패했다가 복구된** 사례라 오히려 설명 가치가 큽니다.
 
-**1) 실패:** 사용자가 배포 다이어그램을 검토해 달라고 했을 때, 에이전트가 [`docs/decisions/010-redis-infra.md`](../decisions/010-redis-infra.md)를 읽고 "EC2 D의 Redis는 access token 블랙리스트 저장소"라고 단정해 사용자 코드를 잘못 지적했습니다.
+**1) 실패:** 사용자가 배포 다이어그램을 검토해 달라고 했을 때, 에이전트가 `docs/decisions/010-redis-infra.md`(TripFit 문서 — 이 저장소에 없음)를 읽고 "EC2 D의 Redis는 access token 블랙리스트 저장소"라고 단정해 사용자 코드를 잘못 지적했습니다.
 
 **2) 문서가 stale했음:** 실제로는 `#2`(PR #121)에서 블랙리스트가 폐기되고 Redis가 refresh token 저장소로 바뀐 상태였는데, ADR이 갱신되지 않았습니다.
 

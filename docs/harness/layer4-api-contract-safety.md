@@ -18,10 +18,10 @@
 |---|---|---|---|
 | 트레일러 규칙 | [`local-openapi-conventions.md`](../../examples/seeds/java-spring/rules/local-openapi-conventions.md) (씨앗) "API 계약 변경" 절 **[플래그: API 계약 보호]** (2026-09-05 core STOP §5에서 이사) | rule (lang 팩) | 커밋 시 `Breaking-Change-Reason:` 작성 강제 |
 | 로컬 경고 훅 | [`local-warn-breaking-change.sh`](../../examples/seeds/java-spring/hooks/local-warn-breaking-change.sh) (씨앗) | hook | 트레일러 누락 시 advisory 경고 (막지 않음) |
-| CI 파이프라인 | [`.github/workflows/ci-cd.yml`](../../.github/workflows/ci-cd.yml) | CI | 스펙 export → base 비교 → 알림 |
-| 감지·알림 스크립트 | [`scripts/notify-api-breaking-change.sh`](../../scripts/notify-api-breaking-change.sh) | script | 3중 감지 + Discord 웹훅 |
-| 기준 스냅샷 | [`docs/api/openapi.json`](../api/openapi.json) | 산출물 | `main` push마다 CI가 자동 갱신 (**손편집 금지**) |
-| 상세·사고 이력 | [`docs/api/README.md`](../api/README.md) | 문서 | 트레일러 형식·사각지대 기록 |
+| CI 파이프라인 | `.github/workflows/ci-cd.yml` (TripFit — 이 저장소에 없음) | CI | 스펙 export → base 비교 → 알림 |
+| 감지·알림 스크립트 | `scripts/notify-api-breaking-change.sh` (TripFit — 이 저장소에 없음) | script | 3중 감지 + Discord 웹훅 |
+| 기준 스냅샷 | `docs/api/openapi.json` (TripFit — 이 저장소에 없음) | 산출물 | `main` push마다 CI가 자동 갱신 (**손편집 금지**) |
+| 상세·사고 이력 | `docs/api/README.md` (TripFit — 이 저장소에 없음) | 문서 | 트레일러 형식·사각지대 기록 |
 
 ## 2. 언제 발동하고, 어떤 흐름을 타는가
 

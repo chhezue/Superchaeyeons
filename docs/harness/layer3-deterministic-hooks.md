@@ -115,7 +115,7 @@ print(data.get('tool_input', {}).get('command', ''))
 
 동시에 검사 범위도 `git diff --cached`(스테이징된 것만)로 좁혀 원인이던 오탐을 제거했습니다.
 
-**결론으로 확정된 규칙:** advisory-only 훅은 command-type을 기본으로 한다. ([`.claude/rules/README.md`](../../.claude/rules/README.md) "agent-type 훅 관련 교훈" 절이 SSOT)
+**결론으로 확정된 규칙:** advisory-only 훅은 command-type을 기본으로 한다. ([`.claude/rules/README.md`](../../.claude/rules/README.md) "Hooks" 절의 "advisory 훅은 command-type으로" 문단이 SSOT)
 
 ## 4. fail-closed vs fail-open — 의도적 비대칭
 

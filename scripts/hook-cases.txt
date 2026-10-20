@@ -21,7 +21,6 @@ deny-out-of-scope-write.sh	sub	2	not json
 deny-out-of-scope-write.sh	sub	2	{"tool_input":{"path":"other/a.md"}}
 deny-out-of-scope-write.sh	sub	2
 deny-out-of-scope-write.sh	.	0	{"tool_input":{"file_path":"other/a.md"}}
-
 # 하네스 자기 수정 플래그 ❌(self=0)이면 SCOPE와 무관하게 훅 본문·settings.json 쓰기를 막는다 — 규칙은 여전히 허용 (2026-09-07 감사)
 deny-out-of-scope-write.sh	.;self=0	2	{"tool_input":{"file_path":".claude/hooks/deny-dangerous-bash.sh"}}
 deny-out-of-scope-write.sh	.;self=0	2	{"tool_input":{"file_path":"$REPO/.claude/settings.json"}}
@@ -30,6 +29,7 @@ deny-out-of-scope-write.sh	.;self=0	0	{"tool_input":{"file_path":".claude/rules/
 deny-out-of-scope-write.sh	.;self=0	0	{"tool_input":{"file_path":"scripts/verify.sh"}}
 deny-out-of-scope-write.sh	sub;self=0	2	{"tool_input":{"file_path":".claude/settings.json"}}
 deny-out-of-scope-write.sh	.;self=1	0	{"tool_input":{"file_path":".claude/hooks/deny-dangerous-bash.sh"}}
+
 # ---- local-deny-db-migration.sh ----
 local-deny-db-migration.sh	-	2	{"tool_input":{"file_path":"src/main/resources/db/migration/V1__init.sql"}}
 local-deny-db-migration.sh	-	2	{"tool_input":{"file_path":"anywhere/V2.1__add_col.sql"}}
@@ -56,7 +56,6 @@ deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"git push origin main"}}
 deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"git push --follow-tags origin main"}}
 deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"git push -u origin feat/1-x"}}
 deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"git reset --hard HEAD~1"}}
-deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"docker compose down -v"}}
 # git clean 강제 삭제 — 플래그 묶음·분리·긴 형식 전부 차단, dry-run은 통과 (2026-09-07 감사 canonical task)
 deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"git clean -fdx"}}
 deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"git clean -f"}}
@@ -96,6 +95,7 @@ deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"dd if=/dev/zero of=/dev/dis
 deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"dd if=/dev/zero of=./blank.img bs=1m count=1"}}
 deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"git clean -n"}}
 deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"git clean --dry-run -d"}}
+deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"docker compose down -v"}}
 deny-dangerous-bash.sh	-	2	not json
 deny-dangerous-bash.sh	-	2	{"tool_input":{}}
 deny-dangerous-bash.sh	-	2
@@ -109,7 +109,6 @@ deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixture
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-tested.jsonl","stop_hook_active":false}
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-docs-only.jsonl","stop_hook_active":false}
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":true}
-# Stop 훅은 판정 불가면 통과 (명시적 예외 — 대화가 끝나지 못하는 피해가 더 크다)
 # 2026-09-07 감사에서 드러난 사각 — Bash 편집(sed -i·리다이렉션·tee), 완료 동의어, 실패한 테스트, 편집 전 실행, 문자열 언급
 deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-bash-edit-no-test.jsonl","stop_hook_active":false}
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-bash-edit-tested.jsonl","stop_hook_active":false}
@@ -119,6 +118,7 @@ deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixture
 deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-mention-not-run.jsonl","stop_hook_active":false}
 # 통과 출력에 "0 failed"·"ERROR" 같은 일반어가 있어도 실패로 오판하지 않는다 (2026-09-07 실세션 오탐)
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-test-passed-wordy.jsonl","stop_hook_active":false}
+# Stop 훅은 판정 불가면 통과 (명시적 예외 — 대화가 끝나지 못하는 피해가 더 크다)
 deny-unverified-completion.sh	-	0	not json
 deny-unverified-completion.sh	-	0	{"transcript_path":"/nonexistent.jsonl","stop_hook_active":false}
 

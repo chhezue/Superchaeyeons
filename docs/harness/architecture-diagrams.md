@@ -3,12 +3,14 @@
 실제 [Eraser.io 워크스페이스](https://app.eraser.io/workspace/HmuAgWuJ2vS9ZvsDOv8u)에 반영되어 있는 다이어그램 코드 모음입니다.
 [Eraser.io](https://app.eraser.io/)에서 빈 캔버스를 열고 좌측 텍스트 에디터에 원하는 블록을 그대로 붙여넣으면 깔끔하게 렌더링됩니다.
 
+> **2026-09-07 — 이 문서는 TripFit 시절(2026-07~09) v1 하네스의 그림이다.** 아래 다이어그램의 배포 인프라(EC2·MySQL·Redis)·CI(oasdiff·Discord)·개수(스킬 5·훅 4·트랙 3·규칙 7+8)는 그 저장소 기준이라 **현행 배달물과 다르다** — 현행은 스킬 8·훅 5·트랙 4·규칙 always-load 8 + path-scoped 3, 배포·CI 없음. 현행 구조의 SSOT는 [`.claude/rules/README.md`](../../.claude/rules/README.md)와 [`component-map.md`](component-map.md)다. 새 프로젝트에는 배달하지 않는다.
+
 ---
 
 ## Part 1. 포트폴리오 메인 다이어그램 (통합 뷰)
 
 이 파트는 포트폴리오 첨부에 최적화된 **"AI-Native Engineering System"**의 핵심 다이어그램 3종입니다.
-실제 서버 인프라부터 `.claude/` 내부의 방대한 규칙(Rules), 스킬(Skills), 훅(Hooks) 생태계, 그리고 API 검증까지 100% 팩트에 기반하여 시각화했습니다.
+실제 서버 인프라부터 `.claude/` 내부의 방대한 규칙(Rules), 스킬(Skills), 훅(Hooks) 생태계, 그리고 API 검증까지 **당시(2026-09-04) TripFit 저장소의 사실**에 기반하여 시각화했습니다.
 
 ### 1. 배포 아키텍처 (Deployment Architecture)
 

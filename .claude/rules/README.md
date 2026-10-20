@@ -180,7 +180,7 @@ lang 팩 훅(포맷 자동 실행 · 마이그레이션 파일 차단 · 계약 
 ## 유지보수 체크리스트
 
 - [ ] 스킬·에이전트를 추가·삭제·개명하면 **같은 턴에** `core-workflow.md` 트랙 표·게이트 절과 이 README의 Skills·Agents 표, `{{문서 루트}}/harness/component-map.md`를 갱신 — 없어진 스킬로 안내하는 라우터는 거짓말을 한다
-- [ ] 훅을 추가·삭제·수정하면 `scripts/hook-cases.txt`에 케이스를 먼저 넣고 `scripts/test-hooks.sh` 통과 → 이 README Hooks 표 + 디렉터리 구조 갱신
+- [ ] 훅을 추가·삭제·수정하면 `scripts/hook-cases.txt`에 케이스를 먼저 넣고 `scripts/test-hooks.sh` 통과 (등록 대조 포함 — 새 훅은 `settings.json`에 등록해야 통과한다) → 이 README Hooks 표 + 디렉터리 구조 갱신
 - [ ] 규칙 파일을 고쳤으면 `scripts/check-portability.sh` exit 0 (배달물 전체가 판정 대상)
 - [ ] 문서를 새로 만들거나 크게 고쳤으면 `scripts/check-doc-style.sh` 오류 0 + `doc-reviewer`
 - [ ] 슬롯·플래그를 늘리는 문턱: `core-*.md`에서 실제로 그 `{{슬롯}}`·`[플래그]`를 쓰는 곳이 있을 때만

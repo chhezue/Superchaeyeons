@@ -73,8 +73,8 @@
 
 ```json
 {
-  "code": "TRIP_NOT_FOUND",
-  "message": "여행방을 찾을 수 없습니다."
+  "code": "RESOURCE_NOT_FOUND",
+  "message": "대상을 찾을 수 없습니다."
 }
 ```
 

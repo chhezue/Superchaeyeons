@@ -15,7 +15,7 @@ C1	Discord|디스코드|Slack|슬랙	특정 알림 채널
 C1	EC2|AWS|S3|Loki|Grafana	특정 인프라 제품
 C1	#[0-9]+	특정 저장소의 이슈 번호 (자리표시자 `#n`은 허용)
 C1	how-it-works\.md|release-milestones\.md|erd\.md|platform\.md|glossary\.md	TripFit 문서 파일명 → 슬롯으로 ({{스키마 SSOT}}·{{클라이언트 전제}}·{{용어집}})
-C1	NotificationController|Trip[A-Z][A-Za-z]*	TripFit 클래스 이름
+C1	NotificationController|Trip[A-Z][A-Za-z]*|TRIP_[A-Z_]+|여행방|여행 일정	TripFit 클래스·에러 코드·도메인 용어 (2026-09-07 감사: 대문자 상수·한글 도메인어가 빠져 있었다)
 C1	trip-[a-z]|googlecalendar|user-schedule|trip/|notification/	TripFit 도메인·스펙 파일명 (소문자 — 스펙 폴더 매핑은 {{스펙 저장소}} README가 갖는다)
 
 # ---- C2 언어·프레임워크·도구 식별자 → lang 팩 ----

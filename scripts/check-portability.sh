@@ -23,8 +23,8 @@ scope="all"
 # 이행 중 특정 분류를 잠시 빼야 할 때: PORTABILITY_SKIP=C3 (pre-commit도 이 변수를 그대로 물려받는다)
 skip="${PORTABILITY_SKIP:-}"
 # always-load 합계 상한(바이트). 한국어 UTF-8 기준 바이트/2.5 ≈ 토큰.
-# 2026-09-06 확정: 65,000B(≈2.6만 토큰) — P6 종료 실측 63,096B를 상한으로 못 박는 래칫이다. 늘어나는 커밋은 막고, 줄이는 작업은
-# 이 값을 낮추며 진행한다. 2026-09-06 토큰 최적화(라우터 통합·요약 표 제거·priority 절 local화)로 낮췄다. 이유 없이 올리지 않는다.
+# 래칫: 실측 합계를 상한으로 못 박아 늘어나는 커밋은 막고, 줄이는 작업은 이 값을 낮추며 진행한다. 이유 없이 올리지 않는다.
+# 이력: 2026-09-06 65,000B(P6 실측 63,096B) → 같은 날 토큰 최적화(라우터 통합·요약 표 제거·priority 절 local화) 뒤 52,000B.
 budget_bytes="${PORTABILITY_BUDGET_BYTES:-52000}"
 # 상한이 확정됐으므로 초과는 기본 차단이다. 이행 중 한 번 넘겨야 하면 PORTABILITY_BUDGET_STRICT=0.
 strict_budget="${PORTABILITY_BUDGET_STRICT:-1}"

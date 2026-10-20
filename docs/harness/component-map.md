@@ -102,8 +102,8 @@
 
 | 스크립트 | 언제 | 판정 | 데이터 파일 | 실패 시 |
 |----------|------|------|-------------|---------|
-| `check-portability.sh` | 규칙·스킬·에이전트·훅을 고친 뒤 · pre-commit(배달물 stage 시) | 배달물에 C1 고유명사 · C2 스택 식별자 · C3 경로 리터럴·버전 · C4 팩 참조가 없는가. always-load 합계 ≤ 65,000B(래칫). `harness-map.md`·`.claude/*/local-*`·`examples/`는 제외 | `portability-patterns.txt` | exit 1 — 위반 줄과 대신 쓸 것(슬롯·lang 팩)을 출력 |
-| `test-hooks.sh` | 훅을 고친 뒤 · pre-commit(훅·케이스 stage 시) | 케이스마다 기대 exit와 실제 exit 비교. 씨앗 훅도 찾는다. 내장: `deny-*` 전부에 python3 부재 → exit 2 | `hook-cases.txt` · `hook-fixtures/` | exit 1 — 실패 케이스와 stderr 3줄 |
+| `check-portability.sh` | 규칙·스킬·에이전트·훅을 고친 뒤 · pre-commit(배달물 stage 시) | 배달물에 C1 고유명사 · C2 스택 식별자 · C3 경로 리터럴·버전 · C4 팩 참조가 없는가. always-load 합계 ≤ 52,000B(래칫). `harness-map.md`·`.claude/*/local-*`·`examples/`는 제외 | `portability-patterns.txt` | exit 1 — 위반 줄과 대신 쓸 것(슬롯·lang 팩)을 출력 |
+| `test-hooks.sh` | 훅을 고친 뒤 · pre-commit(훅·케이스 stage 시) | 케이스마다 기대 exit와 실제 exit 비교. 씨앗 훅도 찾는다. 내장: `deny-*` 전부에 python3 부재 → exit 2 · 훅 등록 대조(`.claude/hooks/*.sh` 전부가 `settings.json`에 등록·실존·실행 가능) | `hook-cases.txt` · `hook-fixtures/` | exit 1 — 실패 케이스와 stderr 3줄 |
 | `check-doc-style.sh` | 문서를 새로 쓰거나 크게 고친 뒤 · pre-commit(`.md` stage 시) | E(차단): 개요 없음·H4·메타 담화·이중 피동·닫히지 않은 펜스 · W(경고): 제목 30자·약어 첫 등장·한자어·명사형 | `doc-style-patterns.txt` | E가 있으면 exit 1. 오탐이면 스크립트가 아니라 패턴 파일을 고친다 |
 | `verify.sh` | "완료·통과"를 말하기 전 — 이 저장소의 `{{테스트 명령}}` | 위 셋을 순서대로 | — | 하나라도 실패하면 exit 1 |
 | `adopt-probe.sh` | `adopt` 1단계 | 축 4개·커밋/브랜치 형식 집계·슬롯 후보를 마크다운 표로 (판단 없음, 읽기 전용) | — | — |

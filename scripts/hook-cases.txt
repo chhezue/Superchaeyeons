@@ -109,6 +109,15 @@ deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixture
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-docs-only.jsonl","stop_hook_active":false}
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":true}
 # Stop 훅은 판정 불가면 통과 (명시적 예외 — 대화가 끝나지 못하는 피해가 더 크다)
+# 2026-09-07 감사에서 드러난 사각 — Bash 편집(sed -i·리다이렉션·tee), 완료 동의어, 실패한 테스트, 편집 전 실행, 문자열 언급
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-bash-edit-no-test.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-bash-edit-tested.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-synonym-claim.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-test-failed.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-test-before-edit.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-mention-not-run.jsonl","stop_hook_active":false}
+# 통과 출력에 "0 failed"·"ERROR" 같은 일반어가 있어도 실패로 오판하지 않는다 (2026-09-07 실세션 오탐)
+deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-test-passed-wordy.jsonl","stop_hook_active":false}
 deny-unverified-completion.sh	-	0	not json
 deny-unverified-completion.sh	-	0	{"transcript_path":"/nonexistent.jsonl","stop_hook_active":false}
 

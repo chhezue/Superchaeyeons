@@ -40,6 +40,7 @@
 | `[미정]` 임의 확정 · priority 라벨 부여·변경 | `core-scope.md` · `local-priority.md`(있을 때) |
 | `.claude/rules/` 자동 추가 | `core-workflow.md` G4 · `retro` 스킬 |
 | **훅이 막은 것을 우회** (`Bash`로 같은 일을 하는 것 포함) | 이 절 |
+| **훅·`settings.json` 수정** — **[플래그: 하네스 자기 수정]** ❌면 훅이 그 쓰기를 막는다. ☑이어도 diff 제안 → 승인 후 반영 | 이 절 · `deny-out-of-scope-write.sh`(상수 `HARNESS_SELF_EDIT`) |
 | **`{{작업 범위}}` 밖 파일 수정** | 이 절 · `deny-out-of-scope-write.sh`(훅 본문 상수 `SCOPE` = 이 슬롯 값) |
 | "완료·통과" 선언 전에 `{{테스트 명령}}`을 실제로 돌리지 않음 | `core-workflow.md` G3 · `deny-unverified-completion.sh` |
 

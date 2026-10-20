@@ -23,12 +23,12 @@
 
 ## 경로 슬롯
 
-함께 배달되는 문서도 `{{문서 루트}}` 기준 상대 경로다 (문서 루트가 저장소 루트 `docs/`가 아닌 모노레포용). 기본값이 있는 슬롯은 대부분 그대로 둔다.
+함께 배달되는 문서도 `{{문서 루트}}` 기준 상대 경로다.
 
 | 슬롯 | 이 프로젝트의 경로 | 쓰는 곳 |
 |------|-------------------|---------|
 | `{{문서 루트}}` | `docs/` (기본값) | `core-workflow` G4 · `core-followup` · `core-tools` — 함께 배달되는 문서의 상위 경로 |
-| `{{작업 범위}}` | `.` (기본값 = 저장소 전체) | `adopt` 스킬 실측 범위 · `deny-out-of-scope-write.sh` 훅 — **훅 본문의 `SCOPE=`를 여기 값과 함께 고칠 것** (`.`이면 훅은 무동작) |
+| `{{작업 범위}}` | `.` (기본값 = 저장소 전체) | `adopt` 스킬 실측 범위 · `deny-out-of-scope-write.sh` 훅 — **훅 본문의 `SCOPE=`를 여기 값과 함께 고칠 것** (`.`이면 범위 검사 생략) |
 | `{{Git 컨벤션 SSOT}}` | `.github/CONTRIBUTING.md` | `core-guardrails` · `core-workflow` G2·G4. **`(없음)`이면 `core-workflow` G2·G4가 SSOT다** — 저장소 루트에 파일을 둘 수 없는 프로젝트를 위해 |
 | `{{스펙 저장소}}` | `docs/specs/` — README가 기본값으로 선언, v2 스펙이 실제로 여기 있음 | `core-workflow` A 트랙 · `specify` 스킬 |
 | `{{현재동작 요약}}` | `docs/harness/README.md` — 이 저장소에서 "보안·아키텍처 성격 변경"은 훅·규칙 동작 변경이고, 그걸 쉬운 말로 설명하는 곳 | `core-guardrails` ⛔ §3 |
@@ -75,10 +75,11 @@ Git 규율은 `core-workflow.md` G2·G4가 담고, **형식 문자열만** 여�
 | **생성 문서 검증** | ❌ | `core-guardrails` §1.6 · lang 팩 "생성 문서 검증" 절 (씨앗 java-spring: `local-openapi-conventions.md`) | 없음 |
 | **스택 함정 메모** | ❌ | `core-workflow` G1 배지 절 — 본문은 lang 팩 (씨앗 java-spring: `local-g1-stack-trap.md`) | 없음 |
 | **스택 리뷰어** | ❌ | `core-workflow` G3 리뷰어 행 — 리뷰어 에이전트 (씨앗 java-spring: `agents/local-spring-reviewer.md`) | 없음 |
+| **하네스 자기 수정** | ☑ | `core-gates` §3 훅·`settings.json` 수정 행 | ❌이면 `deny-out-of-scope-write.sh`의 `HARNESS_SELF_EDIT="0"` — 에이전트가 `.claude/hooks/`·`settings.json`을 못 쓴다. **붙여 쓰는 프로젝트는 ❌가 기본** |
 
 **⬜ = 미결정.** 하나라도 남으면 하네스가 절반만 작동한다. 붙이는 첫 턴에 전부 ☑/❌로 바꾼다.
 
-**이 저장소의 판정:** DB·API·애플리케이션 코드가 없어 7개 전부 ❌. `settings.json`의 훅 5개는 스택 무관이라 플래그와 관계없이 등록을 유지하며 이 저장소에서도 발화한다. 플래그에 묶인 훅은 씨앗에만 있고 `adopt`이 ☑인 것만 복사·등록한다.
+**이 저장소의 판정:** DB·API·애플리케이션 코드가 없어 스택 플래그 7개는 전부 ❌, "하네스 자기 수정"만 ☑(이 저장소의 작업이 곧 훅 수정이라). 훅 5개는 스택 무관이라 항상 등록. 플래그에 묶인 훅은 씨앗에만 있고 `adopt`이 ☑인 것만 복사·등록한다.
 
 ## 스택 팩 (= lang 팩)
 

@@ -1,6 +1,7 @@
 # test-hooks.sh가 읽는 훅 케이스. 한 줄에 하나, `#`은 주석.
 # 형식: 훅파일<TAB>SCOPE<TAB>기대exit<TAB>stdin
-#   SCOPE: `-`면 훅 원본 그대로, 값이 있으면 훅 본문의 `SCOPE="…"` 줄을 그 값으로 바꾼 임시 복사본으로 실행
+#   SCOPE: `-`면 훅 원본 그대로, 값이 있으면 훅 본문의 `SCOPE="…"` 줄을 그 값으로 바꾼 임시 복사본으로 실행.
+#          `;self=0`을 붙이면 `HARNESS_SELF_EDIT="…"` 줄도 그 값으로 바꾼다 (예: `.;self=0`)
 #   stdin 안의 $REPO는 저장소 루트 절대경로, $HOME은 홈 디렉터리로 치환된다
 # 훅 공통 규약 — 모든 deny-* 훅은 (1) 정상 범위는 통과 (2) 위반은 exit 2 (3) 판정 불가(JSON 깨짐·키 없음·빈 입력·python3 없음)는 exit 2
 # python3 없음 케이스는 PATH를 바꿔야 해서 이 파일이 아니라 test-hooks.sh 내장 케이스가 deny-* 전부에 자동으로 돌린다.

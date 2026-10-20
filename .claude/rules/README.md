@@ -88,7 +88,7 @@ paths:
 | `core-followup.md` | 후속 제안 · Defer · ERD 제안 | 완료 후 |
 | `core-tools.md` | 서브에이전트 호출 규약 · 별도 컨텍스트 리뷰 · 서드파티 도구 채택 기준 (트랙·게이트별 도구는 `core-workflow`가 직접 적는다) | 도구 규약 |
 | `core-reporting.md` | 사용자 보고는 쉬운 말로 (코드 주석 제외) | 보고 문체 |
-| `harness-map.md` | 축 4 · 슬롯 22 · 능력 플래그 7의 **이 프로젝트 값** | 값 |
+| `harness-map.md` | 축 4 · 슬롯 22 · 능력 플래그 8의 **이 프로젝트 값** | 값 |
 | `local-*.md` | 이 저장소에서만 사는 사실 (릴리즈 게이트·도메인 용어 등) | 프로젝트 고유 — 검사 대상 아님 |
 
 우선순위: `core-guardrails` ⛔ > `core-gates` > `core-workflow` > 스킬 > 일반 관례
@@ -169,7 +169,7 @@ lang 팩 훅(포맷 자동 실행 · 마이그레이션 파일 차단 · 계약 
 
 **훅 공통 규약:** `deny-*`는 정상 범위 통과, 위반 exit 2, **판정 불가(JSON 깨짐·키 없음·빈 입력·python3 없음)도 exit 2**. 경로는 실경로로 정규화한다. `settings.json`의 훅 경로는 `$CLAUDE_PROJECT_DIR` 기준이라 cwd에 기대지 않는다. `Stop` 훅만 판정 불가면 통과(대화가 끝나지 못하는 피해가 더 크다). [`scripts/test-hooks.sh`](../../scripts/test-hooks.sh)가 [`scripts/hook-cases.txt`](../../scripts/hook-cases.txt)로 판정하고, 훅·케이스가 stage되면 pre-commit이 같은 테스트를 돌린다. 새 우회 경로를 발견하면 케이스를 먼저 추가한다. 훅에 "확인받았으면 통과" 통로는 없다 — 승인은 사용자가 `harness-map.md` 값과 훅 상수를 바꾸는 행위다 (`core-gates.md` §3).
 
-**훅이 슬롯 값을 읽는 방법:** 훅 본문 상수(`SCOPE`·`TEST_CMD`·`FORMAT_CMD`)에 직접 적고, `harness-map.md` 해당 행이 "함께 고칠 것"이라고 가리킨다. 별도 설정 파일은 SSOT를 둘로 가른다.
+**훅이 슬롯·플래그 값을 읽는 방법:** 훅 본문 상수(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`FORMAT_CMD`)에 직접 적고, `harness-map.md` 해당 행이 "함께 고칠 것"이라고 가리킨다. 별도 설정 파일은 SSOT를 둘로 가른다. 훅 스크립트는 고친 즉시 다음 도구 호출부터 효력이 생긴다 — 그래서 "하네스 자기 수정" 플래그가 ❌인 프로젝트에서는 훅이 자기 자신에 대한 쓰기를 막는다.
 
 **advisory 훅은 `command`-type으로:** 서브에이전트가 판단하는 `agent`-type 훅은 "절대 막지 마라"는 지시에도 커밋을 막은 사고가 있었다. 판단은 LLM에게, "항상 이렇게 동작해야 한다"는 결정론적 스크립트에게.
 

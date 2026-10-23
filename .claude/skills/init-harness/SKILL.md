@@ -33,7 +33,7 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 
 ### 2. 축·슬롯·플래그 제안 → **승인 (G2)**
 
-실측표를 근거로 `harness-map.md`의 **축·슬롯·플래그 전부**를 채운 제안을 만든다. "하네스 자기 수정" 플래그는 하네스를 붙여 쓰는 프로젝트에서 **❌가 기본**이다 — ☑는 하네스 자체를 고치는 저장소에만 둔다. "Gemini 다듬기"도 **❌가 기본**이다 — 켜면 사람용 문서와 커밋·PR 글이 Gemini 무료 등급으로 나가고, Google이 그 글을 모델 개선에 쓸 수 있다는 점을 함께 보이고 묻는다. 형식은 `harness-map.md`의 표 그대로이고, 각 행에 근거를 한 줄 붙인다. 축은 표로 제안하고, 승인 뒤 map에는 `**축:**` 한 줄로 적는다.
+실측표를 근거로 `harness-map.md`의 **축·슬롯·플래그 전부**를 채운 제안을 만든다. "하네스 자기 수정" 플래그는 하네스를 붙여 쓰는 프로젝트에서 **❌가 기본**이다 — ☑는 하네스 자체를 고치는 저장소에만 둔다. "Gemini 다듬기"도 **❌가 기본**이다 — 켜면 사람용 문서와 커밋·PR 글이 Gemini 무료 등급으로 나가고, Google이 그 글을 모델 개선에 쓸 수 있다는 점을 함께 보이고 묻는다. **"폴더 통째 삭제(`rm -rf`·`find -delete`)를 훅이 막을까요?"**도 한 번 묻는다 — 배달된 `deny-dangerous-bash.sh`는 하네스 원본의 값(`BLOCK_BULK_DELETE="0"`, 맡기기)을 그대로 싣고 온다. 막으면 작업 폴더의 git에 없는 파일(로컬 데이터·설정·산출물)을 지우는 명령이 막히고, 맡기면 임시 폴더 정리가 막히지 않는 대신 Claude Code 기본 권한 확인과 auto mode 판정기에만 맡겨진다. 권장은 막기(`1`)이고, 임시 폴더 정리로 작업이 자주 멈추는 쪽이 더 문제인 프로젝트만 맡긴다. 어느 쪽이든 루트·홈·현재 폴더·`.git` 통째 삭제는 훅이 막는다. 형식은 `harness-map.md`의 표 그대로이고, 각 행에 근거를 한 줄 붙인다. 축은 표로 제안하고, 승인 뒤 map에는 `**축:**` 한 줄로 적는다.
 
 - 실측으로 정해지지 않는 값(운영 데이터를 앞으로 보존할 것인가, 외부 클라이언트를 붙일 계획인가 등)은 **질문으로** 낸다. 질문은 번호를 붙이고 권장 답을 함께 적는다 — 사람이 번호로 답할 수 있게
 - `(없음)`과 ⬜는 "아직 모름"이 아니라 "이 프로젝트엔 그 개념이 없음"일 때만 남기고, 그 뜻을 값 칸에 적는다
@@ -43,7 +43,7 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 
 승인된 값으로 아래를 만든다. `core-*.md`는 손대지 않는다 (`.claude/rules/README.md` map 규칙 5).
 
-1. `harness-map.md` — 축·슬롯·플래그 값. 플래그 ❌면 해당 씨앗 훅을 등록하지 않는다 (규칙 절은 지우지 않는다). `.claude/rules/README.md` "훅 상수와 짝" 목록(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`·`DOC_ROOT`)을 값과 같은 턴에 고친다. `HARNESS_SELF_EDIT="0"`이면 `check-portability.sh`는 이 대입 줄의 값과 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`를 프로젝트 값 자리로 보고 검사하지 않는다
+1. `harness-map.md` — 축·슬롯·플래그 값. 플래그 ❌면 해당 씨앗 훅을 등록하지 않는다 (규칙 절은 지우지 않는다). `.claude/rules/README.md` "훅 상수와 짝" 목록(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`·`DOC_ROOT`·`BLOCK_BULK_DELETE`)을 값과 같은 턴에 고친다. `BLOCK_BULK_DELETE`는 map에 적지 않고 2단계 답대로 훅 상수만 바꾼다. 맡기기(`0`)면 `settings.json` `permissions.deny`에 `Bash(rm -rf:*)`가 없어야 효과가 나고, 막기(`1`)면 그 줄을 둬도 된다. `HARNESS_SELF_EDIT="0"`이면 `check-portability.sh`는 이 대입 줄의 값과 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`를 프로젝트 값 자리로 보고 검사하지 않는다
 2. **lang 팩** — `.claude/`에는 스택 파일이 없다. 실측한 lang 축에 맞는 씨앗이 `examples/seeds/{스택}/`에 있으면 그 README의 "무엇을 어디에 복사하나" 표대로 복사하고, 없으면 `examples/seeds/_template/`을 복사해 실측값으로 채운다. **파일명의 `local-` 접두사를 떼지 않는다** — `scripts/check-portability.sh`가 그 접두사로 local 층을 식별해 검사에서 빼므로, 접두사가 빠지면 복사 직후부터 검사기와 pre-commit이 막힌다. **복사한 씨앗은 즉시 대조한다** — 씨앗 README의 "씨앗 대조" 표에 있는 전제(의존성·버전·기반 클래스·표기 방식)마다 빌드 파일·코드를 열어 확인하고, 다르면 씨앗 본문을 고치고 근거 파일을 표에 적는다. 확인하지 않은 전제를 남기지 않는다 — 검증 없이 물려받은 전제가 같은 실수를 세 번 낳은 사례가 계기다. 씨앗 훅은 해당 플래그가 ☑일 때만 `.claude/hooks/`로 복사하고 `settings.json`에 등록한다
 2-1. **트래커 안내** — 실측한 트래커에 맞는 씨앗(`examples/seeds/tracker-*/`)이 있으면 그 README대로 `.claude/skills/local-track-issues/`로 복사하고 "씨앗 대조"를 확인한다. 없으면 `examples/seeds/_template/skills/local-track-issues/`를 복사해 실측값으로 채운다 — 확인하지 못한 항목은 지어내지 않고 "(확인 못 함 — 이유)"로 남긴다. `{{이슈 연결}}`은 "트래커 이름 · 안내 `local-track-issues`"로 채운다
 3. `local-*.md` — 슬롯으로도 플래그로도 안 빠지는 **그 저장소만의 사실**이 있을 때만. `AGENTS.md`와 중복이면 만들지 않는다
@@ -60,6 +60,7 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 - [ ] 복사한 씨앗의 "씨앗 대조" 표에 빈 칸이 없다 (전제마다 근거 파일)
 - [ ] `{{문서 루트}}/templates/README.md` 산출물 등록부의 "프로젝트 문서" 행이 이 저장소 값으로 채워졌다
 - [ ] `settings.json`의 훅 등록 상태 = 플래그 ☑/❌
+- [ ] `deny-dangerous-bash.sh`의 `BLOCK_BULK_DELETE`가 2단계 답과 같다
 - [ ] `AGENTS.md`에 `{…}` 자리표시자가 0개
 - [ ] `{{커밋 메시지 형식}}`이 최근 커밋 20개와 일치한다 (`git log -20 --format=%s`)
 - [ ] 저장소 루트에 `dev.conf`가 없다 — 있으면 `dev.sh`가 `scripts/dev.conf`보다 먼저 읽는다

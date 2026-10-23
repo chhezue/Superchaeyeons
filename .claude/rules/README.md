@@ -108,6 +108,7 @@ paths:
 - `{{커밋 메시지 형식}}` ↔ `scripts/git-hooks/commit-msg`의 `COMMIT_RE`
 - `{{포맷 명령}}` ↔ `scripts/git-hooks/pre-commit`의 `FORMAT_CMD`·`FORMAT_PATHS`와 씨앗 포맷 훅
 - `{{문서 루트}}` ↔ `scripts/analyze-corrections.sh`의 `LEDGER`(장부 경로) · `scripts/polish-with-gemini.sh`의 `DOC_ROOT`
+- 폴더 통째 삭제 막기(map에 없음 — `init-harness` 2단계 질문) ↔ `deny-dangerous-bash.sh`의 `BLOCK_BULK_DELETE`. 나머지 `BLOCK_*` 묶음 상수는 묻지 않고 배달 기본값 `1`(막기)로 둔다
 - "Gemini 다듬기" ↔ 프로젝트 루트 `harness.conf`의 `POLISH_ENABLED=1`(☑일 때만 둔다). `scripts/polish-with-gemini.sh`의 같은 이름 상수는 배달 기본값 `0`이라 고치지 않는다 — 원본의 켜짐이 복사본에 실리지 않게
 
 **플래그를 켜거나 끌 때 할 일** — 표에 없는 플래그는 값만 바꾼다.

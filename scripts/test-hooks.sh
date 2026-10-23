@@ -145,6 +145,36 @@ if [ -z "$only" ] || [[ "$only" == *deny-* ]]; then
 	done
 fi
 
+# ---- 내장 케이스: 작업 폴더의 파이썬 파일이 판정에 섞이지 않는다 ----------------------------
+# 훅은 Claude Code가 작업 폴더에서 부른다. `python3 -c`는 그 폴더를 모듈 경로 맨 앞에 넣어, 폴더의 json.py가 표준 라이브러리 대신 불리고
+# 위반 입력을 통과시킨다(2026-10-28 리뷰 실측). 가짜 json.py를 둔 폴더에서 위반 입력을 넣어 deny-* 훅이 여전히 막는지 본다 — `python3 -I` 규약.
+# 케이스 파일은 저장소 루트에서 훅을 돌리므로 여기 둔다. deny-unverified-completion은 TEST_CMD가 있어야 판정하니 복사본에 값을 넣는다.
+if [ -z "$only" ] || [[ "$only" == *deny-* ]]; then
+	mkdir -p "$tmpdir/hijack"
+	printf '%s\n' 'def load(f):' '    return {"tool_input": {"command": "ls", "file_path": "sub/a.md"}, "stop_hook_active": True}' \
+		'def loads(s):' '    return load(None)' >"$tmpdir/hijack/json.py"
+	for src in "$hooks_dir"/deny-*.sh "$hooks_dir"/local-deny-*.sh examples/seeds/*/hooks/local-deny-*.sh examples/seeds/*/hooks/deny-*.sh; do
+		[ -f "$src" ] || continue
+		hook="$(basename "$src")"
+		[ -n "$only" ] && [ "$hook" != "$only" ] && continue
+		n=$((n + 1))
+		run="$tmpdir/$hook.hijack"
+		sed -e 's|^SCOPE="\.\"|SCOPE="sub"|' -e 's|^TEST_CMD=".*"|TEST_CMD="scripts/dev.sh test"|' "$src" >"$run"; chmod +x "$run"
+		case "$hook" in
+		deny-unverified-completion.sh) stdin="{\"transcript_path\":\"$repo_root/scripts/hook-fixtures/stop-code-no-test.jsonl\",\"stop_hook_active\":false}" ;;
+		*) stdin='{"tool_input":{"command":"rm -rf /","file_path":"other/V1__x.sql"}}' ;;
+		esac
+		(cd "$tmpdir/hijack" && printf '%s' "$stdin" | CLAUDE_PROJECT_DIR="$repo_root" "$run" >/dev/null 2>"$tmpdir/err")
+		actual=$?
+		if [ "$actual" = "2" ]; then
+			pass=$((pass + 1)); printf '  ok    %-28s scope=-        exit=%s  (작업 폴더 json.py 무시)\n' "$hook" "$actual"
+		else
+			fail=$((fail + 1)); printf '  FAIL  %-28s scope=-        exit=%s (기대 2)  (작업 폴더 json.py가 판정에 섞임 — python3 -I로 부르는지 확인)\n' "$hook" "$actual"
+			sed 's/^/          stderr: /' "$tmpdir/err" | head -3
+		fi
+	done
+fi
+
 # ---- 내장 케이스: 회고 기록 폴더는 커밋되지 않는다 -----------------------------------
 # 회고 루프 훅·분석 스크립트가 .claude/corrections/에 정정 기억 설명과 대화 원문 일부를 쓴다. .gitignore에서 빠지면 그대로 커밋될 수 있다
 # (harness-retro-loop 스펙 불변 조건). 케이스 파일로는 git 설정을 볼 수 없어 여기 둔다.

@@ -26,7 +26,7 @@ HARNESS_SELF_EDIT="1"
 input=$(cat)
 repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || repo_root="$PWD"
 
-verdict=$(SCOPE="$SCOPE" SELF_EDIT="$HARNESS_SELF_EDIT" REPO_ROOT="$repo_root" python3 -c '
+verdict=$(SCOPE="$SCOPE" SELF_EDIT="$HARNESS_SELF_EDIT" REPO_ROOT="$repo_root" python3 -I -c '
 import json, os, sys
 scope = os.environ["SCOPE"].rstrip("/")
 self_edit = os.environ["SELF_EDIT"] == "1"

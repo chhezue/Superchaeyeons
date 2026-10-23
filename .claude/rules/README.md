@@ -77,6 +77,7 @@ paths:
 `scripts/test-hooks.sh`가 `scripts/hook-cases.txt`로 판정한다.
 
 - `deny-*`는 정상 범위 통과 · 위반 exit 2 · **판정 불가(JSON 깨짐·키 없음·빈 입력·python3 없음)도 exit 2**. 경로는 실경로로 정규화한다
+- 훅 안의 python3는 **`python3 -I`**로 부른다 — 훅은 작업 폴더에서 도는데 `-I` 없이는 그 폴더가 모듈 경로 맨 앞에 들어가, 폴더에 있는 `json.py` 같은 파일이 표준 라이브러리 대신 불려 판정이 뒤집힌다. `test-hooks.sh`가 가짜 `json.py`를 둔 폴더에서 `deny-*`를 돌려 확인한다
 - `Stop` 훅만 판정 불가와 재진입(`stop_hook_active`)이면 통과한다 — 대화가 끝나지 못하는 피해가 더 크다
 - `auto-*`(기록·알림)는 막지 않는다 — 어떤 입력에도 exit 0이고, 기록하지 못하면 `systemMessage`로 알린다. 세션마다 도니 bash 3.2 내장 기능과 macOS 기본 명령만 쓴다(python3 없음). 출력과 남긴 파일은 케이스의 `out~`·`file:` 검사로 판정한다
 - 훅 경로는 `$CLAUDE_PROJECT_DIR` 기준이다. `.claude/hooks/*.sh`는 전부 `settings.json`에 등록돼야 하고, 쓰기 도구 매처는 `Write`·`Edit`·`MultiEdit`·`NotebookEdit`를 모두 덮어야 한다 — 매처는 정확한 이름 목록이라 `Write|Edit`만 두면 나머지 둘이 훅을 건너뛴다

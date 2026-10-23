@@ -31,7 +31,7 @@ TEST_CMD="scripts/dev.sh test"
 case "$TEST_CMD" in ''|'(없음)') exit 0 ;; esac
 
 input=$(cat)
-verdict=$(TEST_CMD="$TEST_CMD" python3 -c '
+verdict=$(TEST_CMD="$TEST_CMD" python3 -I -c '
 import json, os, re, sys
 try:
     data = json.load(sys.stdin)

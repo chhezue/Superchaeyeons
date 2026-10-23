@@ -8,7 +8,7 @@
 
 input=$(cat)
 
-command=$(python3 -c "
+command=$(python3 -I -c "
 import json, sys
 try:
     data = json.load(sys.stdin)

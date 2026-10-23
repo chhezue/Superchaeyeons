@@ -10,7 +10,7 @@
 
 input=$(cat)
 
-file_path=$(python3 -c "
+file_path=$(python3 -I -c "
 import json, sys
 try:
     data = json.load(sys.stdin)

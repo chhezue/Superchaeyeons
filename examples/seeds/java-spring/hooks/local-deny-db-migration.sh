@@ -8,7 +8,7 @@
 input=$(cat)
 
 # python3 자체가 없거나 죽으면(exit ≠ 0) file_path가 빈 문자열이 되어 통과해 버린다 — 그 경우도 판정 불가로 본다.
-file_path=$(python3 -c "
+file_path=$(python3 -I -c "
 import json, sys
 try:
     data = json.load(sys.stdin)

@@ -11,6 +11,12 @@ lang 축별 **검증된 lang 팩**을 모아 둔 곳이다. 하네스 배달물(
 | [`_template/`](_template/README.md) | (스택 무관 골격) | — | 모든 lang 팩이 갖춰야 할 절의 목록 |
 | [`java-spring/`](java-spring/README.md) | Java 21 · Spring Boot · JPA · Gradle | 원본 백엔드 프로젝트(2026-07~09) · baro-farm-be(2026-09) | 씨앗 대조 표 있음 — 복사 직후 전제를 대조한다 |
 
+트래커 씨앗은 lang 축과 따로, 그 프로젝트의 이슈 트래커에 맞춰 고른다. 맞는 씨앗이 없으면 `_template/skills/local-track-issues/`를 실측으로 채운다. 검증되지 않은 트래커의 씨앗을 미리 두지 않는 것도 lang 씨앗과 같다.
+
+| 씨앗 | 트래커 · 수단 | 검증된 곳 | 상태 |
+|------|---------------|-----------|------|
+| [`tracker-github/`](tracker-github/README.md) | GitHub Issues · `gh` CLI | 하네스 원본 저장소(2026-10) | 씨앗 대조 표 있음 |
+
 ## 씨앗을 새로 올리는 조건
 
 1. 그 스택의 실제 저장소에서 하네스를 한 사이클 이상 굴렸다

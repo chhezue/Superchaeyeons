@@ -129,7 +129,7 @@
 
 **프로젝트 설정 파일**
 
-- [ ] 프로젝트 값은 `.claude/harness.conf`(`키=값`, `dev.conf`와 같은 형식)에 둔다. 경로 슬롯·형식 슬롯·능력 플래그·승인 창 범주 플래그·지금 훅 상수(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`)가 대상이다. 빌드·실행 명령은 지금처럼 `dev.conf`에 남는다
+- [ ] 프로젝트 값은 `.claude/harness.conf`(`키=값`, `dev.conf`와 같은 형식)에 둔다. 경로 슬롯·형식 슬롯·능력 플래그·승인 창 범주 플래그·지금 훅 상수(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`)와 [Gemini 글 다듬기](gemini-text-polish.md)의 `POLISH_ENABLED`·`DOC_ROOT`가 대상이다. 빌드·실행 명령은 지금처럼 `dev.conf`에 남는다
 - [ ] 훅은 상수를 본문에 적지 않고 이 파일을 읽는다. 파일이 없거나 깨졌으면 지금 규약대로 `deny-*`는 차단한다
 - [ ] 설정이 채워진 뒤에는 Claude가 `harness.conf`를 고치려 하면 승인 창이 뜬다. 창의 이유에 바뀌는 키와 값을 적는다. 사용자가 누르면 반영되고, 에이전트가 설정을 바꿔 훅을 몰래 푸는 통로는 닫힌다(`core-gates.md` §3)
 - [ ] `harness-map.md`는 이 파일로 대체하고 지운다. 사람이 읽는 슬롯 설명은 플러그인 쪽 문서(주입 규칙이 가리키는 스킬 또는 참조 문서)로 옮긴다
@@ -144,6 +144,13 @@
 
 - [ ] 이 저장소는 자기 마켓플레이스를 로컬 경로로 추가해 `plugin/`을 제자리에서 쓴다. 고친 내용은 `/reload-plugins`나 새 세션부터 반영된다
 - [ ] `.claude/`에는 이 저장소 전용 파일(설정 파일·`settings.json`·`local-*.md`)만 남는다
+
+**Gemini 글 다듬기·트래커 안내 옮기기** (2026-10-28 추가 — 두 기능이 이 스펙보다 늦게 들어와 복사 배달 전제로 만들어졌다)
+
+- [ ] 다듬기 스크립트가 기준 글(`doc-writing.md` 3절·`core-reporting.md`·`doc-style-patterns.txt`)을 프로젝트 폴더가 아니라 플러그인 폴더(`plugin/rules/`·`plugin/scripts/`)에서 읽는다. 기준 글을 하나도 못 찾으면 기준 없이 보내지 않고 "다듬기 건너뜀(기준 글 없음)"으로 실패한다 — 지금은 조용히 빈 기준으로 보내 품질만 떨어진다
+- [ ] 스킬 본문(`write-spec`·`refactor-safely`·`verify-work`·`improve-harness`)과 트래커 안내 씨앗이 부르는 `scripts/polish-with-gemini.sh`를 `${CLAUDE_PLUGIN_ROOT}/scripts/polish-with-gemini.sh`로 바꾼다
+- [ ] `POLISH_ENABLED`·`DOC_ROOT`를 스크립트 상수 대신 `.claude/harness.conf`에서 읽는다. 이 저장소 루트의 `harness.conf`는 `.claude/harness.conf`로 합치고 지운다(`core-guardrails.md` §2)
+- [ ] 씨앗(`examples/seeds/` — lang 팩과 트래커 안내)을 플러그인에 실을지 정한다 — 리스크 12
 
 **같은 변경에서 고칠 문서**
 
@@ -209,7 +216,7 @@ Superchaeyeons/
 │   ├── skills/ · agents/
 │   ├── hooks/                        hooks.json · deny-* 3개 · ask-* 1개 · auto-correction-* 2개(회고 기록·알림) · 주입 훅(세션 시작 2 · 서브에이전트 1 · 경로 1)
 │   ├── rules/                        주입할 core 규칙 · 경로 조건부 규칙 원문
-│   └── scripts/                      dev.sh · verify.sh · 검사기 · init-harness-probe.sh · analyze-corrections.sh
+│   └── scripts/                      dev.sh · verify.sh · 검사기 · init-harness-probe.sh · analyze-corrections.sh · polish-with-gemini.sh
 ├── .claude/                          이 저장소 전용 — harness.conf · settings.json · rules/README.md · local-*
 └── scripts/ · docs/ · examples/      scripts/에는 이 저장소 전용 도구(test-hooks.sh 등)만 남는다
 ```
@@ -266,6 +273,7 @@ Superchaeyeons/
 | **9. 승인 창이 뜨지 않는 실행 방식** | 확인 (2026-10-27 실험) | `-p` 비대화형 실행에서는 기본 모드·승인 창 없는 모드·자동 모드 모두 `ask-decisions`가 걸린 명령이 거절되고, 훅의 이유가 Claude에게 도구 결과로 간다. 권한 확인을 전부 건너뛰는 모드(`--dangerously-skip-permissions`)에서도 `ask-decisions`는 승인 창을 띄웠다. 사용자가 직접 돌렸고, 대화 기록에 승인 출처가 `user_temporary`로 남았다. 문서에는 이 모드에서 `deny`만 막힌다고 적혀 있다. 어느 방식에서도 승인 없이 지나가지 않는다 |
 | **10. 기본 권한 창과 겹침** | [미정] (일부 확인) | 처음 뜨는 창은 하나다(2026-10-27 실험). 훅의 창이 기본 창을 대신하고, 선택지가 "예/아니오" 둘이라 "앞으로 항상 허용"이 없다. 자동 모드(Claude Code 2.1.304부터 기본 권한 모드)에서는 사용자가 "예"를 한 번 누르자 바로 실행됐다. 수동 모드에서 "예"를 누른 뒤 기본 창이 또 뜨는지는 자동 입력이 화면에 먹히지 않아 확인하지 못했다. 사용자가 직접 확인한다 |
 | **11. 플러그인 버전과 검사** | 확정 (2026-10-27 사용자) | `version`은 빼고, 검사기가 `validate --json`에서 `version` 경고만 허용한다. `--strict` 제거(공식 권장)는 오타 같은 경고까지 통과시켜서 버렸다. version을 적고 매번 올리는 방식(Superpowers)은 올리는 걸 잊으면 업데이트가 멈춰서 버렸다. Claude Code가 결과 형식을 바꾸면 검사기가 해석에 실패해 바로 드러난다 |
+| **12. 씨앗을 플러그인에 싣나** | [미정] | 위 폴더 구성에서 `examples/`는 이 저장소 전용이라, 플러그인으로 붙이면 `init-harness`가 lang 팩·트래커 안내 씨앗을 가져올 수 없다. 플러그인에 `seeds/`로 싣거나, `init-harness`가 이 저장소에서 내려받거나, 매번 골격을 실측으로 채우는 길이 있다. 구현 전에 정한다 |
 
 ## 변경 이력
 
@@ -280,3 +288,5 @@ Superchaeyeons/
 | 2026-10-27 | 승인 — 남은 [미정] 9·10은 구현 전 수동 검증에서 확인한다 |
 | 2026-10-27 | 실험 결과 반영 — 경로 조건부 규칙은 `PostToolUse` 훅, `--strict` 대신 `version` 경고만 허용하는 검사기(리스크 11), 주입 훅은 bash 3.2 기능만, 규칙 글자 수 8,513자, 자동 업데이트는 git 마켓플레이스로 검증. 리스크 9 확인, 리스크 10은 수동 모드만 남음 |
 | 2026-10-27 | 사용자 결정 — 경로 규칙 훅과 플러그인 검사기를 테스트 먼저 지점에 추가, 경로 훅 `hook-cases.txt` 케이스 추가 |
+| 2026-10-28 | 사용자 승인 — Gemini 글 다듬기·트래커 안내를 옮길 때 고칠 다섯 가지를 Must Have에 추가(스크립트 경로·기준 글 위치·스킬 경로·`harness.conf` 키 3개·씨앗). 씨앗을 플러그인에 실을지는 리스크 12 [미정] |
+| 2026-10-28 | Gemini 다듬기 단순화에 맞춤 — 메시지 훅이 없어져 훅 개수·폴더 구성·옮길 항목에서 뺐다 |

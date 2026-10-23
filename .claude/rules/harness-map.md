@@ -50,7 +50,7 @@
 | `{{커밋 메시지 형식}}` | `{Type}: {한글}` |
 | `{{기본 브랜치}}` | `main` |
 | `{{머지 방식}}` | rebase merge(`gh pr merge --rebase --delete-branch`) — 2026-10-27부터, 이전 이력은 merge commit |
-| `{{이슈 연결}}` | GitHub Issues · `Closes #n` |
+| `{{이슈 연결}}` | GitHub Issues · 안내 `local-track-issues` |
 
 ## 능력 플래그
 

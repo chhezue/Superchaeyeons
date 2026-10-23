@@ -33,7 +33,7 @@ paths:
 
 ```text
 .claude/
-├── settings.json                     훅 등록 + permissions.deny(.env 읽기·쓰기 · force push · hard reset · rm -rf · --no-verify — 훅과 이중)
+├── settings.json                     훅 등록 + permissions.deny(.env 읽기·쓰기 · force push · hard reset · --no-verify — 훅이 막는 묶음과 이중)
 ├── settings.local.json               개인 allowlist — 커밋 안 함
 ├── rules/
 │   ├── core-guardrails.md            항상 — ⛔ STOP: 문서·구현 정합 · [미정] · 레거시 즉시 삭제 · 현재동작 요약 갱신
@@ -61,7 +61,7 @@ paths:
 │   ├── test-writer.md                test-first 1단계 — 통제 영역 지점의 테스트를 스펙만 보고 작성 (Bash 없음)
 │   └── doc-reviewer.md               G3 — 문서 유형·구조·문장 리뷰 (advisory)
 └── hooks/
-    ├── deny-dangerous-bash.sh        PreToolUse Bash — 파괴·우회·시크릿 명령 차단 (목록은 PATTERNS)
+    ├── deny-dangerous-bash.sh        PreToolUse Bash — 파괴·우회·시크릿 명령 차단, 실행되는 부분만 검사 (묶음별 막기·맡기기는 맨 위 상수)
     ├── deny-out-of-scope-write.sh    PreToolUse Write|Edit|MultiEdit|NotebookEdit — 범위 밖 쓰기 · (자기 수정 ❌) 훅·settings 쓰기 차단
     ├── deny-unverified-completion.sh Stop — 코드 편집 뒤 TEST_CMD 미실행·실패인데 완료 선언이면 한 번 되돌림
     ├── auto-correction-queue.sh      PostToolUse Write|Edit|MultiEdit|NotebookEdit — 정정 기억(type: feedback) 저장을 정정 대기열에 기록
@@ -81,7 +81,7 @@ paths:
 - `auto-*`(기록·알림)는 막지 않는다 — 어떤 입력에도 exit 0이고, 기록하지 못하면 `systemMessage`로 알린다. 세션마다 도니 bash 3.2 내장 기능과 macOS 기본 명령만 쓴다(python3 없음). 출력과 남긴 파일은 케이스의 `out~`·`file:` 검사로 판정한다
 - 훅 경로는 `$CLAUDE_PROJECT_DIR` 기준이다. `.claude/hooks/*.sh`는 전부 `settings.json`에 등록돼야 하고, 쓰기 도구 매처는 `Write`·`Edit`·`MultiEdit`·`NotebookEdit`를 모두 덮어야 한다 — 매처는 정확한 이름 목록이라 `Write|Edit`만 두면 나머지 둘이 훅을 건너뛴다
 - "확인받았으면 통과" 통로는 없다. 승인은 사용자가 `harness-map.md` 값과 짝인 훅 상수를 바꾸는 것이다. 막힐 때 각 `deny-*` 훅의 차단 메시지가 이 안내를 Claude에게 준다
-- 훅은 명령 문자열만 본다. 변수·`eval`·별도 스크립트 간접 실행과 Bash로 하네스 파일을 고치는 것은 못 보므로 규칙으로만 막는다
+- 훅은 명령 문자열만 본다. 변수·별도 스크립트 간접 실행과 Bash로 하네스 파일을 고치는 것은 못 보므로 규칙으로만 막는다 (`eval`·`bash -c` 안은 `deny-dangerous-bash.sh`가 다시 검사한다)
 - 판단이 필요한 것은 훅에 넣지 않는다. advisory 훅이 필요하면 `command`-type으로 — `agent`-type 훅이 "막지 마라"는 지시에도 커밋을 막은 사고가 있었다
 - 씨앗 훅(`local-*`)은 플래그가 ☑일 때 `init-harness`가 복사·등록한다. 복사하지 않은 씨앗의 케이스는 `test-hooks.sh`가 건너뛴다
 

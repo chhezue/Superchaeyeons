@@ -35,7 +35,7 @@
 | 클라이언트 전제 | 사용자 승인 후 수동 작성 | `{{클라이언트 전제}}` — 이 저장소: (없음) | 설명 | [`explanation-doc.md`](explanation-doc.md) |
 | 현재동작 요약 | 보안·아키텍처 변경과 같은 턴 | `{{현재동작 요약}}` — 이 저장소: `docs/harness/README.md` | 설명 | [`explanation-doc.md`](explanation-doc.md) |
 
-**마크다운을 만들지 않는 것들.** 훅은 stderr 메시지만 내보내고 파일을 쓰지 않는다. `verify-work`·`fix-bug` 스킬과 `doc-reviewer`·`researcher`·스택 리뷰어 에이전트는 결과를 채팅으로만 보고한다. 이들의 결과를 문서로 남겨야 한다고 판단되면 위 등록부에 행을 추가하는 것이 먼저다 — 임의 경로에 파일을 만들지 않는다.
+**마크다운을 만들지 않는 것들.** 훅은 stderr 메시지만 내보내고 파일을 쓰지 않는다. 글 다듬기(`scripts/polish-with-gemini.sh`)는 이미 있는 문서의 문장만 고치고, 기준판과 차이는 git이 무시하는 `.claude/polish/`에만 둔다. `verify-work`·`fix-bug` 스킬과 `doc-reviewer`·`researcher`·스택 리뷰어 에이전트는 결과를 채팅으로만 보고한다. 이들의 결과를 문서로 남겨야 한다고 판단되면 위 등록부에 행을 추가하는 것이 먼저다 — 임의 경로에 파일을 만들지 않는다.
 
 ## 유형별 템플릿
 

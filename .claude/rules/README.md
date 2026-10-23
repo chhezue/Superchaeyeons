@@ -67,7 +67,7 @@ paths:
     └── auto-correction-notice.sh     SessionStart — 마지막 회고 분석 뒤 세션·정정 기억·검토할 후보 수를 한 줄로 (셋 다 0이면 출력 없음)
 ```
 
-회고 루프의 분석은 훅이 아니라 `scripts/analyze-corrections.sh`가 별도 실행으로 한다. 기록·분석 상태는 `.claude/corrections/`(git이 무시)에 있고, 형식은 그 스크립트 머리가 SSOT다.
+회고 루프의 분석은 훅이 아니라 `scripts/analyze-corrections.sh`가 별도 실행으로 한다. 기록·분석 상태는 `.claude/corrections/`(git이 무시)에 있고, 형식은 그 스크립트 머리가 SSOT다. 문서 다듬기도 훅이 아니라 스킬 단계에서 `scripts/polish-with-gemini.sh`를 부르고, 상태는 `.claude/polish/`(git이 무시)에 둔다.
 
 우선순위는 `core-guardrails` ⛔ > `core-gates` > `core-workflow` > 스킬 > 일반 관례다. 같은 주제를 여러 파일에 쓰지 않고, 아래쪽 파일은 위쪽을 가리킨다.
 
@@ -105,7 +105,8 @@ paths:
 - `{{테스트 명령}}` ↔ `deny-unverified-completion.sh`의 `TEST_CMD`
 - `{{커밋 메시지 형식}}` ↔ `scripts/git-hooks/commit-msg`의 `COMMIT_RE`
 - `{{포맷 명령}}` ↔ `scripts/git-hooks/pre-commit`의 `FORMAT_CMD`·`FORMAT_PATHS`와 씨앗 포맷 훅
-- `{{문서 루트}}` ↔ `scripts/analyze-corrections.sh`의 `LEDGER`(장부 경로)
+- `{{문서 루트}}` ↔ `scripts/analyze-corrections.sh`의 `LEDGER`(장부 경로) · `scripts/polish-with-gemini.sh`의 `DOC_ROOT`
+- "Gemini 다듬기" ↔ 프로젝트 루트 `harness.conf`의 `POLISH_ENABLED=1`(☑일 때만 둔다). `scripts/polish-with-gemini.sh`의 같은 이름 상수는 배달 기본값 `0`이라 고치지 않는다 — 원본의 켜짐이 복사본에 실리지 않게
 
 **플래그를 켜거나 끌 때 할 일** — 표에 없는 플래그는 값만 바꾼다.
 

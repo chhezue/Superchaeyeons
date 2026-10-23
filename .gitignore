@@ -11,3 +11,6 @@ docs/portfolio/
 
 # 회고 루프 기록 — 정정 기억 설명·대화 원문 일부가 들어간다 (harness-retro-loop 스펙)
 .claude/corrections/
+
+# Gemini 글 다듬기 — 기준판에 문서 내용이 들어간다 (gemini-text-polish 스펙)
+.claude/polish/

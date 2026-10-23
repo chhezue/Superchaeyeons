@@ -69,6 +69,8 @@ while IFS=$'\t' read -r spec scope expected stdin; do
 	# (배달본은 TEST_CMD가 비어 있어 Stop 훅 판정을 시험하려면 값을 넣은 복사본이 필요하다)
 	# `;대문자이름=값`은 본문의 `대문자이름=…` 줄을 `대문자이름="값"`으로 바꾼다 (예: `-;STORE=$TMP/q` — SCOPE는 그대로)
 	scope_val="${scope%%;*}"; extras=""; [ "$scope" != "$scope_val" ] && extras="${scope#*;}"
+	# `;env:이름=값`은 그 실행에만 환경 변수를 준다 · `;cp:원본=대상`은 실행 전에 파일·폴더를 복사한다(테스트가 저장소 파일을 고치지 않게)
+	run_env=()
 	if [ "$scope" != "-" ]; then
 		run="$tmpdir/$hook.$n"
 		cp "$src" "$run"
@@ -82,13 +84,16 @@ while IFS=$'\t' read -r spec scope expected stdin; do
 			test=*) sed -i.bak "s|^TEST_CMD=\".*\"|TEST_CMD=\"${extra#test=}\"|" "$run" && rm -f "$run.bak" ;;
 			[A-Z]*=*) name="${extra%%=*}"; val="$(expand "${extra#*=}")"
 				sed -i.bak "s|^$name=.*|$name=\"$val\"|" "$run" && rm -f "$run.bak" ;;
+			env:*=*) run_env+=("$(expand "${extra#env:}")") ;;
+			cp:*=*) cp_src="$(expand "${extra#cp:}")"; cp_dst="${cp_src#*=}"; cp_src="${cp_src%%=*}"
+				mkdir -p "$(dirname "$cp_dst")"; [ -e "$cp_dst" ] && rm -r -- "$cp_dst"; cp -R "$cp_src" "$cp_dst" ;;
 			esac
 		done
 		chmod +x "$run"
 	fi
 	stdin="$(expand "$stdin")"
 	argv=(); [ -n "$args" ] && read -r -a argv <<<"$(expand "$args")"
-	printf '%s' "$stdin" | "$run" "${argv[@]+"${argv[@]}"}" >"$tmpdir/out" 2>"$tmpdir/err"
+	printf '%s' "$stdin" | env "${run_env[@]+"${run_env[@]}"}" "$run" "${argv[@]+"${argv[@]}"}" >"$tmpdir/out" 2>"$tmpdir/err"
 	actual=$?
 	label="$stdin"; [ -z "$label" ] && label="${args:-(빈 입력)}"
 	# 기대 열: `exit` 또는 `exit;검사;검사…` — 검사 형식은 scripts/hook-cases.txt 머리

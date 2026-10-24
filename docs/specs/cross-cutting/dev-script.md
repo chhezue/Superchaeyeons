@@ -1,6 +1,6 @@
 # 빌드·실행 환경 분리 — `dev.sh`·`dev.conf`
 
-> 상태: Draft
+> 상태: Implemented (2026-10-24 승인·구현)
 > MVP: In scope
 > 관련 BR: N/A
 
@@ -39,12 +39,15 @@
 | 5 | 명령 슬롯 | 슬롯 이름(`{{테스트 명령}}`·`{{빌드 명령}}`·`{{포맷 명령}}`·`{{의존성 조회}}`)은 그대로 둔다. 대신 모든 프로젝트에서 값이 `scripts/dev.sh <동사>`가 된다. 프로젝트마다 다른 실제 명령은 `dev.conf`로 옮긴다. 슬롯을 지우면 core 17개 파일의 문장을 바꿔야 해서, 이번에는 값만 바꾼다. 실행용 슬롯은 추가하지 않는다(`dev.sh start`가 모든 프로젝트에서 같기 때문이다) |
 | 6 | 이 저장소에도 적용 | 적용한다. `scripts/dev.conf`의 `TEST_CMD`를 `scripts/verify.sh`로 하고, 나머지 동사는 "없음 — 이유"로 둔다. `{{테스트 명령}}`·훅 `TEST_CMD`는 `scripts/dev.sh test`가 된다. 이 저장소가 매 턴 `dev.sh`를 실제로 쓰므로, 엔진이 깨지면 바로 드러난다 |
 | 7 | 설정 명령의 위험 검사 | `dev.sh`는 `dev.conf`의 명령을 실행하기 전에 그 문자열을 `deny-dangerous-bash.sh`에 넣어 판정을 받는다. 차단되면 실행하지 않고 exit 2로 끝낸다. 패턴 목록은 훅 하나에만 두고 복사하지 않는다 |
+| 8 | 씨앗 기본값 3개 | 권장안 그대로: 의존 서비스(Redis 포함)를 모두 띄우고 전체 헬스 URL로 판정 · 로그 `build/dev/` · 대기 서비스 60초·앱 120초. 2026-10-24 사용자 승인 |
+| 9 | 커밋 서명 오판 | 완료 검사 훅이 heredoc 본문의 `>`(커밋 서명의 이메일 꺾쇠)를 파일 쓰기로 오판한다(2026-10-23 실제 발생). 같은 훅을 고치는 이번 변경에 픽스처와 수정을 넣는다 |
+| 10 | 효과 측정 | 이번 구현에서 하지 않는다(Nice to Have 유지). 2026-10-24 |
 
 ## 요구사항
 
 ### Must Have
 
-- [ ] **`scripts/dev.sh` (core)** — 스택에 묶이지 않는 실행 엔진이다. 동사·종료 코드·출력 형식·설정 키 목록의 SSOT는 이 파일 머리다
+- [x] **`scripts/dev.sh` (core)** — 스택에 묶이지 않는 실행 엔진이다. 동사·종료 코드·출력 형식·설정 키 목록의 SSOT는 이 파일 머리다
   - 동사: `build` · `test [인자…]` · `fmt` · `deps` · `start` · `stop` · `status` · `logs [N]`. 설정 값이 `없음 — 이유`인 동사는 그 이유를 한 줄로 출력하고 exit 0으로 끝낸다
   - 종료 코드: `0` 성공 · `1` 실패 · `2` 환경 없음(설정 파일 없음 · 필수 키 없음 · 컨테이너 런타임 없음 · 포트 점유 · 위험 명령 차단). `2`는 `preflight`의 "검증하지 못한 것"으로 넘긴다
   - 출력: 성공하면 `dev <동사>: 통과 — <요약>` 한 줄이다. 실패하면 `dev <동사>: 실패 <개수>` 한 줄, 실패 항목마다 이름과 원인 한 줄(최대 10개, 줄당 최대 300자), 마지막에 전체 로그 경로를 쓴다. 실패 줄은 `deny-unverified-completion.sh`의 `FAILED` 정규식에 걸리고, 성공 줄은 걸리지 않는다
@@ -53,19 +56,19 @@
   - `start`는 여러 번 실행해도 결과가 같다: 이미 떠 있으면 PID만 보여 주고 exit 0으로 끝낸다. 의존 서비스가 healthy가 될 때까지 기다린 뒤 앱을 백그라운드로 띄우고, 헬스 URL이 성공할 때까지 `WAIT_HEALTH`초 동안 기다린다. 시간 안에 성공하지 못하면 앱을 종료하고, exit 1과 함께 로그의 에러 줄을 보여 준다
   - `stop`은 PID 파일의 번호로만 종료한다. 이름 패턴은 쓰지 않는다. 떠 있는 것이 없으면 exit 0으로 끝낸다
   - 결정 7의 위험 명령 사전 검사
-- [ ] **엔진 테스트** — `scripts/test-dev.sh`를 둔다. 가짜 명령(성공·실패하는 작은 셸 스크립트, 가짜 JUnit XML, `python3 -m http.server`로 띄운 헬스 응답)을 가리키는 임시 `dev.conf`로 동사·종료 코드·출력 형식을 판정한다. `scripts/verify.sh`의 4번째 단계로 넣는다
-- [ ] **이 저장소의 `scripts/dev.conf`** — 결정 6대로 둔다
-- [ ] **`java-spring` 씨앗** — `examples/seeds/java-spring/dev.conf`. 키마다 한 줄 주석으로 무엇을 적는지 설명한다. 도메인·프로젝트 이름은 넣지 않는다
-- [ ] **`_template` 씨앗** — `examples/seeds/_template/dev.conf`. 키 목록과 빈 값만 둔다. 씨앗이 없는 스택은 `adopt`이 CI 워크플로의 실제 명령으로 채운다
-- [ ] **TripFit에서 검증** — core `dev.sh`와 `java-spring` 씨앗 `dev.conf`를 TripFit 클론에 복사하고, 아래 "검증 시나리오"를 모두 실행한다. TripFit에 커밋하지 않는다
-- [ ] **완료 검사 훅 수정** — `deny-unverified-completion.sh`가 파일 이름이 아니라 `TEST_CMD` 전체(모든 단어)와 비교하게 한다. `TEST_CMD` 뒤에 인자가 더 붙은 실행은 전체 테스트로 보지 않는다. 훅의 `TEST_CMD` 값은 `scripts/dev.sh test`로 바꾼다
-- [ ] **훅 케이스** — 위 훅 수정 전에 `scripts/hook-cases.txt`에 픽스처를 먼저 추가한다: `dev.sh test` 실행 → 통과 · `dev.sh build`만 실행 → 차단 · `dev.sh test --tests X`만 실행 → 차단 · 예전 값(`scripts/verify.sh`)만 실행 → 차단
-- [ ] **슬롯 값** — `harness-map.md` 명령 슬롯 4개의 값을 `scripts/dev.sh <동사>`로 바꾼다. "훅 상수와 짝" 목록의 설명도 그에 맞게 고친다. `scripts/git-hooks/pre-commit`의 `FORMAT_CMD` 짝 설명도 고친다(이 저장소는 포맷 명령이 없으므로 값은 비운 채로 둔다)
-- [ ] **이식성 검사 대상** — `check-portability.sh`의 배달물 목록에 `scripts/dev.sh`를 추가해서, core 엔진에 스택 이름·경로가 들어오지 않게 한다
-- [ ] **행동 규칙 한 줄** — `core-workflow.md` "구현" 절에 "빌드·테스트·실행은 `scripts/dev.sh`로만 부르고, 같은 일을 하는 명령을 직접 조합하지 않는다. 명령을 바꿀 일이 생기면 `dev.conf`를 고친다"를 넣는다. always-load 예산(현재 27,362B / 상한 28,000B) 안에서 넣는다
-- [ ] **`debug` 연결** — "로컬 재현" 단계에 "앱을 띄워 재현할 때는 `scripts/dev.sh start`, 끝나면 `stop`"을 넣는다
-- [ ] **`adopt` 연결** — 1단계 실측표의 CI 명령으로 `dev.conf`를 채운다(씨앗이 있으면 씨앗 `dev.conf`에서 시작한다). 산출물 체크리스트에 "`scripts/dev.sh test`·`build`의 종료 코드가 0 또는 1이다(2가 아니다)"를 추가한다
-- [ ] **문서 갱신** — `AGENTS.md`(배달물 표의 `scripts/` 행, "항상 `scripts/verify.sh`" 줄) · `AGENTS.template.md` Commands 블록 · `README.md` 배달물 표 · `examples/seeds/README.md`·`java-spring/README.md`(복사 표와 "씨앗 대조" 표에 `dev.conf` 행) · `docs/harness/README.md` "지금의 실제 동작"(완료 검사 훅 판정 변경을 쉬운 말로 설명 — STOP §3)
+- [x] **엔진 테스트** — `scripts/test-dev.sh`를 둔다. 가짜 명령(성공·실패하는 작은 셸 스크립트, 가짜 JUnit XML, `python3 -m http.server`로 띄운 헬스 응답)을 가리키는 임시 `dev.conf`로 동사·종료 코드·출력 형식을 판정한다. `scripts/verify.sh`의 4번째 단계로 넣는다
+- [x] **이 저장소의 `scripts/dev.conf`** — 결정 6대로 둔다. `LOG_DIR`은 `.dev/`(`.gitignore`에 추가)
+- [x] **`java-spring` 씨앗** — `examples/seeds/java-spring/dev.conf`. 키마다 한 줄 주석으로 무엇을 적는지 설명한다. 도메인·프로젝트 이름은 넣지 않는다
+- [x] **`_template` 씨앗** — `examples/seeds/_template/dev.conf`. 키 목록과 `{…}` 자리표시자만 둔다(구현 시 추가: `dev.sh`는 `{…}` 값이 남아 있으면 exit 2로 멈춘다 — 빈 값이면 빈 명령이 성공으로 지나가기 때문이다). 씨앗이 없는 스택은 `adopt`이 CI 워크플로의 실제 명령으로 채운다
+- [x] **TripFit에서 검증** — core `dev.sh`와 `java-spring` 씨앗 `dev.conf`를 TripFit 클론에 복사하고, 아래 "검증 시나리오"를 모두 실행한다. TripFit에 커밋하지 않는다
+- [x] **완료 검사 훅 수정** — `deny-unverified-completion.sh`가 파일 이름이 아니라 `TEST_CMD` 전체(모든 단어)와 비교하게 한다. `TEST_CMD` 뒤에 인자가 더 붙은 실행은 전체 테스트로 보지 않는다. 훅의 `TEST_CMD` 값은 `scripts/dev.sh test`로 바꾼다
+- [x] **훅 케이스** — 위 훅 수정 전에 픽스처를 먼저 추가한다: `dev.sh test` 실행 → 통과 · `dev.sh build`만 실행 → 차단 · `dev.sh test --tests X`만 실행 → 차단 · 예전 값(`scripts/verify.sh`)만 실행 → 차단 · 테스트 뒤 heredoc 커밋 메시지에 `>`가 있음 → 통과(결정 9). 기존 픽스처의 테스트 실행 명령은 새 `TEST_CMD`로 바꾸고 판정(기대 종료 코드)은 그대로 둔다
+- [x] **슬롯 값** — `harness-map.md` 명령 슬롯 4개의 값을 `scripts/dev.sh <동사>`로 바꾼다. "훅 상수와 짝" 목록의 설명도 그에 맞게 고친다. `scripts/git-hooks/pre-commit`의 `FORMAT_CMD` 짝 설명도 고친다(이 저장소는 포맷 명령이 없으므로 값은 비운 채로 둔다). (구현 시 정정: 이 저장소는 빌드·포맷·의존성 조회 슬롯을 `(없음)`으로 둔다 — `dev.conf`에도 값이 없기 때문이다. 규칙은 "값이 있으면 `scripts/dev.sh <동사>`"로 `harness-map.md` 명령 슬롯 절 머리에 적었다)
+- [x] **이식성 검사 대상** — `check-portability.sh`의 배달물 목록에 `scripts/dev.sh`를 추가해서, core 엔진에 스택 이름·경로가 들어오지 않게 한다
+- [x] **행동 규칙 한 줄** — `core-workflow.md` "구현" 절에 "빌드·테스트·실행은 `scripts/dev.sh`로만 부르고, 같은 일을 하는 명령을 직접 조합하지 않는다. 명령을 바꿀 일이 생기면 `dev.conf`를 고친다"를 넣는다. always-load 예산(현재 27,362B / 상한 28,000B) 안에서 넣는다
+- [x] **`debug` 연결** — "로컬 재현" 단계에 "앱을 띄워 재현할 때는 `scripts/dev.sh start`, 끝나면 `stop`"을 넣는다
+- [x] **`adopt` 연결** — 1단계 실측표의 CI 명령으로 `dev.conf`를 채운다(씨앗이 있으면 씨앗 `dev.conf`에서 시작한다). 산출물 체크리스트에 "`scripts/dev.sh test`·`build`의 종료 코드가 0 또는 1이다(2가 아니다)"를 추가한다
+- [x] **문서 갱신** — `AGENTS.md`(배달물 표의 `scripts/` 행, "항상 `scripts/verify.sh`" 줄) · `AGENTS.template.md` Commands 블록 · `README.md` 배달물 표 · `examples/seeds/README.md`·`java-spring/README.md`(복사 표와 "씨앗 대조" 표에 `dev.conf` 행) · `docs/harness/README.md` "지금의 실제 동작"(완료 검사 훅 판정 변경을 쉬운 말로 설명 — STOP §3)
 
 ### Nice to Have
 
@@ -109,9 +112,9 @@ API 없음. 인터페이스는 `dev.sh`의 동사·종료 코드·출력 형식�
 | `BUILD_CMD` | 빌드 | `./gradlew build -x test --no-daemon` |
 | `TEST_CMD` | 전체 테스트(인자는 뒤에 붙는다) | `./gradlew test --no-daemon` |
 | `TEST_REPORT` | 결과 형식과 위치 | `junit:build/test-results/test/*.xml` |
-| `FMT_CMD` · `DEPS_CMD` | 포맷 · 의존성 조회 | `./gradlew spotlessApply` · `./gradlew dependencies --configuration runtimeClasspath` |
+| `FMT_CMD` · `DEPS_CMD` | 포맷 · 의존성 조회 | `./gradlew spotlessApply --no-daemon` · `./gradlew dependencies --configuration runtimeClasspath --no-daemon` |
 | `SERVICES` | 먼저 띄울 compose 서비스 | `mysql` |
-| `EXTRA_CONTAINERS` | compose에 없는 의존 서비스(이름:이미지:포트) | 아래 미결정 1에 따른다 |
+| `EXTRA_CONTAINERS` | compose에 없는 의존 서비스(`이름,이미지,포트` — 이미지 이름에 `:`가 있어 쉼표로 나눈다) | `redis,redis:7-alpine,6379` |
 | `START_CMD` · `APP_PORT` | 앱 기동 · 포트 | `./gradlew bootRun` · `8080` |
 | `HEALTH_URL` | 기동 성공 판정 주소 | 아래 미결정 1에 따른다 |
 | `WAIT_SERVICES` · `WAIT_HEALTH` | 대기 시간(초) | 아래 미결정 3에 따른다 |
@@ -121,42 +124,42 @@ API 없음. 인터페이스는 `dev.sh`의 동사·종료 코드·출력 형식�
 
 ### 정상 (TripFit 클론)
 
-- [ ] `dev.sh test` → 현재 TripFit 상태라 exit 1. 출력은 15줄 이하이고, 실패한 테스트 이름과 데드락 원인 한 줄이 있다. 바이트 수를 기존 방식(콘솔 5,656B + 원인을 보려고 연 XML 13,745B)과 비교해 보고서에 적는다
-- [ ] `dev.sh test --tests <통과하는 클래스>` → exit 0, 한 줄
-- [ ] `dev.sh build` → exit 0, 한 줄
-- [ ] `dev.sh start` → 의존 서비스 healthy 확인 → 앱 헬스 성공 → exit 0. 다시 `start` → "이미 실행 중 (PID n)", exit 0
-- [ ] `dev.sh status` → 실행 여부·PID·헬스 결과 한 줄
-- [ ] `dev.sh logs` → 에러 줄과 마지막 N줄만, 그리고 전체 로그 경로
-- [ ] `dev.sh stop` → 포트가 닫히고 PID 파일이 지워진다. 다시 `stop` → exit 0
-- [ ] `start → stop`을 3회 반복해도 출력 형식과 종료 코드가 같다
+- [x] `dev.sh test` → 현재 TripFit 상태라 exit 1. 출력은 15줄 이하이고, 실패한 테스트 이름과 데드락 원인 한 줄이 있다. 바이트 수를 기존 방식(콘솔 5,656B + 원인을 보려고 연 XML 13,745B)과 비교해 보고서에 적는다
+- [x] `dev.sh test --tests <통과하는 클래스>` → exit 0, 한 줄
+- [x] `dev.sh build` → exit 0, 한 줄
+- [x] `dev.sh start` → 의존 서비스 healthy 확인 → 앱 헬스 성공 → exit 0. 다시 `start` → "이미 실행 중 (PID n)", exit 0
+- [x] `dev.sh status` → 실행 여부·PID·헬스 결과 한 줄
+- [x] `dev.sh logs` → 에러 줄과 마지막 N줄만, 그리고 전체 로그 경로
+- [x] `dev.sh stop` → 포트가 닫히고 PID 파일이 지워진다. 다시 `stop` → exit 0
+- [x] `start → stop`을 3회 반복해도 출력 형식과 종료 코드가 같다
 
 ### 엣지 · 실패
 
-- [ ] 컨테이너 런타임 데몬이 꺼져 있다 → `start`가 exit 2, "환경 없음" 한 줄
-- [ ] 앱 포트를 다른 프로세스가 이미 쓰고 있다 → `start`가 exit 2
-- [ ] 헬스가 대기 시간 안에 성공하지 못한다 → 앱을 종료하고 exit 1, 에러 줄을 보여 준다
-- [ ] `dev.conf`의 명령에 차단 패턴(예: 재귀 삭제)이 있다 → 실행하지 않고 exit 2 (엔진 테스트)
-- [ ] `dev.conf`가 없거나 필수 키가 없다 → exit 2 (엔진 테스트)
+- [x] 컨테이너 런타임 데몬이 꺼져 있다 → `start`가 exit 2, "환경 없음" 한 줄
+- [x] 앱 포트를 다른 프로세스가 이미 쓰고 있다 → `start`가 exit 2
+- [x] 헬스가 대기 시간 안에 성공하지 못한다 → 앱을 종료하고 exit 1, 에러 줄을 보여 준다
+- [x] `dev.conf`의 명령에 차단 패턴(예: 재귀 삭제)이 있다 → 실행하지 않고 exit 2 (엔진 테스트)
+- [x] `dev.conf`가 없거나 필수 키가 없다 → exit 2 (엔진 테스트)
 
 ### 이 저장소
 
-- [ ] `scripts/dev.sh test` → `scripts/verify.sh`와 같은 종료 코드로 끝나고, 성공하면 한 줄을 출력한다
-- [ ] 여러 단어 `TEST_CMD` 픽스처 4개와 기존 102개 케이스가 `scripts/test-hooks.sh`에서 모두 통과한다
+- [x] `scripts/dev.sh test` → `scripts/verify.sh`와 같은 종료 코드로 끝나고, 성공하면 한 줄을 출력한다
+- [x] 여러 단어 `TEST_CMD` 픽스처 4개, heredoc 픽스처 2개(커밋 메시지 → 통과 · `cat > 파일 <<EOF` → 여전히 편집)와 기존 102개 케이스가 `scripts/test-hooks.sh`에서 모두 통과한다
 
 ## 완료 기준
 
-- [ ] `scripts/dev.sh test` 통과(이 저장소의 새 `{{테스트 명령}}`)
-- [ ] TripFit 검증 시나리오의 실행 결과(명령 → 종료 코드 → 출력 바이트)가 작업 보고서에 있다
-- [ ] `{{빌드 명령}}` — 이 저장소는 빌드가 없어 `dev.sh build`가 "없음"을 출력하고 exit 0
-- [ ] 작업 보고서 `docs/reports/2026-10-23-dev-script.md`(L 규모 — "검증하지 못한 것" 포함)
+- [x] `scripts/dev.sh test` 통과(이 저장소의 새 `{{테스트 명령}}`)
+- [x] TripFit 검증 시나리오의 실행 결과(명령 → 종료 코드 → 출력 바이트)가 작업 보고서에 있다
+- [x] `{{빌드 명령}}` — 이 저장소는 빌드가 없어 `dev.sh build`가 "없음"을 출력하고 exit 0
+- [x] 작업 보고서 `docs/reports/2026-10-24-dev-script.md`(L 규모 — "검증하지 못한 것" 포함)
 
 ## 리스크·미결정
 
 | 항목 | 상태 | 비고 |
 |---|---|---|
-| 1. `start`의 헬스 판정 기준 (씨앗 기본값) | [미정] — 사용자 결정 | **권장: 의존 서비스(Redis 포함)를 모두 띄우고, 전체 `/actuator/health`가 성공할 때 기동 성공으로 본다.** TripFit compose에는 Redis가 없으므로 `EXTRA_CONTAINERS`에 운영과 같은 이미지(`redis:7-alpine`)를 둔다. 대안: `/actuator/health/readiness`만 본다. Redis 없이도 성공하지만, 이후 AI가 전체 헬스 `DOWN`을 보고 원인을 다시 찾게 된다 |
-| 2. 로그 디렉터리 (씨앗 기본값) | [미정] — 사용자 결정 | **권장: `build/dev/`** — Gradle 빌드 산출물 폴더라 TripFit `.gitignore`에 이미 있고, `clean`을 하면 같이 지워진다. 대안: `.dev/logs/`(TripFit에 `.dev/`가 있지만 세션 기록용이다) |
-| 3. 대기 시간 (씨앗 기본값) | [미정] — 사용자 결정 | **권장: 의존 서비스 60초, 앱 헬스 120초.** 실측에서 MySQL은 약 8초, 앱 기동은 9초였다(컴파일 캐시가 있을 때). 첫 실행의 컴파일 시간을 고려해 여유를 두었다 |
+| 1. `start`의 헬스 판정 기준 (씨앗 기본값) | 확정 — 결정 8 | **채택: 의존 서비스(Redis 포함)를 모두 띄우고, 전체 `/actuator/health`가 성공할 때 기동 성공으로 본다.** TripFit compose에는 Redis가 없으므로 `EXTRA_CONTAINERS`에 운영과 같은 이미지(`redis:7-alpine`)를 둔다. 대안: `/actuator/health/readiness`만 본다. Redis 없이도 성공하지만, 이후 AI가 전체 헬스 `DOWN`을 보고 원인을 다시 찾게 된다 |
+| 2. 로그 디렉터리 (씨앗 기본값) | 확정 — 결정 8 | **채택: `build/dev/`** — Gradle 빌드 산출물 폴더라 TripFit `.gitignore`에 이미 있고, `clean`을 하면 같이 지워진다. 대안: `.dev/logs/`(TripFit에 `.dev/`가 있지만 세션 기록용이다) |
+| 3. 대기 시간 (씨앗 기본값) | 확정 — 결정 8 | **채택: 의존 서비스 60초, 앱 헬스 120초.** 실측에서 MySQL은 약 8초, 앱 기동은 9초였다(컴파일 캐시가 있을 때). 첫 실행의 컴파일 시간을 고려해 여유를 두었다 |
 | 4. Maven Central 429 | 확정 — 범위 밖 | 클라우드 세션에서만 났고 다시 시도해 해결했다. 보고서 "검증하지 못한 것"에 남긴다 |
 
 ## 변경 이력
@@ -165,3 +168,6 @@ API 없음. 인터페이스는 `dev.sh`의 동사·종료 코드·출력 형식�
 |---|---|
 | 2026-10-23 | 초안 — TripFit-server 실측 반영 |
 | 2026-10-23 | 사용자 목표("빌드·실행 환경도 프로젝트별로 분리") 확인 후 구조 변경: 스택별 스크립트 씨앗 → core 엔진 `dev.sh` + 프로젝트 설정 `dev.conf`. 위험 명령 사전 검사, 이 저장소 적용, 엔진 테스트 추가 |
+| 2026-10-24 | 승인. 기본값 3개 확정(결정 8), 커밋 서명 오판 픽스처 추가(결정 9), 효과 측정 보류(결정 10) |
+| 2026-10-24 | 별도 컨텍스트 리뷰 10건 반영 — heredoc 판정 보완(`<<<`·셸에 넘긴 본문·닫는 줄), 리다이렉션 뒤 테스트 실행 인정, 결과 파일 0개는 실패(씨앗 `--rerun`), 실패한 start의 서비스 정리, 추가 컨테이너 설정 라벨, `pre-commit` 엔진 테스트, 남은 `verify.sh` 안내 수정 |
+| 2026-10-24 | 구현. 정정: 이 저장소의 빌드·포맷·의존성 슬롯은 `(없음)` 유지 · `EXTRA_CONTAINERS` 구분자 쉼표 · `{…}` 자리표시자 차단 추가 · 시작 명령은 데몬 없이(`--no-daemon`). 결과는 `docs/reports/2026-10-24-dev-script.md` |

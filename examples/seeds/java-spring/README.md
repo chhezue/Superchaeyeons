@@ -18,6 +18,7 @@ Java 21 / Spring Boot / JPA / Gradle 백엔드용 lang 팩 **씨앗**이다. 하
 | `hooks/local-deny-db-migration.sh` | `.claude/hooks/` + `settings.json` `PreToolUse`/`Write\|Edit\|MultiEdit\|NotebookEdit` 등록 (매처는 정확한 이름 목록 — 넷 다 적는다) | DB 마이그레이션 금지 (❌면 복사하지 않는다) |
 | `hooks/local-warn-breaking-change.sh` | `.claude/hooks/` + `settings.json` `PreToolUse`/`Bash` 등록 | API 계약 보호 (❌면 복사하지 않는다) |
 | `hooks/local-auto-format-java.sh` | `.claude/hooks/` + `settings.json` `PostToolUse`/`Write\|Edit\|MultiEdit\|NotebookEdit` 등록 | — (`{{포맷 명령}}`이 있을 때만) |
+| `dev.conf` | `scripts/dev.conf` (이름 그대로 — 데이터 파일이라 `local-` 접두사가 없다) | — (항상. 실행 엔진 `scripts/dev.sh`는 배달물이라 복사하지 않는다) |
 
 훅을 복사하면 `scripts/hook-cases.txt`의 해당 케이스도 살아난다 — `test-hooks.sh`는 `.claude/hooks/`와 `examples/seeds/*/hooks/` 둘 다에서 훅을 찾는다.
 
@@ -37,6 +38,10 @@ Java 21 / Spring Boot / JPA / Gradle 백엔드용 lang 팩 **씨앗**이다. 하
 | 아키텍처 규칙을 ArchUnit 테스트가 검증 | `local-spring-boot-java.md` · `local-spring-reviewer.md` 제외 목록 | `src/test/java/**/architecture/*Test.java` 존재 · 빌드 파일에 `archunit` 의존성. 없으면 리뷰어 제외 목록을 비운다 | |
 | 테스트: JUnit 5 + Testcontainers, 프로필 `test` | `local-testing.md` | 빌드 파일에 `testcontainers` 의존성 · `src/test/resources/application-test.yml` 존재 | |
 | 모든 PK·FK가 UUID v4(`CHAR(36)`), `Long`·`IDENTITY` PK 금지 | `local-spring-boot-java.md` "Entity Conventions" 절 | 엔티티 하나를 열어 `@Id` 타입·생성 전략과 DB 컬럼 타입 확인. 숫자 자동 증가 PK를 쓰는 프로젝트면 이 행을 고친다 | |
+| `dev.conf`: 의존 서비스가 compose의 `mysql` 서비스 + compose에 없는 Redis 하나 | `dev.conf` `SERVICES`·`EXTRA_CONTAINERS` | `docker-compose.yml`의 서비스 이름 · 설정 파일의 `spring.data.redis` 사용 여부. compose에 Redis가 있으면 `SERVICES`로 옮긴다 | |
+| `dev.conf`: 헬스 주소 `/actuator/health`, 포트 8080, 전체 헬스로 판정 | `dev.conf` `APP_PORT`·`HEALTH_URL` | 빌드 파일에 `actuator` 의존성 · 설정의 `server.port`·`management.endpoints.web.exposure` | |
+| `dev.conf`: 테스트 결과가 `build/test-results/test/*.xml`, 기동이 `bootRun` | `dev.conf` `TEST_REPORT`·`START_CMD` | Gradle 기본 경로 · `bootRun` 태스크 존재. 첫 `scripts/dev.sh test`·`start`가 exit 0 또는 1이면(2가 아니면) 맞다 | |
+| `dev.conf`: DB 접속 정보는 `.env`가 채운다 | `dev.conf` `RUN_ENV` | `.env.example`에 compose가 쓰는 변수가 있는지. 없으면 로컬 기본값만 `RUN_ENV`에 적는다(비밀값 금지) | |
 | 성공 응답이 `SuccessResponse<T>`로 감싸이고, 실패는 `GlobalExceptionHandler`가 `ErrorCode`로 변환 | `local-spring-boot-java.md` "레이어"·"API" 절 · `local-openapi-conventions.md` | 컨트롤러 반환 타입 하나와 전역 예외 처리기 확인 | |
 | 로그인 사용자를 `@AuthorizedUser UUID userId`로 주입, 사용자 조회는 `UserLookupService.requireUser` 하나로 | `local-spring-boot-java.md` "레이어"·"교차관심사" 절 · `local-openapi-conventions.md` · `local-java-comments.md` | 인자 리졸버와 사용자 조회 서비스 존재 여부. 이름이 다르면 네 파일의 예시를 함께 고친다 | |
 | Service는 facade + Command/Query로 나누고, 풀 DDD(도메인 주도 설계)·포트 인터페이스는 쓰지 않음 | `local-spring-boot-java.md` "Package Layout"·"SOLID / OOP 원칙" 절 | `{{결정 기록}}`의 아키텍처 결정과 기존 Service 구성. 결정 기록이 없으면 사용자에게 묻는다 | |

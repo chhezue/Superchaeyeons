@@ -9,6 +9,7 @@
 | 파일 | 복사 위치 | 채우는 것 |
 |---|---|---|
 | `rules/lang-conventions.md` | `.claude/rules/local-{스택 이름}.md` | 아래 절 전부. `paths:` frontmatter를 그 언어 확장자로 |
+| `dev.conf` | `scripts/dev.conf` (이름 그대로) | 빌드·테스트·실행 명령, 의존 서비스, 헬스 주소. 키 뜻은 `scripts/dev.sh` 머리. `{…}`를 남기면 `dev.sh`가 exit 2로 멈춘다 |
 | `agents/stack-reviewer.md` | `.claude/agents/local-{스택}-reviewer.md` (`name:`은 `{스택}-reviewer`) | 스택 리뷰어 — 정적 검사가 못 잡는 결함 목록. 플래그 "스택 리뷰어"를 켤 때만 |
 
 복사 위치의 `local-` 접두사는 필수다 — `scripts/check-portability.sh`가 그 접두사로 local 층을 식별해 검사에서 뺀다. 훅은 템플릿에 없다. 포맷 훅(`local-auto-format-*.sh`)과 마이그레이션 차단 훅은 `{{포맷 명령}}`·"DB 마이그레이션 금지" 플래그가 실제로 있을 때 `java-spring/hooks/`를 본떠 만든다(역시 `local-` 접두사).

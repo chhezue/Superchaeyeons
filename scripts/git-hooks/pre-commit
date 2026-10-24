@@ -26,6 +26,16 @@ if [ -n "$staged_hooks" ] && [ -x scripts/test-hooks.sh ]; then
 	fi
 fi
 
+# dev.sh 엔진·테스트·설정이 stage에 있으면 엔진 테스트 — 실패하면 커밋을 막는다 (scripts/test-dev.sh)
+staged_dev="$(git -c core.quotepath=false diff --cached --name-only -- 'scripts/dev.sh' 'scripts/test-dev.sh' 'scripts/dev.conf')"
+if [ -n "$staged_dev" ] && [ -x scripts/test-dev.sh ]; then
+	if ! scripts/test-dev.sh >/dev/null; then
+		scripts/test-dev.sh | grep -E 'FAIL|케이스' >&2
+		echo "FAIL: dev.sh 엔진 테스트 실패 — 케이스를 통과시킨 뒤 다시 커밋하세요." >&2
+		exit 1
+	fi
+fi
+
 # stage된 마크다운은 문서 스타일 검사 — 개요 없음·H4·번역투·닫히지 않은 코드 펜스 등 E 판정이면 커밋을 막는다
 if [ -x scripts/check-doc-style.sh ]; then
 	if ! scripts/check-doc-style.sh --staged; then
@@ -36,6 +46,7 @@ fi
 
 # ---- 자동 포맷 (프로젝트별) ----------------------------------------------------
 # FORMAT_CMD·FORMAT_PATHS는 harness-map.md의 {{포맷 명령}}과 같은 값이어야 한다 — 훅은 슬롯을 읽지 못하므로 여기 직접 적는다.
+# 포맷 도구가 있으면 FORMAT_CMD는 `scripts/dev.sh fmt`이고 실제 명령은 scripts/dev.conf의 FMT_CMD다.
 # 슬롯을 바꾸면 이 두 줄도 함께 고칠 것. 비어 있으면 포맷 단계를 건너뛴다. (씨앗 예: examples/seeds/java-spring/README.md)
 FORMAT_CMD=""
 FORMAT_PATHS=""

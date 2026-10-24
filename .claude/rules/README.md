@@ -96,4 +96,4 @@ paths:
 - 규칙 수정 → `scripts/check-portability.sh` (always-load 예산은 래칫 — 낮추기만 한다)
 - 문서 신설·50줄 이상 수정 → `scripts/check-doc-style.sh` 오류 0 + `doc-reviewer`
 - 안 하기로 한 것 → `{{문서 루트}}/out-of-scope/README.md`에 이유와 함께
-- 끝나면 `scripts/verify.sh`
+- 끝나면 `scripts/dev.sh test`

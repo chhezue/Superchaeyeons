@@ -5,13 +5,16 @@
 #
 # TEST_CMD는 harness-map.md의 {{테스트 명령}}과 같은 값이어야 한다 — 훅은 슬롯을 읽지 못하므로 여기 직접 적는다.
 # 슬롯을 바꾸면 이 줄도 함께 고칠 것. "(없음)"이나 빈 값이면 아무것도 막지 않는다 (테스트 없는 저장소를 영구히 막지 않기 위해).
-TEST_CMD="scripts/verify.sh"
+TEST_CMD="scripts/dev.sh test"
 #
 # 판정: 마지막 사용자 메시지 이후에
 #   (a) 문서(.md/.txt/.rst)가 아닌 파일을 고쳤고 — Write/Edit/MultiEdit/NotebookEdit 도구뿐 아니라 Bash의 `sed -i`·`tee`·
 #       `>`/`>>` 리다이렉션도 편집으로 센다 (2026-09-07 감사: Bash 편집이 보이지 않아 게이트가 무동작이던 사각),
-#   (b) 그 **마지막 편집 이후에** TEST_CMD를 명령으로 실행한 기록이 없거나(`cat scripts/verify.sh`처럼 문자열로 언급한 것은 실행이
-#       아니다), 실행했지만 그 tool_result가 실패(is_error 또는 러너 요약 줄 "실패 있음·FAIL·N failed")였고,
+#       heredoc 본문(`<<EOF` 다음 줄부터 구분자 줄까지)은 명령이 아니라 데이터라 보지 않는다 — 커밋 메시지 서명의 `<…@…>`가
+#       리다이렉션으로 오판되던 사각(2026-10-23 실세션),
+#   (b) 그 **마지막 편집 이후에** TEST_CMD를 명령으로 실행한 기록이 없거나(`cat scripts/dev.sh`처럼 문자열로 언급한 것은 실행이
+#       아니다. TEST_CMD의 모든 단어가 그대로 나와야 하고, 뒤에 인자가 더 붙은 `… test --tests X`나 다른 동사는 전체 테스트가
+#       아니라 실행으로 치지 않는다), 실행했지만 그 tool_result가 실패(is_error 또는 러너 요약 줄 "실패 있음·FAIL·N failed")였고,
 #   (c) 마지막 어시스턴트 텍스트에 완료 단정("완료·통과·끝났·마쳤·성공·정상 동작·구현했·적용했·반영했·수정했·done·passed·fixed·
 #       complete·implemented·works")이 있으면 exit 2 — 모델이 이어서 테스트를 돌리거나 문구를 고친다. 문서만 고친 턴에는 발화하지 않는다.
 # 완료 단정에서 제외하는 것: "완료 조건·기준·선언·보고"처럼 규칙을 인용하는 명사구, "미완료", "통과하지/못", 영어는 단어 경계
@@ -37,7 +40,7 @@ path = data.get("transcript_path") or ""
 if not path or not os.path.isfile(path):
     print("SKIP"); sys.exit(0)
 test_cmd = os.environ["TEST_CMD"]
-test_key = os.path.basename(test_cmd.split()[0])
+test_words = test_cmd.split()
 DOC_EXT = (".md", ".txt", ".rst")
 CLAIM = re.compile(
     r"(?<!미)완료(?!\s?(조건|기준|선언|보고))"
@@ -48,9 +51,31 @@ CLAIM = re.compile(
     re.I,
 )
 # TEST_CMD "실행" = 명령의 시작, 또는 ; && || | ( 뒤에 (bash|sh|source|.) 접두사와 경로를 붙여 부른 것. 인용·cat·grep은 실행이 아니다.
+# 첫 단어는 파일 이름만, 나머지 단어는 그대로 맞춰 보고, 그 뒤에는 리다이렉션(2>&1 · 2>/dev/null · > 파일)과
+# 명령 끝(; & | ) 줄바꿈)만 허용한다. 파일로 보내는 리다이렉션은 아래 편집 판정이 먼저 잡는다.
 TEST_RUN = re.compile(
-    r"(^|[;&|(\n]\s*)((bash|sh|source|\.)\s+)?(\S*/)?" + re.escape(test_key) + r"(\s|$)"
+    r"(^|[;&|(\n]\s*)((bash|sh|source|\.)\s+)?(\S*/)?" + re.escape(os.path.basename(test_words[0]))
+    + "".join(r"\s+" + re.escape(w) for w in test_words[1:])
+    + r"(?=(?:\s*(?:[0-9]*>&[0-9]+|&>>?\s*\S+|[0-9]*>>?\s*\S+))*\s*(?:$|[;&|)\n]))"
 )
+# heredoc 본문은 데이터로 보고 뺀다. 단 here-string(<<<)은 heredoc이 아니고, 닫는 줄이 없으면 heredoc으로 보지 않으며,
+# 셸·인터프리터에 넘긴 본문(bash <<EOF)은 실행되는 코드라 남긴다 — 빼면 그 안의 편집을 놓친다 (2026-10-24 리뷰)
+HEREDOC = re.compile(r"(?<!<)<<(?!<)-?\s*([\"\x27]?)([A-Za-z_][A-Za-z0-9_]*)\1")
+EXEC_FEED = re.compile(r"(^|[;&|(\s])(bash|sh|zsh|dash|ksh|python3?|node|ruby|perl)(\s|$)")
+
+def strip_heredocs(cmd):
+    lines = cmd.split("\n"); out = []; i = 0
+    while i < len(lines):
+        cur = lines[i]; out.append(cur); i += 1
+        for m in HEREDOC.finditer(cur):
+            if EXEC_FEED.search(cur[:m.start()]):
+                continue
+            j = i
+            while j < len(lines) and lines[j].strip() != m.group(2):
+                j += 1
+            if j < len(lines):
+                i = j + 1
+    return "\n".join(out)
 # Bash 편집 검출 — 리다이렉션 대상, tee 대상, sed -i 의 경로 토큰. /dev/null·&1·문서 확장자는 편집이 아니다.
 REDIRECT = re.compile(r"(?<![<>&0-9])>{1,2}\s*[\"\x27]?([^\s\"\x27&|;<>]+)")
 TEE = re.compile(r"\btee\s+(?:-[a-zA-Z]+\s+)*[\"\x27]?([^\s\"\x27&|;<>]+)")
@@ -127,7 +152,7 @@ for t in turns[last_user + 1:]:
                     p = (inp.get("file_path") or inp.get("notebook_path") or "")
                     edited = bool(p) and not is_doc(p)
                 elif name == "Bash":
-                    cmd = inp.get("command") or ""
+                    cmd = strip_heredocs(inp.get("command") or "")
                     if bash_edits_code(cmd):
                         edited = True
                     elif TEST_RUN.search(cmd):

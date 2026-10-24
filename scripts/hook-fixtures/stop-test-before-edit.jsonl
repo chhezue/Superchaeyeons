@@ -1,5 +1,5 @@
 {"type": "user", "message": {"role": "user", "content": [{"type": "text", "text": "검사기 고쳐줘"}]}}
-{"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "t1", "name": "Bash", "input": {"command": "scripts/verify.sh"}}]}}
+{"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "t1", "name": "Bash", "input": {"command": "scripts/dev.sh test"}}]}}
 {"type": "user", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t1", "content": "verify: 전부 통과"}]}}
 {"type": "assistant", "message": {"role": "assistant", "content": [{"type": "tool_use", "id": "t2", "name": "Edit", "input": {"file_path": "scripts/check-portability.sh", "old_string": "a", "new_string": "b"}}]}}
 {"type": "user", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t2", "content": "ok"}]}}

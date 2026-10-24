@@ -118,6 +118,19 @@ deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixture
 deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-mention-not-run.jsonl","stop_hook_active":false}
 # 통과 출력에 "0 failed"·"ERROR" 같은 일반어가 있어도 실패로 오판하지 않는다 (2026-09-07 실세션 오탐)
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-test-passed-wordy.jsonl","stop_hook_active":false}
+# TEST_CMD가 여러 단어(scripts/dev.sh test)일 때 — 파일 이름만 비교하면 다른 동사·일부 테스트·예전 명령도 통과로 오판한다 (dev-script 스펙)
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-devsh-build-only.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-devsh-test-partial.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-old-test-cmd.jsonl","stop_hook_active":false}
+# heredoc 본문의 `>`(커밋 서명의 이메일 꺾쇠)는 파일 쓰기가 아니다 (2026-10-23 실세션 오판)
+deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-heredoc-commit-after-test.jsonl","stop_hook_active":false}
+# heredoc 앞의 리다이렉션(`cat > 파일 <<EOF`)은 여전히 파일 쓰기다
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-heredoc-write-no-test.jsonl","stop_hook_active":false}
+# here-string(<<<)은 heredoc이 아니고, 셸에 넘긴 heredoc 본문은 실행되는 코드다 — 둘 다 뒤의 편집을 놓치면 안 된다 (2026-10-24 리뷰)
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-herestring-then-edit.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-heredoc-shell-edit.jsonl","stop_hook_active":false}
+# 테스트 명령 뒤 /dev/null로 보내는 리다이렉션은 실행으로 친다
+deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-test-stderr-devnull.jsonl","stop_hook_active":false}
 # Stop 훅은 판정 불가면 통과 (명시적 예외 — 대화가 끝나지 못하는 피해가 더 크다)
 deny-unverified-completion.sh	-	0	not json
 deny-unverified-completion.sh	-	0	{"transcript_path":"/nonexistent.jsonl","stop_hook_active":false}

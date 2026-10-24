@@ -32,6 +32,7 @@
 | **구성 요소 지도·레이어별 설명 문서** (`component-map.md`·`layer1~3`·`architecture-diagrams.md`·`workflow-cycle.md`) | 같은 구성 요소 목록을 13개 문서가 다시 적어 하나를 바꾸면 10곳을 고쳐야 했고, 이전 감사의 불일치 사고가 전부 이 문서들에서 났다. 목록 SSOT는 `.claude/rules/README.md` 하나로 두고 `check-portability.sh`가 대조한다 | 사람용 입문 자료가 따로 필요해질 때 — 그때는 목록을 다시 적지 않고 SSOT를 링크한다 | 2026-10-05 삭제 |
 | **`defer` 스킬** | Draft 스펙·Approved amend·이슈 생성 확인은 스펙 작업이라 `specify`의 "범위를 미룰 때" 절로 합쳤다. 트리거 문구는 `specify` 설명에 있다 | — | 2026-10-05 통합 |
 | **`core-scope`·`core-followup`·`core-tools` 규칙** | 매 세션 실리지만 안전과 무관하거나(후속 제안 형식·도구 도입 기준) 다른 규칙과 겹쳤다(`[미정]`은 STOP §1.4의 한 사례, 호출 규약·별도 리뷰는 워크플로와 중복). 남길 문장은 `core-guardrails` §1.8·`core-workflow`·`core-gates`·위 도입 기준으로 옮겼다 | — | 2026-10-05 통합 |
+| **`dev.sh`를 거치지 않는 직접 명령 차단 훅** (`./gradlew bootRun` 같은 명령을 막기) | 같은 도구의 정상적인 변형(테스트 하나만 돌리기·디버그 옵션)까지 막는다. `core-workflow.md` 구현 절의 규칙 한 줄로 시작한다 | 규칙이 있는데도 직접 명령으로 조합하는 사례가 반복될 때 | 2026-10-24 |
 | **서술형 문서(`docs/harness/`·`harness-engineering.md`) 배달** | 이 저장소의 이력이라 새 프로젝트에는 관계없는 사고 사례가 대부분이고, 훅 하나 추가에 4곳을 갱신해야 하는 부담이 붙는다. 새 프로젝트는 `AGENTS.md`에서 이 저장소를 링크만 한다 | — | 2026-09-05 |
 
 ## 관련 문서

@@ -28,10 +28,10 @@ cp -R .claude docs/templates scripts <새-프로젝트>/
 
 ### 2단계: 자동 환경 측정과 슬롯 설정
 
-새 프로젝트에서 Claude Code를 켜고 `adopt` 스킬을 실행합니다.
+새 프로젝트에서 Claude Code를 켜고 `harness-init` 스킬을 실행합니다.
 
 ```text
-/adopt
+/harness-init
 ```
 
 저장소를 자동으로 실측해 언어·스택·테스트 명령을 파악하고, [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md)의 설정값(축·슬롯·능력 플래그)을 제안합니다. 승인하면 프로젝트 맞춤 설정이 끝납니다.
@@ -50,7 +50,7 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 
 | 단계 | 작업 내용 | 하네스의 통제 장치 |
 |:---:|---|---|
-| **0** | **저장소 탐색 (Exploration)**<br>구조·스택·컨벤션을 읽어 멘탈 모델 수립 | `adopt` 자동 실측 및 진입 문서 확인 순서 |
+| **0** | **저장소 탐색 (Exploration)**<br>구조·스택·컨벤션을 읽어 멘탈 모델 수립 | `harness-init` 자동 실측 및 진입 문서 확인 순서 |
 | **1** | **요구사항 분석 (Requirements)**<br>모호한 부분을 질문하고 범위 확정 | `ask` 스킬 (라운드 인터뷰) |
 | **2** | **불변 조건 정의 (Invariant & Acceptance Criteria)**<br>절대 깨지면 안 되는 조건과 완료 기준 확정 | G2 승인 게이트 & `specify` 스펙 문서 |
 | **3** | **외부 지식 조사 (Research)**<br>최신 라이브러리 문서·공식 사양 확인 | G1 리서치 게이트 & `researcher` 에이전트 |
@@ -78,7 +78,7 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 ```text
 [ 수정 권한 3층 구조 ]
 - Core (부품) : core-*.md, 공통 훅, 공통 스킬 (수정 금지, 100% 이식성 보장)
-- Map (연결)  : harness-map.md (adopt 스킬이 프로젝트 실측값으로 채움)
+- Map (연결)  : harness-map.md (harness-init 스킬이 프로젝트 실측값으로 채움)
 - Local (고유): local-*.md (각 프로젝트 고유의 도메인·기술 스택 규칙)
 ```
 
@@ -91,7 +91,7 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 | 경로 | 내용 | 배달 여부 |
 |------|------|:---------:|
 | `.claude/rules/` | 행동 규칙 (`core-*`, `harness-map.md`, `doc-writing.md`) — 목록은 [`.claude/rules/README.md`](.claude/rules/README.md) | 배달 |
-| `.claude/skills/` | 표준 워크플로 스킬 (`adopt`, `ask`, `specify`, `tdd`, `preflight` 등) | 배달 |
+| `.claude/skills/` | 표준 워크플로 스킬 (`harness-init`, `ask`, `specify`, `tdd`, `preflight` 등) | 배달 |
 | `.claude/agents/` | 보조 에이전트 (`researcher`, `test-writer`, `doc-reviewer`) | 배달 |
 | `.claude/hooks/` | 결정적 차단 훅 (`deny-*`) | 배달 |
 | `scripts/` | 이식성·문서·훅 검사 스크립트, git 훅 설치기, 빌드·실행 엔진 `dev.sh` (프로젝트 값은 `dev.conf`) | 배달 |
@@ -113,4 +113,4 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 - [하네스 레이어와 현재 동작](docs/harness/README.md): 4개 레이어와 지금 실제로 일어나는 일
 - [하네스 엔지니어링 기록](docs/harness-engineering.md): 설계 철학과 실제 인시던트 해결 과정
 - [참고 자료 및 출처](docs/references.md): 영감을 받은 선행 연구와 차용한 개념
-- [상세 적용 순서](AGENTS.md): adopt 단계별 상세 동작 원리
+- [상세 적용 순서](AGENTS.md): harness-init 단계별 상세 동작 원리

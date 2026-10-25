@@ -94,14 +94,14 @@ baro 쪽은 반대 방향으로 오염됐다 — `researcher.md`에 Spring AI 1.
 ### Must Have
 
 - [x] **부품 계약** — `core-*.md`에 고유명사·언어 식별자·경로 리터럴·버전 번호가 0개이고, `scripts/check-portability.sh`가 이를 exit code로 판정한다 (P0·P2 완료 — C1~C4 0건. always-load 예산 판정은 아래 별도 항목)
-- [x] **4축 어휘** — 축 4개·능력 플래그 7개를 `harness-map.md`의 고정 어휘로 둔다 (P1). **2026-09-05 결정: `packs/` 디렉터리와 `pack.md` 계약은 만들지 않는다.** 축은 `adopt`이 무엇을 물을지 정하는 질문 목록이고, 산출물은 `harness-map.md` 값 + 프로젝트 소유 `local-*.md`다. 생성물 품질은 `adopt` 스킬 본문의 산출물 체크리스트가 맡는다 (P3)
+- [x] **4축 어휘** — 축 4개·능력 플래그 7개를 `harness-map.md`의 고정 어휘로 둔다 (P1). **2026-09-05 결정: `packs/` 디렉터리와 `pack.md` 계약은 만들지 않는다.** 축은 `harness-init`이 무엇을 물을지 정하는 질문 목록이고, 산출물은 `harness-map.md` 값 + 프로젝트 소유 `local-*.md`다. 생성물 품질은 `harness-init` 스킬 본문의 산출물 체크리스트가 맡는다 (P3)
 - [x] **core 정화** — STOP §2·§3·§5·§1.6을 lang 팩 파일(`spring-boot-java.md`·`openapi-conventions.md`)로 삭제 없이 이사, core-guardrails를 3절로 축소 (P1)
 - [x] **배지 판정** — 옵션이 꺼져도 규칙 절을 삭제하지 않는다. `[플래그: X]` 배지 + harness-map 판정 + `core-guardrails` "플래그 판정" 절 (P1)
-- [x] **슬롯 v2** — `{{문서 루트}}`·`{{작업 범위}}`·`{{Git 컨벤션 SSOT}}`·`{{브랜치명 형식}}`·`{{커밋 메시지 형식}}` 추가 (P2). `{{작업 범위}}`는 core가 아니라 `adopt` 스킬만 쓰므로 `harness-map` 규칙 3의 예외 — P3에서 `adopt` 1단계가 실측 범위로 실제 참조함을 확인, 유지
+- [x] **슬롯 v2** — `{{문서 루트}}`·`{{작업 범위}}`·`{{Git 컨벤션 SSOT}}`·`{{브랜치명 형식}}`·`{{커밋 메시지 형식}}` 추가 (P2). `{{작업 범위}}`는 core가 아니라 `harness-init` 스킬만 쓰므로 `harness-map` 규칙 3의 예외 — P3에서 `harness-init` 1단계가 실측 범위로 실제 참조함을 확인, 유지
 - [x] **Git 컨벤션 부품화** — **2026-09-05 결정: `core-workflow-git.md`를 신설하지 않는다.** 규율 4개는 이미 `core-workflow` G2·G4에 있으므로 그 문장이 형식 슬롯을 읽게 하고, `.github/CONTRIBUTING.md` 직접 참조를 `{{Git 컨벤션 SSOT}}`로 바꿨다 (P2). 새 파일은 같은 내용을 두 곳에 두고 always-load를 늘린다 (부품성 원칙 2)
 - [x] **Stop & Ask 게이트** — 훅 3개 신설(`ask-open-request`·`deny-unverified-completion`·`warn-unfilled-map`) + `core-gates.md`(통제/위임 · 멈추는 신호 · 자동으로 하지 않는 것) (P5)
 - [x] **`ask` 스킬** — 라운드 방식 인터뷰(프론티어 · 사실/결정 분리 · 확인 게이트) + 남용 방지 기준 (P5)
-- [x] **`adopt` 스킬 (트랙 D)** — 하네스를 프로젝트에 붙이는 **유일한 경로**. 실측 → 축·슬롯·플래그 제안(승인) → `harness-map.md`·`local-*.md` 채움(승인) → (기존 코드가 있으면) 역스펙·초기 백로그. 산출물 체크리스트 6개가 `pack.md` 계약을 대신한다 (P3)
+- [x] **`harness-init` 스킬 (트랙 D)** — 하네스를 프로젝트에 붙이는 **유일한 경로**. 실측 → 축·슬롯·플래그 제안(승인) → `harness-map.md`·`local-*.md` 채움(승인) → (기존 코드가 있으면) 역스펙·초기 백로그. 산출물 체크리스트 6개가 `pack.md` 계약을 대신한다 (P3)
 - [x] **`safe-refactor` 유연화** — Invariant로 계약 동결 대체 + Audit 내 G1 + A 트랙 승격 경로 + 감사 템플릿 "구현 결과"·"불변 조건 영향" (P6)
 - [x] **Invariant 개념 도입** — G2에서 "이번 작업 내내 깨지면 안 되는 조건"을 확정(`core-workflow` G2 트랙 기본값 · 스펙 템플릿 절). `{{계약 동결 수준}}` 슬롯을 대체 (P6)
 - [x] **실행 환경 검증** — 구현 전 빌드·테스트가 실제로 도는지 확인 (`preflight` 스킬의 사전 모드) (P6)
@@ -112,11 +112,11 @@ baro 쪽은 반대 방향으로 오염됐다 — `researcher.md`에 Spring AI 1.
 - [x] **baro 개선 회수** (P4) — 산출물 등록부(`docs/templates/README.md`, 템플릿 형태) · 설명 유형 템플릿 · 훅 버그 2건(`paths:` `**/` 누락 → `doc-writing`·`testing` 수정, 저장소 밖 절대경로 오탐 → `deny-out-of-scope-write.sh`를 `{{작업 범위}}` 연동 일반형으로 회수) · `deny-dangerous-bash` 오탐 문서화 · 감사 문서 `{NNN}-{topic}.md` 네이밍. **회수하지 않은 것 2건**은 §11 표 참고
 - [x] **훅 공통 규약 + 테스트** — 모든 `deny-*` 훅은 입력을 판정할 수 없으면(JSON 깨짐·키 없음·빈 입력) **차단**하고, 경로는 실경로로 정규화해 `..`·심볼릭 링크 우회를 막는다. `scripts/test-hooks.sh` + `scripts/hook-cases.txt`(훅·입력·기대 exit 한 줄씩)가 이를 기계로 판정한다 (P5, 회고 4)
 - [x] **승인 통로 원칙** — 훅이 막은 것을 에이전트가 우회하지 않는다. 승인은 사용자가 `SCOPE`·플래그·슬롯 값을 바꾸는 행위이고, 그 외 범위 밖 파일은 사용자가 직접 적용한다. `core-gates.md`와 훅 메시지에 같은 문장 (P5, 회고 5)
-- [x] **판정 범위 확대** — `check-portability.sh` 기본 scope를 `.claude/` 전체로. 스택 파일은 `.claude/`에 두지 않고 `examples/seeds/{스택}/`에 두며 `adopt`이 복사한다 (P6, 회고 1·2·3)
-- [x] **씨앗 대조** — `adopt` 3단계: 복사한 씨앗의 스택 전제(의존성·버전·기반 클래스·어노테이션)를 빌드 파일·코드와 대조하고 다른 것은 고친다. 전제마다 근거 파일 한 줄. 체크리스트 항목 추가 (P6, 회고 1·3)
+- [x] **판정 범위 확대** — `check-portability.sh` 기본 scope를 `.claude/` 전체로. 스택 파일은 `.claude/`에 두지 않고 `examples/seeds/{스택}/`에 두며 `harness-init`이 복사한다 (P6, 회고 1·2·3)
+- [x] **씨앗 대조** — `harness-init` 3단계: 복사한 씨앗의 스택 전제(의존성·버전·기반 클래스·어노테이션)를 빌드 파일·코드와 대조하고 다른 것은 고친다. 전제마다 근거 파일 한 줄. 체크리스트 항목 추가 (P6, 회고 1·3)
 - [x] **`report.md`** (Nice → Must) — G4 산출물. 무엇을·어떤 결정·**검증하지 못한 것과 그 이유**. 환경이 없어 못 돌린 검증은 실패가 아니라 이 절에 남기는 것이 정상 경로다 (P6, 회고 6)
 - [x] **서술형 문서 배달 정책** — `docs/harness/`·`harness-engineering.md`는 이 저장소의 이력이라 배달하지 않는다. 새 프로젝트는 `AGENTS.md`에서 링크만 (P6, 미결정 → 결정 제안)
-- [x] **자기 채움** — `adopt`을 Superchaeyeons 자신에게 돌려 `harness-map.md`를 실측값으로 채웠다 (P3). 축 4개 값 · 슬롯 22개(그중 `(없음)` 10개는 전부 이유 명시) · 스택 플래그 7개 전부 ❌ (2026-09-07 감사로 추가한 "하네스 자기 수정"만 ☑). 예외 2건을 값 칸에 명시: 훅은 배달 기본값으로 유지, Java·Spring 팩은 씨앗이라 삭제하지 않음. `local-*.md`는 `AGENTS.md`와 중복이라 만들지 않았다
+- [x] **자기 채움** — `harness-init`을 Superchaeyeons 자신에게 돌려 `harness-map.md`를 실측값으로 채웠다 (P3). 축 4개 값 · 슬롯 22개(그중 `(없음)` 10개는 전부 이유 명시) · 스택 플래그 7개 전부 ❌ (2026-09-07 감사로 추가한 "하네스 자기 수정"만 ☑). 예외 2건을 값 칸에 명시: 훅은 배달 기본값으로 유지, Java·Spring 팩은 씨앗이라 삭제하지 않음. `local-*.md`는 `AGENTS.md`와 중복이라 만들지 않았다
 
 ### Nice to Have
 
@@ -129,7 +129,7 @@ baro 쪽은 반대 방향으로 오염됐다 — `researcher.md`에 Spring AI 1.
 ### Out of Scope
 
 - baro-farm-be·원본 저장소에 실제 역이식 — 이 스펙은 Superchaeyeons를 최종본으로 만드는 것까지다
-- 팩 자동 감지(빌드 파일 보고 lang 추론) — `adopt` 스킬이 **제안**하고 사람이 고른다
+- 팩 자동 감지(빌드 파일 보고 lang 추론) — `harness-init` 스킬이 **제안**하고 사람이 고른다
 - 훅의 지속적 통합(CI) 연동
 - **모호성 점수 게이팅** — 점수 기준을 직접 설계해야 하고 그 값이 자의적이라, 라운드 방식의 확인 게이트로 같은 목적을 더 단순하게 달성한다
 - **서브에이전트 산출물 검증 훅** — 현재 에이전트 3개가 전부 채팅 보고만 하고 파일을 만들지 않아 검증할 산출물이 없다
@@ -222,8 +222,8 @@ C5와 C6은 기계로 판정할 수 없다. C5는 배지 판정 방식의 알려
 │   ├── core-gates.md      ← 신설: Stop & Ask 트리거 표 + 자동화 금지 목록
 │   ├── harness-map.md     ← 프로젝트가 고치는 유일한 파일
 │   └── local-*.md         ← 프로젝트 고유 (baro-ai-performance-refactor 같은)
-├── (packs/ 없음)          ← 2026-09-05 결정: 축은 adopt의 질문 목록, 산출물은 harness-map 값 + rules/local-*.md
-├── skills/  (specify safe-refactor debug preflight defer retro + ask adopt)
+├── (packs/ 없음)          ← 2026-09-05 결정: 축은 harness-init의 질문 목록, 산출물은 harness-map 값 + rules/local-*.md
+├── skills/  (specify safe-refactor debug preflight defer retro + ask harness-init)
 ├── agents/  (researcher doc-reviewer — 스택 리뷰어는 lang 팩으로)
 └── hooks/   (deny-dangerous-bash · ask-open-request · deny-unverified-completion · warn-unfilled-map)
 ```
@@ -239,7 +239,7 @@ C5와 C6은 기계로 판정할 수 없다. C5는 배지 판정 방식의 알려
 | `local-*.md` | 자유 | 이 저장소에서만 사는 사실 |
 | `harness-map.md` | 채우기 | 축·슬롯·플래그의 값 |
 
-지금 하네스가 갖고 있는 Java·Spring 규칙 5개는 **팩이 아니라 씨앗**이다. `examples/`로 옮겨, Java 프로젝트가 `adopt` 중 복사해 시작할 수 있게 한다. 복사한 뒤 그 프로젝트의 팩 안에서 자유롭게 고쳐도 core는 갈라지지 않는다.
+지금 하네스가 갖고 있는 Java·Spring 규칙 5개는 **팩이 아니라 씨앗**이다. `examples/`로 옮겨, Java 프로젝트가 `harness-init` 중 복사해 시작할 수 있게 한다. 복사한 뒤 그 프로젝트의 팩 안에서 자유롭게 고쳐도 core는 갈라지지 않는다.
 
 ### 2. 부품 계약 — core에 없어야 하는 것
 
@@ -274,10 +274,10 @@ C5와 C6은 기계로 판정할 수 없다. C5는 배지 판정 방식의 알려
 | 신설 슬롯 | 기본값 | 요구하는 축 |
 |---|---|---|
 | `{{문서 루트}}` | `docs/` | 전 축 (모든 문서 슬롯의 상위 경로) |
-| `{{작업 범위}}` | `.` (저장소 전체) | shape-monorepo — `adopt` 스킬만 참조 |
+| `{{작업 범위}}` | `.` (저장소 전체) | shape-monorepo — `harness-init` 스킬만 참조 |
 | `{{Git 컨벤션 SSOT}}` | (없음) — 없으면 `core-workflow` G2·G4가 SSOT | shape (저장소 루트에 파일을 둘 수 있는가) |
-| `{{브랜치명 형식}}` | `{type}/{issue-number}-{description}` | 전 축 — 기존 저장소는 `adopt`이 실측 |
-| `{{커밋 메시지 형식}}` | `{Type}: {한글}` | 전 축 — 기존 저장소는 `adopt`이 실측. `commit-msg` 훅 본문과 함께 고친다 |
+| `{{브랜치명 형식}}` | `{type}/{issue-number}-{description}` | 전 축 — 기존 저장소는 `harness-init`이 실측 |
+| `{{커밋 메시지 형식}}` | `{Type}: {한글}` | 전 축 — 기존 저장소는 `harness-init`이 실측. `commit-msg` 훅 본문과 함께 고친다 |
 
 `docs/harness/`·`docs/templates/`·`docs/audits/harness-retro.md`도 `{{문서 루트}}` 기준 상대 경로로 바꾼다 — "함께 배달되므로 고정"이라는 현재 전제를 폐기한다. (P2 완료 — `harness-map.md`에 "형식 슬롯" 절 신설)
 
@@ -356,15 +356,15 @@ always-load 신설. 세 절만 담는다.
 
 **한 번에 하나 옵션** — 천천히 읽는 사람, 제2언어로 일하는 사람에게는 순차 방식이 낫다. `harness-map.md`에 한 줄로 끌 수 있게 둔다.
 
-### 9. `adopt` 스킬 — 팩을 생성하는 경로 (트랙 D)
+### 9. `harness-init` 스킬 — 팩을 생성하는 경로 (트랙 D)
 
-팩이 배달되지 않으므로, `adopt`은 브라운필드 편의 기능이 아니라 **하네스를 프로젝트에 붙이는 유일한 경로**다. 그린필드도 이 경로로 들어온다 — 신규 저장소는 3·4단계가 짧아질 뿐이다.
+팩이 배달되지 않으므로, `harness-init`은 브라운필드 편의 기능이 아니라 **하네스를 프로젝트에 붙이는 유일한 경로**다. 그린필드도 이 경로로 들어온다 — 신규 저장소는 3·4단계가 짧아질 뿐이다.
 
 | 단계 | 하는 일 | 게이트 |
 |---|---|---|
 | 1. 실측 | 빌드·테스트·포맷 명령, 커밋·브랜치 이력, 문서 위치, 모듈 경계, 운영 데이터 유무, 외부 클라이언트 유무를 **코드와 이력에서** 확인 | — |
 | 2. 축·슬롯·플래그 제안 | 실측 결과로 축 4개의 값과 슬롯·플래그를 **제안**한다. 근거를 함께 제시하고 사람이 고른다 | **승인** |
-| 3. 규칙 생성 | 축 답에 따라 `harness-map.md` 값·플래그를 채우고 필요한 `local-*.md`를 만든다. 해당 스택 씨앗이 `examples/`에 있으면 복사해서 시작. 산출물 체크리스트는 `adopt` 스킬 본문에 둔다 (2026-09-05: `pack.md` 계약 대신) | **승인** |
+| 3. 규칙 생성 | 축 답에 따라 `harness-map.md` 값·플래그를 채우고 필요한 `local-*.md`를 만든다. 해당 스택 씨앗이 `examples/`에 있으면 복사해서 시작. 산출물 체크리스트는 `harness-init` 스킬 본문에 둔다 (2026-09-05: `pack.md` 계약 대신) | **승인** |
 | 4. 역스펙·백로그 | 기존 코드가 있으면 주요 도메인의 현재 동작을 Draft 스펙으로, 감사 후보를 `{{감사 로그}}`에 남긴다 (구현하지 않음) | **승인** |
 
 **2단계가 이 스킬의 핵심이다.** 실측 없이 축을 고르면 baro에서 벌어진 일이 반복된다 — 하네스가 물려받은 `{Type}: {한글}` 커밋 형식이 그 저장소의 실제 관례가 아니었는데도 그대로 적용됐고, 나중에 커밋 963건을 세어보고서야 `[Type] #n - {한글}`이 실제 관례임이 드러났다. 축과 슬롯은 **관례를 물려받는 것이 아니라 실측하는 것**이다.
@@ -456,7 +456,7 @@ PDF `AI_Harness_Guide`는 AI 기반 개발 워크플로를 0~11의 12단계로 �
 
 | PDF 단계 | 이 하네스의 대응 | 상태 |
 |---|---|---|
-| 0. Repository Exploration | `adopt` 1단계 실측(저장소 전체, 1회) + 매 턴 진입 문서 확인 순서(작업 단위) | 있음 |
+| 0. Repository Exploration | `harness-init` 1단계 실측(저장소 전체, 1회) + 매 턴 진입 문서 확인 순서(작업 단위) | 있음 |
 | 1. Requirements Analysis | `ask` 스킬 (라운드 인터뷰, 사실/결정 분리) | 신설 (§8) |
 | 2. Invariant / Acceptance Criteria | G2 Invariant 확정(§12) + 스펙 `완료 기준` | 신설 (§12) |
 | 3. Research | G1 리서치 게이트 · `researcher` | 있음 |
@@ -477,18 +477,18 @@ PDF가 하네스를 **코드 저장소와 분리된 별도 저장소**(레포별
 
 각 단계 끝에서 승인을 받고 다음으로 넘어간다. 커밋도 단계 단위로 나눈다.
 
-팩이 생성물이 되면서 순서가 바뀌었다. `adopt`이 하네스를 붙이는 유일한 경로이므로, **자기 채움은 `adopt`을 만든 뒤에야 가능하다.**
+팩이 생성물이 되면서 순서가 바뀌었다. `harness-init`이 하네스를 붙이는 유일한 경로이므로, **자기 채움은 `harness-init`을 만든 뒤에야 가능하다.**
 
 | P | 내용 | 설계 절 | 산출 |
 |---|---|---|---|
 | **P0** ✅ | 부품 계약 + `check-portability.sh` | §2 | 정화의 판정 기준부터 만든다 |
 | **P1** ✅ | core 정화 (고유명사 제거 · §2/§3/§5를 축으로 분류) + 축·능력 플래그 어휘 확정 | §1·§2 | `core-guardrails` 6절 → 3절 |
 | **P2** ✅ | 슬롯 v2 + 배지(플래그 기준) + Git 컨벤션 부품화 (`packs/`·`core-workflow-git.md`는 만들지 않기로 결정) | §3·§4·§5 | C1~C4 위반 0 |
-| **P3** ✅ | `adopt` 스킬 → Superchaeyeons 자신에게 돌려 `harness-map.md` 채움 | §9 | 자기 채움. 하네스가 자기 자신에게 작동 |
+| **P3** ✅ | `harness-init` 스킬 → Superchaeyeons 자신에게 돌려 `harness-map.md` 채움 | §9 | 자기 채움. 하네스가 자기 자신에게 작동 |
 | **P4** ✅ | baro 개선 회수 + `doc-writing` 보강 + `check-doc-style.sh` | §11·§15 | 문서 강제가 advisory에서 벗어남 |
 | **P5** ✅ | **결정론적 하한선 강화 + Stop & Ask** — 훅 공통 규약(판정 불가 = 차단·경로 정규화) + `scripts/test-hooks.sh`(케이스 데이터 파일) · `core-gates.md`(통제/위임 · 멈추는 신호 · 자동으로 하지 않는 것 — **훅 우회 금지, 승인 = 사용자가 범위·값을 바꾸는 행위**) · 훅 3개(`ask-open-request`·`deny-unverified-completion`·`warn-unfilled-map`) · `ask` 스킬 · `check-doc-style` 코드 펜스 짝 검사. `inject-rules.sh`는 만들지 않는다 | §6·§7·§8 · 회고 4·5·8 | 훅 전부가 케이스 파일을 통과 (fail-open 0) |
-| **P6** ✅ | **배달물 범용화 — 물려받은 전제 제거** — `check-portability` 판정 범위를 `.claude/` 전체(skills·agents·hooks)로 확대 · Java·Spring 씨앗(규칙 4·에이전트 1·훅 2)을 `examples/seeds/java-spring/`로 이동, `adopt` 3단계에 **씨앗 대조**(의존성·버전·기반 클래스를 빌드 파일·코드와 대조) · `researcher`·`debug`·`safe-refactor`·`preflight`에서 스택 사실 제거 · Invariant + `safe-refactor` 유연화 + 감사 템플릿 "구현 결과" 절 · `preflight` 사전 모드 + **`report.md`(G4 산출물, "검증하지 못한 것" 절 필수)** · `doc-writing` 코드 발췌 규칙 · `.out-of-scope/` + 라우터 + 스킬 문서 프레임 · 서술형 문서(`docs/harness/`·`harness-engineering.md`)는 배달하지 않고 링크만 · `CONTRIBUTING.md`를 견본화 | §10·§12·§13·§16 · 회고 1·2·3·6·7·8 | `check-portability.sh --scope all` exit 0 — `.claude/` 안에 프로젝트·스택 사실 0 |
-| **P7** ✅ | **범용성 증명 + 예산 확정** — `adopt`을 (a) baro-farm-be 사본 (b) 원본 백엔드 프로젝트 사본 (c) 세 저장소 어디에도 없는 조합(비 JVM 스택 가상 저장소)에 돌려 세 경우 모두 `core-*.md`·스킬·에이전트 diff 0 확인 · 원본 저장소 견본(이후 삭제)·`examples/baro`를 `adopt` 산출물 형태로 갱신 · always-load 실측 후 상한 값 확정 → `check-portability` 예산 판정을 차단으로 전환 · `docs/harness/` 4개 문서 새 구조 반영 | 검증 시나리오 전부 | 하네스 배달물이 세 프로젝트에서 바이트 단위 동일 |
+| **P6** ✅ | **배달물 범용화 — 물려받은 전제 제거** — `check-portability` 판정 범위를 `.claude/` 전체(skills·agents·hooks)로 확대 · Java·Spring 씨앗(규칙 4·에이전트 1·훅 2)을 `examples/seeds/java-spring/`로 이동, `harness-init` 3단계에 **씨앗 대조**(의존성·버전·기반 클래스를 빌드 파일·코드와 대조) · `researcher`·`debug`·`safe-refactor`·`preflight`에서 스택 사실 제거 · Invariant + `safe-refactor` 유연화 + 감사 템플릿 "구현 결과" 절 · `preflight` 사전 모드 + **`report.md`(G4 산출물, "검증하지 못한 것" 절 필수)** · `doc-writing` 코드 발췌 규칙 · `.out-of-scope/` + 라우터 + 스킬 문서 프레임 · 서술형 문서(`docs/harness/`·`harness-engineering.md`)는 배달하지 않고 링크만 · `CONTRIBUTING.md`를 견본화 | §10·§12·§13·§16 · 회고 1·2·3·6·7·8 | `check-portability.sh --scope all` exit 0 — `.claude/` 안에 프로젝트·스택 사실 0 |
+| **P7** ✅ | **범용성 증명 + 예산 확정** — `harness-init`을 (a) baro-farm-be 사본 (b) 원본 백엔드 프로젝트 사본 (c) 세 저장소 어디에도 없는 조합(비 JVM 스택 가상 저장소)에 돌려 세 경우 모두 `core-*.md`·스킬·에이전트 diff 0 확인 · 원본 저장소 견본(이후 삭제)·`examples/baro`를 `harness-init` 산출물 형태로 갱신 · always-load 실측 후 상한 값 확정 → `check-portability` 예산 판정을 차단으로 전환 · `docs/harness/` 4개 문서 새 구조 반영 | 검증 시나리오 전부 | 하네스 배달물이 세 프로젝트에서 바이트 단위 동일 |
 
 **단계 재편 경위 (2026-09-05):** baro 하네스 회고 8건을 대조한 결과 "이미 해결된 것"은 없었고, 뿌리가 둘로 모였다. ① 배달물(스킬·에이전트·훅·씨앗)에 원본 저장소의 스택 전제가 검증 없이 남아 있었다(회고 1·2·3) — 판정 범위가 `core-*.md`뿐이었기 때문이다. ② fail-closed로 설계한 훅이 판정 불가 입력에서 fail-open이었고(회고 4), 승인 후 통로가 없어 규칙·훅·우회 금지가 충돌했다(회고 5). 개별 수정 대신 둘 다 **메커니즘**으로 푼다 — 판정 범위 확대 + 씨앗 분리 + 훅 규약 + 훅 테스트. 회고 6·7·8은 각각 `report.md` "검증하지 못한 것" 절, 감사 템플릿 "구현 결과" 절, 코드 펜스 검사 + 발췌 규칙으로 일반화한다.
 
@@ -499,10 +499,10 @@ PDF가 하네스를 **코드 저장소와 분리된 별도 저장소**(레포별
 ### 정상
 
 - [x] `check-portability.sh`가 정화 후 `core-*.md`에 대해 exit 0 (P2) — 배달물 전체로 확대해도 exit 0 (P6)
-- [x] `adopt`을 Superchaeyeons 자신에게 돌리면 `harness-map.md`가 채워지고, `core-*.md`는 한 줄도 바뀌지 않는다 (P3)
-- [x] 원본 저장소 견본(이후 삭제)·`examples/baro`가 `adopt` 산출물(`harness-map.md`) 형태로 재현되고, 두 경우 모두 core 변경 없이 슬롯·플래그·훅 상수만으로 표현된다 (P7 — `examples/baro/harness-map.md` 신설)
-- [x] **카탈로그에 없던 조합** — Node·TypeScript·Prisma 가상 저장소에 실측(`scripts/adopt-probe.sh`)을 돌려 lang 씨앗 없음 → `_template` 채움, 마이그레이션 디렉터리 있음 → 플래그 ❌, 소문자 `type:` 커밋 → 형식 슬롯·훅 정규식 교체로 전부 표현됨. core 변경 0 (P7, `docs/reports/2026-09-06-p7-generality.md`)
-- [x] ~~`pack.md` 계약 판정~~ → `packs/` 미채택 결정으로 대체: `adopt` 산출물 체크리스트 6개
+- [x] `harness-init`을 Superchaeyeons 자신에게 돌리면 `harness-map.md`가 채워지고, `core-*.md`는 한 줄도 바뀌지 않는다 (P3)
+- [x] 원본 저장소 견본(이후 삭제)·`examples/baro`가 `harness-init` 산출물(`harness-map.md`) 형태로 재현되고, 두 경우 모두 core 변경 없이 슬롯·플래그·훅 상수만으로 표현된다 (P7 — `examples/baro/harness-map.md` 신설)
+- [x] **카탈로그에 없던 조합** — Node·TypeScript·Prisma 가상 저장소에 실측(`scripts/harness-init-probe.sh`)을 돌려 lang 씨앗 없음 → `_template` 채움, 마이그레이션 디렉터리 있음 → 플래그 ❌, 소문자 `type:` 커밋 → 형식 슬롯·훅 정규식 교체로 전부 표현됨. core 변경 0 (P7, `docs/reports/2026-09-06-p7-generality.md`)
+- [x] ~~`pack.md` 계약 판정~~ → `packs/` 미채택 결정으로 대체: `harness-init` 산출물 체크리스트 6개
 - [x] `ask-open-request.sh` — 열린 표현에 컨텍스트가 주입된다 (`hook-cases.txt`)
 - [x] `deny-unverified-completion.sh` — 코드 수정 후 테스트 없이 "완료했습니다"로 끝내면 exit 2로 되돌아온다 (픽스처 `stop-code-no-test.jsonl`)
 - [x] `warn-unfilled-map.sh` — ⬜·이유 없는 `(없음)`이 남으면 경고 (이유가 붙은 `(없음)`은 의도된 값으로 통과)
@@ -516,7 +516,7 @@ PDF가 하네스를 **코드 저장소와 분리된 별도 저장소**(레포별
 
 - [x] `check-portability.sh` — `local-*.md`·`harness-map.md`·`examples/` 안의 고유명사는 **통과**시킨다
 - [x] `check-portability.sh` — `core-*.md`가 스택 팩 파일·에이전트 이름을 부르면 잡는다 (C4)
-- [x] `adopt` — 커밋·브랜치 관례를 하네스 기본값에서 물려받지 않고 저장소 이력에서 실측한다 (`adopt-probe.sh` — baro `[Type] #n - {설명}` 126/188 실측)
+- [x] `harness-init` — 커밋·브랜치 관례를 하네스 기본값에서 물려받지 않고 저장소 이력에서 실측한다 (`harness-init-probe.sh` — baro `[Type] #n - {설명}` 126/188 실측)
 - [x] `check-portability.sh` — 예시·인용 안의 금지어(`> 채운 예: ...`)·`다스택 예시` 줄·frontmatter를 오탐하지 않는다
 - [ ] `deny-unverified-completion.sh` — `{{테스트 명령}}`이 `(없음)`인 저장소에서는 항상 통과 (테스트 없는 저장소를 영구히 막지 않는다)
 - [x] `deny-unverified-completion.sh` — 문서만 고친 턴에는 발화하지 않는다 (픽스처 `stop-docs-only.jsonl`)
@@ -531,7 +531,7 @@ PDF가 하네스를 **코드 저장소와 분리된 별도 저장소**(레포별
 ### 수동 / 통합
 
 - [ ] 훅 3개를 실제 세션에서 발화시켜 stderr·`additionalContext`가 의도대로 보이는지 확인
-- [ ] `adopt` 스킬을 baro-farm-be 사본에 돌려 4단계가 승인 게이트를 지키는지 확인 (baro 실물 수정 없이)
+- [ ] `harness-init` 스킬을 baro-farm-be 사본에 돌려 4단계가 승인 게이트를 지키는지 확인 (baro 실물 수정 없이)
 - [ ] `core-*.md`를 세 저장소에 두고 `diff`로 바이트 일치 확인 — **미실행**: baro·원본 저장소에 v2를 실제로 역이식하는 것은 Out of Scope. 대신 P7 보고서가 세 케이스에서 core 변경이 필요한 항목이 0임을 표로 확인
 
 ## 완료 기준
@@ -553,11 +553,11 @@ PDF가 하네스를 **코드 저장소와 분리된 별도 저장소**(레포별
 |---|---|---|
 | 훅이 슬롯 값을 읽는 방법 | **결정 (2026-09-05): 훅 본문 상수 + `harness-map.md` "함께 고칠 것" 표기** | 슬롯 값을 읽는 훅은 셋(`auto-format-*` 포맷 명령 · `commit-msg` 형식 정규식 · `deny-out-of-scope-write` `SCOPE`)뿐이고, 셋 모두 `harness-map.md` 해당 행이 훅 파일을 가리킨다. `.claude/harness.conf`는 SSOT를 둘로 가른다. 훅이 더 늘어 동기화가 실제로 어긋나는 사고가 나면 그때 재검토 |
 | `{{스펙 저장소}}` 슬롯 | **결정 (2026-09-05, P3 자기 채움): `docs/specs/`** | 초안 당시 `harness-map.md`는 `(없음)`이었고 `docs/specs/README.md`는 자신이 기본값이라고 적고 있었다. P3 자기 채움에서 후자로 확정했고 이 스펙도 거기 있다 |
-| 축 4개가 충분한가 | [미정] | 저장소 두 개를 관찰해 뽑은 것이라 완전하다는 보장이 없다. 규제·데이터 주권처럼 다섯 번째 축이 필요한 도메인이 있을 수 있다. 세 번째 프로젝트에 `adopt`을 돌려보고 재평가 |
+| 축 4개가 충분한가 | [미정] | 저장소 두 개를 관찰해 뽑은 것이라 완전하다는 보장이 없다. 규제·데이터 주권처럼 다섯 번째 축이 필요한 도메인이 있을 수 있다. 세 번째 프로젝트에 `harness-init`을 돌려보고 재평가 |
 | `ask` 라운드 방식의 프론티어 판정 | [미정] | 프론티어는 계산된 그래프가 아니라 에이전트의 판단이다. 서로 의존하는 두 질문을 한 라운드에 넣고 나서야 알아차릴 수 있고, 이를 막는 장치는 사용자가 지적해 해당 가지를 다음 라운드에서 다시 여는 것뿐이다. 더 나은 방법이 있는지는 P4에서 재검토 |
 | 서술형 문서 배달 정책 | **결정 (2026-09-05): 배달하지 않음** — `AGENTS.md` 붙이는 순서·`docs/README.md`에 반영 | `docs/harness/` 4개를 프로젝트마다 복사할지, Superchaeyeons 링크만 둘지. 복사하면 훅 하나 추가 시 4곳 동시 갱신이 필요하다(baro 유지보수 체크리스트가 실제로 이 부담을 기록) |
 | **하네스 배달 방식** — 복사 vs 별도 저장소 | [미정] | 현재는 `.claude/`를 복사한다. PDF 가이드는 하네스를 코드 저장소와 분리된 저장소로 두고 레포별 정책 폴더를 그 안에 둔다. 복사는 `check-portability.sh` + 세 저장소 `diff`로 동일성을 지켜야 하고, 분리 저장소(git submodule 또는 Claude Code 플러그인)는 복사 없이 개선이 전파되지만 플러그인이 `rules/`를 배달할 수 있는지 미확인. **core가 실제로 순수해진 P1 이후 결정** — 순수하지 않은 core를 플러그인으로 묶으면 갈라짐이 배포되기만 한다 |
-| **`packs/` 디렉터리 vs 질문 목록** | **결정 (2026-09-05): 질문 목록** | 축 4개는 `adopt`이 무엇을 물을지 정하는 체크리스트로 두고, 산출물은 `harness-map.md` 값 + 프로젝트 소유 `local-*.md`로 끝낸다. `pack.md` 계약·검증은 만들지 않는다. 생성물 품질(반대 근거였던 것)은 `adopt` 스킬 본문의 산출물 체크리스트가 맡는다 — P3에서 검증 |
+| **`packs/` 디렉터리 vs 질문 목록** | **결정 (2026-09-05): 질문 목록** | 축 4개는 `harness-init`이 무엇을 물을지 정하는 체크리스트로 두고, 산출물은 `harness-map.md` 값 + 프로젝트 소유 `local-*.md`로 끝낸다. `pack.md` 계약·검증은 만들지 않는다. 생성물 품질(반대 근거였던 것)은 `harness-init` 스킬 본문의 산출물 체크리스트가 맡는다 — P3에서 검증 |
 | **`core-workflow-git.md` 신설 여부** | **결정 (2026-09-05): 신설하지 않음** | 규율 4개는 `core-workflow` G2·G4에 이미 있어 새 파일은 중복 + always-load 증가. G2·G4가 `{{브랜치명 형식}}`·`{{커밋 메시지 형식}}`·`{{Git 컨벤션 SSOT}}`를 읽는다 |
 | **always-load 예산 상한 값** | **결정 (2026-09-06): 65,000B 래칫 → 같은 날 토큰 최적화 뒤 52,000B** | P0에서 `check-portability.sh` 기본값을 **30,000B(≈1.2만 토큰)**로 뒀다. 근거는 "현 49.5KB의 60%"라는 제안일 뿐 실측 기반이 아니다. `--budget`·`PORTABILITY_BUDGET_BYTES`로 바꿀 수 있다. **상한 값이 확정되기 전까지 검사기는 예산 초과를 경고만 낸다**(`--strict-budget`으로 차단) — 그렇지 않으면 P2~P4 동안 core 파일 커밋이 전부 막힌다. P2 종료 실측 52.1KB. **P4 규칙 분리 후 값 확정 → 기본을 차단으로 전환** |
 | **`inject-rules.sh` 필요성** | **결정 (2026-09-05): 만들지 않음** — 예산은 P7에서 실측·확정 | 2026-09-05 검토 의견: 배지 절이 상시 로드되는 문제는 P1에서 §2·§3·§5를 팩으로 옮기면 사라지고, 팩 규칙은 이미 `paths:` frontmatter로 접근 시 로드된다. 그러면 §14는 중복이다. 남는 근거는 "나머지 `core-*.md`도 상시 로드에서 빼고 싶다"인데, 그건 always-load 토큰 예산(Must Have)으로 먼저 재보고 판단한다. **P5 시작 전 결정** |
@@ -570,7 +570,7 @@ PDF가 하네스를 **코드 저장소와 분리된 별도 저장소**(레포별
 | 꺼진 절도 로드되어 always-load 토큰 증가 | 이사 후 `core-guardrails`가 3절로 줄어 순증은 작다. P1 후 실측해 기록 |
 | `deny-unverified-completion.sh` 오탐으로 턴이 안 끝남 | `{{테스트 명령}}`이 `(없음)`이면 통과 + 스모크 테스트에 오탐 케이스 포함 |
 | 팩 구조가 과설계 | P0~P3까지만 하고 실제 세 번째 프로젝트에 붙여본 뒤 P5~P6 재평가 |
-| **생성된 팩의 품질이 `adopt` 실행마다 들쭉날쭉** | `pack.md` 계약(표 4개)을 `check-portability.sh`가 판정하고, 씨앗을 `examples/`에 둬 백지에서 시작하지 않게 한다 |
+| **생성된 팩의 품질이 `harness-init` 실행마다 들쭉날쭉** | `pack.md` 계약(표 4개)을 `check-portability.sh`가 판정하고, 씨앗을 `examples/`에 둬 백지에서 시작하지 않게 한다 |
 | **외부 참조를 반영하다 하네스가 무거워짐** | 부품성 원칙 3조가 잣대. 새 장치를 제안할 때마다 C6(bash 하나 + 데이터 파일 하나)와 대조하고, 넘으면 `.out-of-scope/`에 이유와 함께 남긴다 |
 | `inject-rules.sh` 주입 실패로 규칙이 조용히 사라짐 | 멈춤과 관련된 규칙(STOP·게이트·슬롯)은 주입으로 옮기지 않는다 |
 | `check-doc-style.sh` 오탐으로 커밋이 막힘 | 패턴을 데이터 파일로 분리해 프로젝트가 끌 수 있게 하고, 판단이 필요한 항목은 검사기에 넣지 않는다 |

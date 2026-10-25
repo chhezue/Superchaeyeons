@@ -72,7 +72,7 @@ fi
 
 # ---- 1. 검사 대상 수집 -------------------------------------------------------
 # 배달물 = 새 프로젝트로 그대로 복사되는 것 전부. 프로젝트가 고유 사실을 적는 자리(harness-map.md · .claude/ 안의 local-* 파일)와
-# 견본(examples/)만 제외한다. 스택 씨앗은 examples/seeds/ 에 살고, adopt이 .claude/rules·agents·hooks로 복사할 때도 local- 접두사를
+# 견본(examples/)만 제외한다. 스택 씨앗은 examples/seeds/ 에 살고, harness-init이 .claude/rules·agents·hooks로 복사할 때도 local- 접두사를
 # 유지하므로(씨앗 파일명이 이미 local-*) 복사 뒤에도 검사 밖이다 — 접두사가 곧 층 표시다.
 # 붙여 쓰는 프로젝트(하네스 자기 수정 ❌ = HARNESS_SELF_EDIT "0")에서는 두 가지가 프로젝트 값 자리라 검사 밖이다.
 #   .github/CONTRIBUTING.md — 그 프로젝트의 {{Git 컨벤션 SSOT}}. 원본 저장소(☑)에서는 견본이라 검사한다

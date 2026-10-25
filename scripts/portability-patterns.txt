@@ -17,8 +17,8 @@ C1	#[0-9]+	특정 저장소의 이슈 번호 (자리표시자 `#n`은 허용)
 C1	[Ss]quash|merge commit|[Rr]ebase merge|Create a merge commit	특정 머지 방식 → {{머지 방식}} (2026-10-26: 원본 프로젝트의 merge commit 유지·Squash 금지가 core G4에 규율로 남아 있었다)
 C1	(Closes|Fixes|Resolves) #|gh issue|GitHub Issues|Jira|JIRA|지라	특정 이슈 트래커·연결 문법 → {{이슈 연결}}
 C1	`(main|master|develop|trunk)`	특정 기본 브랜치 이름 → {{기본 브랜치}}
-C1	^(BUILD_CMD|TEST_CMD|TEST_REPORT|FMT_CMD|DEPS_CMD|RUN_ENV|SERVICES|EXTRA_CONTAINERS|WAIT_SERVICES|START_CMD|APP_PORT|HEALTH_URL|WAIT_HEALTH|LOG_DIR)=[^{"']	배달본 scripts/dev.conf에 프로젝트 값 → `{…}` 빈칸으로 두고 adopt이 채운다 (하네스 원본의 자기 값은 루트 dev.conf)
-C1	^(TEST_CMD|COMMIT_RE|FORMAT_CMD|FORMAT_PATHS)=("[^"]|'[^'])	배달본 훅 상수에 프로젝트 값 → 빈 값으로 두고 adopt이 채운다. TEST_CMD는 하네스 공통 `scripts/dev.sh test`만 허용한다(check-portability.sh가 그 한 줄을 건너뛴다). 붙여 쓰는 프로젝트에서는 값이 검사 밖이라 걸리지 않는다
+C1	^(BUILD_CMD|TEST_CMD|TEST_REPORT|FMT_CMD|DEPS_CMD|RUN_ENV|SERVICES|EXTRA_CONTAINERS|WAIT_SERVICES|START_CMD|APP_PORT|HEALTH_URL|WAIT_HEALTH|LOG_DIR)=[^{"']	배달본 scripts/dev.conf에 프로젝트 값 → `{…}` 빈칸으로 두고 harness-init이 채운다 (하네스 원본의 자기 값은 루트 dev.conf)
+C1	^(TEST_CMD|COMMIT_RE|FORMAT_CMD|FORMAT_PATHS)=("[^"]|'[^'])	배달본 훅 상수에 프로젝트 값 → 빈 값으로 두고 harness-init이 채운다. TEST_CMD는 하네스 공통 `scripts/dev.sh test`만 허용한다(check-portability.sh가 그 한 줄을 건너뛴다). 붙여 쓰는 프로젝트에서는 값이 검사 밖이라 걸리지 않는다
 C1	(^|[^A-Za-z])(Feat|Fix|Refactor|Docs|Chore|Test)(\([^)]*\))?: |^(feat|fix|refactor|docs|chore|test)(\([^)]*\))?: |:[a-z_]+: [a-z]+ :	특정 커밋 메시지 형식 → {{커밋 메시지 형식}}
 C1	how-it-works\.md|release-milestones\.md|erd\.md|platform\.md|glossary\.md	TripFit 문서 파일명 → 슬롯으로 ({{스키마 SSOT}}·{{클라이언트 전제}}·{{용어집}})
 C1	NotificationController|Trip[A-Z][A-Za-z]*|TRIP_[A-Z_]+|여행방|여행 일정	TripFit 클래스·에러 코드·도메인 용어 (2026-09-07 감사: 대문자 상수·한글 도메인어가 빠져 있었다)

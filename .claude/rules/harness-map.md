@@ -1,6 +1,6 @@
 # Harness Map — 이 프로젝트의 슬롯
 
-규칙(`core-*.md`)은 경로·명령을 `{{역할 이름}}`으로 부르고, 이 파일이 실제 값을 잇는다. **새 프로젝트가 채우는 파일은 이것 하나다** (`adopt` 스킬 · 채운 예: `examples/baro/harness-map.md`).
+규칙(`core-*.md`)은 경로·명령을 `{{역할 이름}}`으로 부르고, 이 파일이 실제 값을 잇는다. **새 프로젝트가 채우는 파일은 이것 하나다** (`harness-init` 스킬 · 채운 예: `examples/baro/harness-map.md`).
 
 `(없음)`인 슬롯을 규칙이 요구하면 멈추고 사용자에게 묻는다. 이 파일을 고칠 때의 규칙과 같은 턴에 고칠 훅 상수 짝은 `.claude/rules/README.md` "harness-map.md 고치기"에 있다 — 이 파일을 열면 함께 실린다.
 

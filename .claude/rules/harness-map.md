@@ -49,7 +49,7 @@
 | `{{브랜치명 형식}}` | `{type}/{issue-number}-{description}` |
 | `{{커밋 메시지 형식}}` | `{Type}: {한글}` |
 | `{{기본 브랜치}}` | `main` |
-| `{{머지 방식}}` | merge commit · 뒤에 브랜치 삭제 |
+| `{{머지 방식}}` | rebase merge(`gh pr merge --rebase --delete-branch`) — 2026-10-27부터, 이전 이력은 merge commit |
 | `{{이슈 연결}}` | GitHub Issues · `Closes #n` |
 
 ## 능력 플래그

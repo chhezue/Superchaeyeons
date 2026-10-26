@@ -26,7 +26,7 @@
 | **G2 승인** | 사람 (`ask` 인터뷰 → 트랙별 승인 산출물) | L1 `core-gates.md` · L2 스킬 승인 단계 |
 | 구현 | 에이전트 · `tdd` · `test-writer` | **L3** `deny-dangerous-bash.sh` · `deny-out-of-scope-write.sh` |
 | **G3 검증** | `preflight` · `doc-reviewer` · L 규모는 `code-review`/`simplify` | **L3** Stop 훅 + **L4** `scripts/dev.sh test` |
-| **G4 회고·커밋** | `retro` · `report.md` · 커밋 분할안 | L1·L2 · 커밋 시 **L4** `pre-commit`·`commit-msg` |
+| **G4 회고·커밋** | `preflight` 마무리 절 · `retro` · `report.md` · 커밋 분할안 | L1·L2 · 커밋 시 **L4** `pre-commit`·`commit-msg` |
 
 강제력이 가장 약한 곳은 G1과 G4다. 조사를 했는지, 배운 것을 남겼는지는 exit code로 판정할 수 없어 규칙과 절차에만 기댄다.
 

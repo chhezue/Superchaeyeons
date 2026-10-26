@@ -49,7 +49,7 @@ core에 프로젝트 사실이 새면 `scripts/check-portability.sh`가 커밋�
 
 `paths:` frontmatter가 없는 규칙은 매 세션 실리고, 있는 규칙은 맞는 파일을 열 때만 실린다. 지금은 always-load 5개(`core-*` 4개 + `harness-map.md`)와 path-scoped 4개(`core-code-comments.md`·`core-testing.md`·`doc-writing.md`·`README.md`)다.
 
-매 세션 무조건 지불하는 always-load 합계에는 **예산**을 걸었다. `check-portability.sh`가 상한과 대조하고, 상한은 줄일 수만 있는 래칫이다. 2026-09-06에 합계를 64,600B에서 약 20% 줄이며 상한을 65,000B에서 52,000B로 내렸고, 2026-10-05에 다른 규칙과 겹치던 규칙 3개를 합치고 유지보수용 열·설계 이력을 빼서 51,384B를 27,341B로 줄이며 상한을 28,000B로 내렸다([경량화 감사](reports/2026-10-05-harness-slimming-audit.md)).
+매 세션 무조건 지불하는 always-load 합계에는 **예산**을 걸었다. `check-portability.sh`가 상한과 대조하고, 상한은 줄일 수만 있는 래칫이다. 2026-09-06에 합계를 64,600B에서 약 20% 줄이며 상한을 65,000B에서 52,000B로 내렸고, 2026-10-05에 다른 규칙과 겹치던 규칙 3개를 합치고 유지보수용 열·설계 이력을 빼서 51,384B를 27,341B로 줄이며 상한을 28,000B로 내렸다([경량화 감사](reports/2026-10-05-harness-slimming-audit.md)). 2026-10-27에는 커밋·보고할 때만 필요한 G4 상세를 `preflight` 스킬로, `harness-map.md`의 값 아닌 설명을 path-scoped `.claude/rules/README.md`로 옮기고 `core-guardrails.md` 예시를 줄여 27,960B를 24,460B로 줄이며 상한을 25,000B로 내렸다([보고서](reports/2026-10-27-slim-always-load.md)).
 
 규칙이 멈춰 세우는 근거는 둘로 나뉜다. `core-guardrails.md`는 "문서와 어긋나면 멈춘다", `core-gates.md`는 "변경이 통제 영역(도메인 규칙·인증·과금·계약·스키마)에 닿으면 멈춘다"를 맡는다. 멈추는 이유가 표현의 모호함이 아니라 변경의 성격이어야 판정이 재현되고, 위임 영역에서는 덜 묻게 된다.
 
@@ -104,6 +104,7 @@ core에 프로젝트 사실이 새면 `scripts/check-portability.sh`가 커밋�
 | 2026-10-16 | TripFit 백엔드 사본에 붙이고 `adopt`로 채우자 `check-portability.sh`가 부품 계약 위반 21건으로 실패했다. `adopt`이 채우게 설계된 훅 상수(`TEST_CMD`·`FORMAT_CMD`·`FORMAT_PATHS`)와, 그 프로젝트의 Git 규칙 문서인 `.github/CONTRIBUTING.md`를 core로 검사했기 때문이다 | 하네스 자기 수정 ❌인 프로젝트에서는 (파일, 상수) 쌍으로 정한 훅 상수의 값과 `CONTRIBUTING.md`를 검사에서 뺀다. 원본 저장소에서는 둘 다 견본이라 계속 검사한다. `commit-msg` 정규식은 `COMMIT_RE` 상수로 뺐다 |
 | 2026-10-26 | squash merge와 외부 이슈 트래커를 쓰는 백엔드 저장소에 붙이려다 core G4에 원본 프로젝트의 "merge commit 유지(Squash 금지)"·`Closes #n`·base 브랜치가 남아 있는 것을 봤다. 범용화 때 경로만 슬롯으로 빼고 Git 운영 정책은 규율로 분류했고, 검사기에는 그런 정책을 잡는 패턴이 없었다. 배달본 `commit-msg` 훅에도 이 저장소의 커밋 형식이 기본값으로 들어 있었다 | 세 정책을 슬롯으로 빼고, 배달본 `COMMIT_RE`와 CONTRIBUTING 견본을 비웠다. 검사기가 Git 정책 표현과 채워진 훅 상수를 잡는다. Stop 훅 `TEST_CMD`는 하네스 공통 `scripts/dev.sh test`만 허용한다 |
 | 2026-10-26 | 백엔드 저장소에 붙인 날, 문서와 임시 파일만 건드린 턴에서 Stop 훅이 두 번 "코드 편집 뒤 테스트 미실행"으로 되돌려 매번 1~2분짜리 테스트를 다시 돌렸다. `sed -i` 판정이 명령 전체에서 점 찍힌 낱말을 찾아 식 안의 패키지 이름을 파일로 셌고, 리다이렉션 판정은 스크래치 폴더의 임시 파일도 저장소 코드처럼 셌다 | `sed -i`는 파일 피연산자만 본다. 저장소 밖 절대 경로 쓰기는 편집이 아니고, 같은 명령의 변수 대입은 따라간다. 값을 모르는 변수는 편집으로 본다 |
+| 2026-10-27 | 백엔드 저장소에 붙이자 매 요청에 실리는 규칙이 상한 28,000B에 61B 앞까지 차서 프로젝트 `AGENTS.md`에 한 줄도 더 쓸 수 없었다. 커밋할 때만 필요한 G4 상세와, 프로젝트가 소유해 하네스 개선이 전파되지도 않는 map의 설명이 매번 실리고 있었다 | G4 상세를 `preflight` "마무리" 절로, map 규칙·훅 상수 짝·플래그별 할 일을 `.claude/rules/README.md`로 옮겼다(map을 열 때 함께 실린다). `core-guardrails.md` 예시를 줄여 상한을 25,000B로 내렸다 |
 
 마지막 행이 보여 주는 것처럼, 배너는 문제를 표시할 뿐 없애지 않는다. 읽는 쪽은 배너 아래 본문을 그대로 믿는다.
 
@@ -113,9 +114,9 @@ core에 프로젝트 사실이 새면 `scripts/check-portability.sh`가 커밋�
 
 ## 10. 숫자로 보는 현재
 
-2026-10-05 기준이다. 정확한 목록은 [`.claude/rules/README.md`](../.claude/rules/README.md)가 SSOT다.
+2026-10-27 기준이다. 정확한 목록은 [`.claude/rules/README.md`](../.claude/rules/README.md)가 SSOT다.
 
-- 규칙: always-load 5개 · path-scoped 4개 · always-load 합계 27,341B / 상한 28,000B
+- 규칙: always-load 5개 · path-scoped 4개 · always-load 합계 24,460B / 상한 25,000B
 - 스킬 8개 · 서브에이전트 3개 · 배달 훅 3개 · 검사기 4개(+ `verify.sh` 래퍼) · 실행 엔진 `dev.sh` · git 훅 2개
 - 씨앗: `java-spring`(규칙 5 · 리뷰어 1 · 훅 3) · 스택 무관 골격 `_template`
 - `harness-map.md`: 축 4 · 슬롯 22 · 능력 플래그 8

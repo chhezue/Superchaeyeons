@@ -30,8 +30,9 @@ skip="${PORTABILITY_SKIP:-}"
 # always-load 합계 상한(바이트). 한국어 UTF-8 기준 바이트/2.5 ≈ 토큰.
 # 래칫: 실측 합계를 상한으로 못 박아 늘어나는 커밋은 막고, 줄이는 작업은 이 값을 낮추며 진행한다. 이유 없이 올리지 않는다.
 # 이력: 2026-09-06 65,000B(P6 실측 63,096B) → 같은 날 토큰 최적화(라우터 통합·요약 표 제거·priority 절 local화) 뒤 52,000B
-#       → 2026-10-05 경량화 감사(규칙 3개 통합·워크플로 규모 단계·유지보수 열 삭제, 실측 27,341B) 뒤 28,000B.
-budget_bytes="${PORTABILITY_BUDGET_BYTES:-28000}"
+#       → 2026-10-05 경량화 감사(규칙 3개 통합·워크플로 규모 단계·유지보수 열 삭제, 실측 27,341B) 뒤 28,000B
+#       → 2026-10-27 G4 상세를 preflight로·map 설명을 rules/README.md로·guardrails 예시 축소(실측 24,460B) 뒤 25,000B.
+budget_bytes="${PORTABILITY_BUDGET_BYTES:-25000}"
 # 상한이 확정됐으므로 초과는 기본 차단이다. 이행 중 한 번 넘겨야 하면 PORTABILITY_BUDGET_STRICT=0.
 strict_budget="${PORTABILITY_BUDGET_STRICT:-1}"
 
@@ -75,7 +76,7 @@ fi
 # 유지하므로(씨앗 파일명이 이미 local-*) 복사 뒤에도 검사 밖이다 — 접두사가 곧 층 표시다.
 # 붙여 쓰는 프로젝트(하네스 자기 수정 ❌ = HARNESS_SELF_EDIT "0")에서는 두 가지가 프로젝트 값 자리라 검사 밖이다.
 #   .github/CONTRIBUTING.md — 그 프로젝트의 {{Git 컨벤션 SSOT}}. 원본 저장소(☑)에서는 견본이라 검사한다
-#   훅 상수 대입 줄의 값 — harness-map.md "훅 상수와 짝". 원본 저장소에서는 기본값도 견본이라 검사한다 (아래 awk)
+#   훅 상수 대입 줄의 값 — .claude/rules/README.md "훅 상수와 짝". 원본 저장소에서는 기본값도 견본이라 검사한다 (아래 awk)
 # 2026-10-16 TripFit 사본에 붙였을 때 이 둘이 위반 21건(CONTRIBUTING 17 · 상수 4)으로 잡혀 verify.sh가 처음부터 실패했다.
 # 값을 읽지 못하면 원본 저장소로 보고 더 많이 검사한다 — 놓치는 쪽보다 오탐이 보이는 쪽이 낫다.
 self_edit="$(sed -n -E "s/^[[:space:]]*(export[[:space:]]+)?HARNESS_SELF_EDIT=[\"']?([01])[\"']?[[:space:]]*(#.*)?$/\2/p" .claude/hooks/deny-out-of-scope-write.sh 2>/dev/null | head -n 1)"
@@ -113,7 +114,7 @@ fi
 # ---- 2. 금지 패턴 스캔 -------------------------------------------------------
 # awk 하나로 끝낸다: 패턴 파일을 먼저 읽고(FNR==NR), 이어지는 파일들을 줄 단위로 대조한다.
 # 오탐 방지: `채운 예`(견본 인용)·`다스택 예시`(여러 스택을 나열하는 실측 안내) 줄과 YAML frontmatter(`paths:` glob)는 건너뛴다.
-# 붙여 쓰는 프로젝트에서는 "훅 상수와 짝"(harness-map.md)의 (파일, 상수) 쌍 대입 줄에서 값만 지우고 나머지(줄 끝 주석)를 검사한다.
+# 붙여 쓰는 프로젝트에서는 "훅 상수와 짝"(.claude/rules/README.md)의 (파일, 상수) 쌍 대입 줄에서 값만 지우고 나머지(줄 끝 주석)를 검사한다.
 violations="$(
 	# shellcheck disable=SC2086
 	awk -v skip="$skip" -v adopted="$adopted" '
@@ -214,7 +215,7 @@ for f in [f for f in harness_files if f != ".claude/rules/harness-map.md" and no
 for slot in sorted(set(used) - defined - META):
     out.append(f"S\t{used[slot]}\t{slot}\tharness-map.md에 없는 슬롯을 쓴다 — 행을 추가하거나 기존 슬롯으로")
 for slot in sorted(defined - set(used)):
-    out.append(f"S\t.claude/rules/harness-map.md\t{slot}\t배달물 어디에서도 쓰지 않는 슬롯 — 지운다 (harness-map 규칙 3)")
+    out.append(f"S\t.claude/rules/harness-map.md\t{slot}\t배달물 어디에서도 쓰지 않는 슬롯 — 지운다 (.claude/rules/README.md map 규칙 3)")
 # --- I: 구성 요소 목록 ---
 readme = open(".claude/rules/README.md", encoding="utf-8").read()
 skills = {os.path.basename(os.path.dirname(p)) for p in glob.glob(".claude/skills/*/SKILL.md")}

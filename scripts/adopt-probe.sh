@@ -61,6 +61,7 @@ echo
 echo "| 패턴 | 건수 |"
 echo "|------|------|"
 git log -200 --format=%s 2>/dev/null | grep -v '^Merge' | LC_ALL=C sed -E \
+	-e 's/^:[a-z_]+: ?[a-z]+ ?: .*/:emoji: type : {설명}/' -e t \
 	-e 's/^\[([A-Za-z]+)\] #[0-9]+ .*/[Type] #n {설명}/' -e t \
 	-e 's/^\[([A-Za-z]+)\] .*/[Type] {설명}/' -e t \
 	-e 's/^([A-Z][a-z]+)(\([^)]*\))?!?: .*/Type: {설명}/' -e t \
@@ -73,8 +74,26 @@ echo "| 패턴 | 건수 |"
 echo "|------|------|"
 git branch -r 2>/dev/null | sed 's|.*origin/||' | grep -v '^HEAD\|^main$\|^master$\|^develop$' | LC_ALL=C sed -E \
 	-e 's|^([a-z]+)/[0-9]+-.*|{type}/{issue}-{desc}|' -e t \
+	-e 's|^([a-z]+)/[A-Za-z]+-[0-9]+-.*|{type}/{key}-{n}-{desc}|' -e t \
 	-e 's|^([a-z]+)/.*|{type}/{desc}|' -e t \
 	-e 's|^[^/]+$|(구분자 없음)|' | sort | uniq -c | sort -rn | head -5 | awk '{c=$1; $1=""; printf "| `%s` | %s |\n", substr($0,2), c}'
+echo
+echo "### 머지 방식·이슈 흔적 실측 (기본 브랜치 첫 부모 최근 200개)"
+echo
+base="$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')"
+[ -n "$base" ] || base="$(git branch --show-current 2>/dev/null)"
+ref="${base:-HEAD}"
+fp_total=$(git log --first-parent -200 --format=%h "$ref" -- 2>/dev/null | wc -l | tr -d ' ')
+fp_merges=$(git log --first-parent --merges -200 --format=%h "$ref" -- 2>/dev/null | wc -l | tr -d ' ')
+pr_suffix=$(git log --first-parent --no-merges -200 --format=%s "$ref" -- 2>/dev/null | grep -cE '\(#[0-9]+\)$')
+key_branches=$(git branch -r 2>/dev/null | grep -cE '/[A-Za-z]+-[0-9]+-')
+hash_subjects=$(git log -200 --format=%s 2>/dev/null | grep -cE '#[0-9]+')
+echo "| 항목 | 값 | 근거 |"
+echo "|------|-----|------|"
+echo "| 기본 브랜치 후보 | \`${base:-알 수 없음}\` | \`origin/HEAD\` 또는 현재 브랜치 |"
+echo "| merge 커밋 / 첫 부모 커밋 | ${fp_merges} / ${fp_total} | \`git log --first-parent --merges\` — 0이면 squash·rebase·직접 push 중 하나라 PR 이력(\`gh pr list --state merged\`)으로 가린다 |"
+echo "| 제목 끝 \`(#n)\` | ${pr_suffix} | squash merge 기본 제목의 꼬리 — 없어도 squash일 수 있다 |"
+echo "| 이슈 흔적 | 브랜치 \`{key}-{n}\` ${key_branches}건 · 커밋 제목 \`#n\` ${hash_subjects}건 | 키면 외부 트래커, \`#n\`이면 저장소 이슈 후보 — 트래커는 사람이 확인 |"
 echo
 echo "## deploy"
 echo

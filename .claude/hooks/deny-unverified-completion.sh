@@ -12,7 +12,9 @@ TEST_CMD="scripts/dev.sh test"
 #   (a) 문서(.md/.txt/.rst)가 아닌 파일을 고쳤고 — Write/Edit/MultiEdit/NotebookEdit 도구뿐 아니라 Bash의 `sed -i`·`tee`·
 #       `>`/`>>` 리다이렉션도 편집으로 센다 (2026-09-07 감사: Bash 편집이 보이지 않아 게이트가 무동작이던 사각),
 #       heredoc 본문(`<<EOF` 다음 줄부터 구분자 줄까지)은 명령이 아니라 데이터라 보지 않는다 — 커밋 메시지 서명의 `<…@…>`가
-#       리다이렉션으로 오판되던 사각(2026-10-23 실세션). 따옴표 안·주석의 `>`도 같은 이유로 보지 않는다(2026-10-26 실세션),
+#       리다이렉션으로 오판되던 사각(2026-10-23 실세션). 따옴표 안·주석의 `>`도 같은 이유로 보지 않는다(2026-10-26 실세션).
+#       `sed -i`는 식이 아니라 파일 피연산자만 보고, 저장소 밖 절대 경로(스크래치·/tmp·홈) 쓰기는 편집으로 치지 않는다 —
+#       식 안의 `com.a.b`와 스크래치 임시 파일을 코드 편집으로 세던 오판(2026-10-26 붙여 쓴 저장소 실세션),
 #   (b) 그 **마지막 편집 이후에** TEST_CMD를 — 한 명령 안에서도 편집보다 뒤에 있어야 한다 — 명령으로 실행한 기록이 없거나(`cat scripts/dev.sh`처럼 문자열로 언급한 것은 실행이
 #       아니다. TEST_CMD의 모든 단어가 그대로 나와야 하고, 뒤에 인자가 더 붙은 `… test --tests X`나 다른 동사는 전체 테스트가
 #       아니라 실행으로 치지 않는다), 실행했지만 그 tool_result가 실패(is_error 또는 러너 요약 줄 "실패 있음·FAIL·N failed")였고,
@@ -104,11 +106,22 @@ def data_mask(cmd):
         else:
             i += 1
     return mask
-# Bash 편집 검출 — 리다이렉션 대상, tee 대상, sed -i 의 경로 토큰. /dev/null·&1·문서 확장자는 편집이 아니다.
+# Bash 편집 검출 — 리다이렉션 대상, tee 대상, sed -i 의 파일 피연산자. /dev/null·&1·문서 확장자·저장소 밖 절대 경로는 편집이 아니다.
 REDIRECT = re.compile(r"(?<![<>&0-9])>{1,2}\s*[\"\x27]?([^\s\"\x27&|;<>]+)")
 TEE = re.compile(r"\btee\s+(?:-[a-zA-Z]+\s+)*[\"\x27]?([^\s\"\x27&|;<>]+)")
-SED_I = re.compile(r"\bsed\s+(-[a-zA-Z]*\s+)*-[a-zA-Z]*i")
-PATH_TOKEN = re.compile(r"[\w./-]+\.[A-Za-z0-9]+")
+SED = re.compile(r"(?:^|(?<=[;&|(\s]))sed\s")
+ASSIGN = re.compile(r"(?:^|(?<=[;&|(\s]))(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)=(\"[^\"]*\"|\x27[^\x27]*\x27|[^\s;&|()]*)")
+VAR = re.compile(r"\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))")
+# 저장소 = CLAUDE_PROJECT_DIR · git 최상위 · 현재 폴더 중 어디든 — 워크트리처럼 셋이 다를 때 하나라도 안이면 편집으로 본다
+def _roots():
+    cands = [os.environ.get("CLAUDE_PROJECT_DIR") or "", os.getcwd()]
+    try:
+        import subprocess
+        cands.append(subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, timeout=5).stdout.strip())
+    except Exception:
+        pass
+    return [os.path.realpath(c) for c in cands if c]
+ROOTS = _roots()
 # 실패 판정은 좁게 — 테스트 러너의 요약 줄만 본다. "0 failed"·"error" 같은 일반어는 통과 출력에도 흔해 오탐이 났다(2026-09-07 실세션).
 FAILED = re.compile(
     r"실패 있음|실패 [1-9]|오류 [1-9]|\bFAIL(ED|URE)?\b|BUILD FAILED|Tests? failed"
@@ -119,19 +132,101 @@ def is_doc(p):
     p = p.lower()
     return p.endswith(DOC_EXT)
 
+# 쓰기 대상이 저장소 안 코드 파일인가. `$VAR`는 같은 명령에서 그 앞에 대입한 값(S=… &&)과 환경 변수로 푼다.
+# 풀지 못한 변수(반복문 변수 등)는 저장소 안으로 본다 — `for f in *.sh; do … > "$f"` 같은 편집을 놓치지 않으려고.
+def is_code_target(t, assigns=None):
+    if not t or t.startswith(("/dev/", "&")) or is_doc(t):
+        return False
+    env = dict(os.environ); env.update(assigns or {})
+    t = VAR.sub(lambda m: env.get(m.group(1) or m.group(2), m.group(0)), t)
+    t = os.path.expanduser(t)
+    if is_doc(t):
+        return False
+    if t.startswith("/") and "$" not in t:
+        real = os.path.realpath(t)
+        return any(real == r or real.startswith(r.rstrip("/") + "/") for r in ROOTS)
+    return True
+
+def assigns_before(cmd, mask, pos):
+    out = {}
+    for m in ASSIGN.finditer(cmd, 0, pos):
+        if mask[m.start()]:
+            continue
+        v = m.group(2)
+        if v[:1] in "\"\x27":
+            v = v[1:-1]
+        out[m.group(1)] = VAR.sub(lambda x: out.get(x.group(1) or x.group(2), os.environ.get(x.group(1) or x.group(2), x.group(0))), v)
+    return out
+
+# sed 한 명령의 낱말에서 파일 피연산자를 고른다. 식(-e 인자 · 첫 번째 비옵션 인자)과 -f 스크립트 파일은 대상이 아니다.
+# -i 접미사는 붙여 쓰거나(-i.bak) BSD식으로 따로 쓴다(-i '' · -i .bak). 반환: (제자리 편집인가, 피연산자 목록), 못 나누면 None
+def sed_operands(words):
+    in_place = False; script = False; files = []; i = 1; opts_done = False
+    while i < len(words):
+        w = words[i]; i += 1
+        if re.match(r"^[0-9]*[<>]", w):
+            if re.fullmatch(r"[0-9]*[<>]{1,2}&?", w):
+                i += 1
+            continue
+        if not opts_done and w == "--":
+            opts_done = True
+        elif not opts_done and w.startswith("--"):
+            name, eq, _ = w[2:].partition("=")
+            if name == "in-place":
+                in_place = True
+            elif name in ("expression", "file"):
+                script = True; i += 0 if eq else 1
+            elif name == "line-length" and not eq:
+                i += 1
+        elif not opts_done and w.startswith("-") and len(w) > 1:
+            k = 1
+            while k < len(w):
+                c = w[k]; rest = w[k + 1:]
+                if c == "i":
+                    in_place = True
+                    if not rest and i < len(words) and (words[i] == "" or words[i].startswith(".")):
+                        i += 1
+                    break
+                if c in "ef":
+                    script = True
+                    if not rest:
+                        i += 1
+                    break
+                if c == "l":
+                    if not rest:
+                        i += 1
+                    break
+                k += 1
+        elif not script:
+            script = True
+        else:
+            files.append(w)
+    return in_place, files
+
+def sed_edit(cmd, mask, start, assigns):
+    end = start
+    while end < len(cmd) and (mask[end] or cmd[end] not in ";&|\n)"):
+        end += 1
+    try:
+        import shlex
+        words = shlex.split(cmd[start:end], comments=True)
+    except ValueError:
+        return True
+    in_place, files = sed_operands(words)
+    if not in_place:
+        return False
+    # 피연산자가 없으면(xargs·find로 넘김) 무엇을 고치는지 모른다 — 편집으로 본다
+    return not files or any(is_code_target(f, assigns) for f in files)
+
 # 둘 다 명령 안에서의 마지막 위치를 돌려준다(없으면 -1) — 한 명령 안의 편집과 테스트 실행은 순서로 판정한다.
 def last_code_edit(cmd, mask):
     at = -1
-    for m in REDIRECT.finditer(cmd):
-        t = m.group(1)
-        if mask[m.start()] or t.startswith(("/dev/", "&")) or is_doc(t):
-            continue
-        at = max(at, m.start())
-    for m in TEE.finditer(cmd):
-        if not mask[m.start()] and not is_doc(m.group(1)) and not m.group(1).startswith("/dev/"):
-            at = max(at, m.start())
-    for m in SED_I.finditer(cmd):
-        if not mask[m.start()] and any(not is_doc(t) for t in PATH_TOKEN.findall(cmd)):
+    for rx in (REDIRECT, TEE):
+        for m in rx.finditer(cmd):
+            if not mask[m.start()] and is_code_target(m.group(1), assigns_before(cmd, mask, m.start())):
+                at = max(at, m.start())
+    for m in SED.finditer(cmd):
+        if not mask[m.start()] and sed_edit(cmd, mask, m.start(), assigns_before(cmd, mask, m.start())):
             at = max(at, m.start())
     return at
 
@@ -186,7 +281,7 @@ for t in turns[last_user + 1:]:
                 edit_at = run_at = -1
                 if name in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
                     p = (inp.get("file_path") or inp.get("notebook_path") or "")
-                    edit_at = 0 if p and not is_doc(p) else -1
+                    edit_at = 0 if is_code_target(p) else -1
                 elif name == "Bash":
                     cmd = strip_heredocs(inp.get("command") or "")
                     mask = data_mask(cmd)

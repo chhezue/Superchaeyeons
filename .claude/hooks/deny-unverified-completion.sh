@@ -11,8 +11,8 @@ TEST_CMD="scripts/dev.sh test"
 #   (a) 문서(.md/.txt/.rst)가 아닌 파일을 고쳤고 — Write/Edit/MultiEdit/NotebookEdit 도구뿐 아니라 Bash의 `sed -i`·`tee`·
 #       `>`/`>>` 리다이렉션도 편집으로 센다 (2026-09-07 감사: Bash 편집이 보이지 않아 게이트가 무동작이던 사각),
 #       heredoc 본문(`<<EOF` 다음 줄부터 구분자 줄까지)은 명령이 아니라 데이터라 보지 않는다 — 커밋 메시지 서명의 `<…@…>`가
-#       리다이렉션으로 오판되던 사각(2026-10-23 실세션),
-#   (b) 그 **마지막 편집 이후에** TEST_CMD를 명령으로 실행한 기록이 없거나(`cat scripts/dev.sh`처럼 문자열로 언급한 것은 실행이
+#       리다이렉션으로 오판되던 사각(2026-10-23 실세션). 따옴표 안·주석의 `>`도 같은 이유로 보지 않는다(2026-10-26 실세션),
+#   (b) 그 **마지막 편집 이후에** TEST_CMD를 — 한 명령 안에서도 편집보다 뒤에 있어야 한다 — 명령으로 실행한 기록이 없거나(`cat scripts/dev.sh`처럼 문자열로 언급한 것은 실행이
 #       아니다. TEST_CMD의 모든 단어가 그대로 나와야 하고, 뒤에 인자가 더 붙은 `… test --tests X`나 다른 동사는 전체 테스트가
 #       아니라 실행으로 치지 않는다), 실행했지만 그 tool_result가 실패(is_error 또는 러너 요약 줄 "실패 있음·FAIL·N failed")였고,
 #   (c) 마지막 어시스턴트 텍스트에 완료 단정("완료·통과·끝났·마쳤·성공·정상 동작·구현했·적용했·반영했·수정했·done·passed·fixed·
@@ -76,6 +76,33 @@ def strip_heredocs(cmd):
             if j < len(lines):
                 i = j + 1
     return "\n".join(out)
+# 따옴표 안·주석·백슬래시로 이스케이프한 글자는 데이터다 — 커밋 메시지 -m "… <a@b.com>…"의 `>`를 리다이렉션으로 오판하던
+# 사각(2026-10-26 실세션). 단 셸에 넘긴 문자열(bash -c "…" · eval "…")은 실행되는 코드라 그 안을 다시 따진다.
+# $"…" 안의 $(…)는 코드지만 데이터로 본다 — 그 안의 편집은 놓친다.
+EXEC_STR = re.compile(r"(?:(?:^|[;&|(\s])(?:bash|sh|zsh|dash|ksh)(?:\s+-[a-zA-Z]+)*\s+-[a-zA-Z]*c[a-zA-Z]*|(?:^|[;&|(\s])eval)\s+$")
+
+def data_mask(cmd):
+    n = len(cmd); mask = [False] * n; i = 0
+    while i < n:
+        c = cmd[i]
+        if c == "\\":
+            mask[i:i + 2] = [True] * len(cmd[i:i + 2]); i += 2
+        elif c == "#" and (i == 0 or cmd[i - 1] in " \t\n;&|("):
+            j = cmd.find("\n", i); j = n if j < 0 else j
+            mask[i:j] = [True] * (j - i); i = j
+        elif c in "\"\x27":
+            ansi = c == "\x27" and i > 0 and cmd[i - 1] == "$"
+            j = i + 1
+            while j < n and cmd[j] != c:
+                j += 2 if cmd[j] == "\\" and (c == "\"" or ansi) else 1
+            j = min(j, n)
+            mask[i:j + 1] = [True] * len(cmd[i:j + 1])
+            if EXEC_STR.search(cmd[:i]):
+                mask[i + 1:j] = data_mask(cmd[i + 1:j])
+            i = j + 1
+        else:
+            i += 1
+    return mask
 # Bash 편집 검출 — 리다이렉션 대상, tee 대상, sed -i 의 경로 토큰. /dev/null·&1·문서 확장자는 편집이 아니다.
 REDIRECT = re.compile(r"(?<![<>&0-9])>{1,2}\s*[\"\x27]?([^\s\"\x27&|;<>]+)")
 TEE = re.compile(r"\btee\s+(?:-[a-zA-Z]+\s+)*[\"\x27]?([^\s\"\x27&|;<>]+)")
@@ -91,20 +118,28 @@ def is_doc(p):
     p = p.lower()
     return p.endswith(DOC_EXT)
 
-def bash_edits_code(cmd):
+# 둘 다 명령 안에서의 마지막 위치를 돌려준다(없으면 -1) — 한 명령 안의 편집과 테스트 실행은 순서로 판정한다.
+def last_code_edit(cmd, mask):
+    at = -1
     for m in REDIRECT.finditer(cmd):
         t = m.group(1)
-        if t.startswith(("/dev/", "&")) or is_doc(t):
+        if mask[m.start()] or t.startswith(("/dev/", "&")) or is_doc(t):
             continue
-        return True
+        at = max(at, m.start())
     for m in TEE.finditer(cmd):
-        if not is_doc(m.group(1)) and not m.group(1).startswith("/dev/"):
-            return True
-    if SED_I.search(cmd):
-        toks = [t for t in PATH_TOKEN.findall(cmd) if not is_doc(t)]
-        if toks:
-            return True
-    return False
+        if not mask[m.start()] and not is_doc(m.group(1)) and not m.group(1).startswith("/dev/"):
+            at = max(at, m.start())
+    for m in SED_I.finditer(cmd):
+        if not mask[m.start()] and any(not is_doc(t) for t in PATH_TOKEN.findall(cmd)):
+            at = max(at, m.start())
+    return at
+
+def last_test_run(cmd, mask):
+    at = -1
+    for m in TEST_RUN.finditer(cmd):
+        if not mask[m.end(1)]:
+            at = m.end(1)
+    return at
 
 turns = []
 for line in open(path, encoding="utf-8", errors="replace"):
@@ -147,20 +182,21 @@ for t in turns[last_user + 1:]:
         for b in blocks(t):
             if b.get("type") == "tool_use":
                 name = b.get("name", ""); inp = b.get("input") or {}
-                edited = False
+                edit_at = run_at = -1
                 if name in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
                     p = (inp.get("file_path") or inp.get("notebook_path") or "")
-                    edited = bool(p) and not is_doc(p)
+                    edit_at = 0 if p and not is_doc(p) else -1
                 elif name == "Bash":
                     cmd = strip_heredocs(inp.get("command") or "")
-                    if bash_edits_code(cmd):
-                        edited = True
-                    elif TEST_RUN.search(cmd):
-                        test_ran = True; test_failed = False
-                        pending_test_ids.add(b.get("id"))
-                if edited:
+                    mask = data_mask(cmd)
+                    edit_at = last_code_edit(cmd, mask)
+                    run_at = last_test_run(cmd, mask)
+                if edit_at >= 0:
                     code_edit = True
                     test_ran = False; test_failed = False; pending_test_ids.clear()
+                if run_at > edit_at:
+                    test_ran = True; test_failed = False
+                    pending_test_ids.add(b.get("id"))
             elif b.get("type") == "text" and b.get("text", "").strip():
                 last_text = b["text"]
     elif kind == "user":

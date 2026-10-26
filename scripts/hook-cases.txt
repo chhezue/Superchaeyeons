@@ -129,6 +129,15 @@ deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixture
 # here-string(<<<)은 heredoc이 아니고, 셸에 넘긴 heredoc 본문은 실행되는 코드다 — 둘 다 뒤의 편집을 놓치면 안 된다 (2026-10-24 리뷰)
 deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-herestring-then-edit.jsonl","stop_hook_active":false}
 deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-heredoc-shell-edit.jsonl","stop_hook_active":false}
+# 따옴표 안의 `>`(-m "…<a@b.com>…" 서명)는 파일 쓰기가 아니고, 같은 명령의 테스트 실행을 가리지 않는다 (2026-10-26 실세션 오판)
+deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-quoted-commit-after-test.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-quoted-merge-and-test.jsonl","stop_hook_active":false}
+# 따옴표 밖의 리다이렉션과 셸에 넘긴 문자열(bash -c "…") 안의 리다이렉션은 여전히 파일 쓰기다
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-quoted-arg-redirect-no-test.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-shell-c-edit-no-test.jsonl","stop_hook_active":false}
+# 한 명령 안에서는 순서로 판정한다 — 편집 뒤 테스트는 검증, 테스트 뒤 편집은 미검증
+deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-edit-then-test-one-cmd.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-test-then-edit-one-cmd.jsonl","stop_hook_active":false}
 # 테스트 명령 뒤 /dev/null로 보내는 리다이렉션은 실행으로 친다
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-test-stderr-devnull.jsonl","stop_hook_active":false}
 # Stop 훅은 판정 불가면 통과 (명시적 예외 — 대화가 끝나지 못하는 피해가 더 크다)

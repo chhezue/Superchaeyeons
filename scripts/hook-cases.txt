@@ -2,6 +2,7 @@
 # 형식: 훅파일<TAB>SCOPE<TAB>기대exit<TAB>stdin
 #   SCOPE: `-`면 훅 원본 그대로, 값이 있으면 훅 본문의 `SCOPE="…"` 줄을 그 값으로 바꾼 임시 복사본으로 실행.
 #          `;self=0`을 붙이면 `HARNESS_SELF_EDIT="…"` 줄도 그 값으로 바꾼다 (예: `.;self=0`)
+#          `;test=CMD`를 붙이면 `TEST_CMD="…"` 줄도 바꾼다 (예: `.;test=`는 빈 값). 여러 개는 `;`로 잇는다
 #   stdin 안의 $REPO는 저장소 루트 절대경로, $HOME은 홈 디렉터리로 치환된다
 # 훅 공통 규약 — 모든 deny-* 훅은 (1) 정상 범위는 통과 (2) 위반은 exit 2 (3) 판정 불가(JSON 깨짐·키 없음·빈 입력·python3 없음)는 exit 2
 # python3 없음 케이스는 PATH를 바꿔야 해서 이 파일이 아니라 test-hooks.sh 내장 케이스가 deny-* 전부에 자동으로 돌린다.
@@ -140,6 +141,8 @@ deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixture
 deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-test-then-edit-one-cmd.jsonl","stop_hook_active":false}
 # 테스트 명령 뒤 /dev/null로 보내는 리다이렉션은 실행으로 친다
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-test-stderr-devnull.jsonl","stop_hook_active":false}
+# TEST_CMD가 비어 있으면(테스트 없는 프로젝트) 코드를 고치고 검증 없이 완료를 말해도 막지 않는다
+deny-unverified-completion.sh	.;test=	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}
 # Stop 훅은 판정 불가면 통과 (명시적 예외 — 대화가 끝나지 못하는 피해가 더 크다)
 deny-unverified-completion.sh	-	0	not json
 deny-unverified-completion.sh	-	0	{"transcript_path":"/nonexistent.jsonl","stop_hook_active":false}

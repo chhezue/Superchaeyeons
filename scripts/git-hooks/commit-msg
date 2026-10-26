@@ -12,12 +12,14 @@ Merge\ * | Revert\ *)
 esac
 
 # COMMIT_RE는 harness-map.md의 {{커밋 메시지 형식}}과 짝이다 — 훅은 슬롯을 읽지 못하므로 여기 직접 적는다.
-COMMIT_RE='^(Feat|Fix|Refactor|Docs|Chore|Test): .+'
+# 배달본은 프로젝트 값을 갖지 않아 비워 둔다. adopt이 저장소 이력에서 실측한 형식을 정규식으로 채운다. 빈 값이면 검사하지 않는다.
+COMMIT_RE=""
+
+[ -n "$COMMIT_RE" ] || exit 0
 
 if ! printf '%s' "$first_line" | grep -Eq "$COMMIT_RE"; then
-	echo "FAIL: 커밋 메시지는 '{Type}: {설명}' 형식이어야 합니다 (CONTRIBUTING.md)." >&2
-	echo "  Type: Feat | Fix | Refactor | Docs | Chore | Test" >&2
-	echo "  예:   Fix: 마이페이지 응답 필드명 정리" >&2
+	echo "FAIL: 커밋 메시지 첫 줄이 이 저장소의 커밋 형식과 맞지 않습니다 (harness-map.md {{커밋 메시지 형식}})." >&2
+	echo "  정규식: ${COMMIT_RE}" >&2
 	echo "  받은 첫 줄: ${first_line}" >&2
 	exit 1
 fi

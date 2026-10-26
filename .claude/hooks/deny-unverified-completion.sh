@@ -3,7 +3,8 @@
 # Registered in .claude/settings.json (Stop). core-workflow.md G3 "실행 없이 통과했을 것이라고 보고 금지"를
 # 결정론적으로 강제한다.
 #
-# TEST_CMD는 harness-map.md의 {{테스트 명령}}과 같은 값이어야 한다 — 훅은 슬롯을 읽지 못하므로 여기 직접 적는다.
+# TEST_CMD는 하네스 공통 값이다 — 프로젝트마다 다른 실제 테스트 명령은 scripts/dev.conf가 갖고, 이 줄은 어느 프로젝트에서나 같다.
+# harness-map.md의 {{테스트 명령}}과 같은 값이어야 한다 — 훅은 슬롯을 읽지 못하므로 여기 직접 적는다.
 # 슬롯을 바꾸면 이 줄도 함께 고칠 것. "(없음)"이나 빈 값이면 아무것도 막지 않는다 (테스트 없는 저장소를 영구히 막지 않기 위해).
 TEST_CMD="scripts/dev.sh test"
 #

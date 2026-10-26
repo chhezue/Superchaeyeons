@@ -8,7 +8,7 @@
 #
 # exit 0 = 전부 통과 · exit 1 = 실패 있음 · exit 2 = 사용법·환경 오류
 # 케이스 형식은 scripts/hook-cases.txt 머리에 있다. 훅을 고치거나 새 우회 경로를 발견하면 케이스를 먼저 추가한다.
-# (부품성 원칙: bash 하나 + 데이터 파일 하나. 훅 본문에 테스트용 분기를 넣지 않는다 — SCOPE·HARNESS_SELF_EDIT는 임시 복사본에서 치환한다.)
+# (부품성 원칙: bash 하나 + 데이터 파일 하나. 훅 본문에 테스트용 분기를 넣지 않는다 — SCOPE·HARNESS_SELF_EDIT·TEST_CMD는 임시 복사본에서 치환한다.)
 
 set -u
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -42,14 +42,19 @@ while IFS=$'\t' read -r hook scope expected stdin; do
 		printf '  FAIL  %-28s (훅 파일 없음)\n' "$hook"; fail=$((fail + 1)); continue
 	fi
 	run="$src"
-	# scope 열: `-` 원본 · `값` SCOPE 치환 · `값;self=N` HARNESS_SELF_EDIT도 치환
-	scope_val="${scope%%;*}"; extra=""; [ "$scope" != "$scope_val" ] && extra="${scope#*;}"
+	# scope 열: `-` 원본 · `값` SCOPE 치환 · 뒤에 `;self=N`·`;test=CMD`를 붙이면 HARNESS_SELF_EDIT·TEST_CMD도 치환
+	# (배달본은 TEST_CMD가 비어 있어 Stop 훅 판정을 시험하려면 값을 넣은 복사본이 필요하다)
+	scope_val="${scope%%;*}"; extras=""; [ "$scope" != "$scope_val" ] && extras="${scope#*;}"
 	if [ "$scope" != "-" ]; then
 		run="$tmpdir/$hook.$n"
 		sed "s|^SCOPE=\".*\"|SCOPE=\"$scope_val\"|" "$src" >"$run"
-		case "$extra" in
-		self=*) sed -i.bak "s|^HARNESS_SELF_EDIT=\".*\"|HARNESS_SELF_EDIT=\"${extra#self=}\"|" "$run" && rm -f "$run.bak" ;;
-		esac
+		IFS=';' read -r -a extra_list <<<"$extras"
+		for extra in "${extra_list[@]+"${extra_list[@]}"}"; do
+			case "$extra" in
+			self=*) sed -i.bak "s|^HARNESS_SELF_EDIT=\".*\"|HARNESS_SELF_EDIT=\"${extra#self=}\"|" "$run" && rm -f "$run.bak" ;;
+			test=*) sed -i.bak "s|^TEST_CMD=\".*\"|TEST_CMD=\"${extra#test=}\"|" "$run" && rm -f "$run.bak" ;;
+			esac
+		done
 		chmod +x "$run"
 	fi
 	stdin="${stdin//\$REPO/$repo_root}"

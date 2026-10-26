@@ -94,7 +94,7 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 | `.claude/skills/` | 표준 워크플로 스킬 (`adopt`, `ask`, `specify`, `tdd`, `preflight` 등) | 배달 |
 | `.claude/agents/` | 보조 에이전트 (`researcher`, `test-writer`, `doc-reviewer`) | 배달 |
 | `.claude/hooks/` | 결정적 차단 훅 (`deny-*`) | 배달 |
-| `scripts/` | 이식성·문서·훅 검사 스크립트와 git 훅 설치기 | 배달 |
+| `scripts/` | 이식성·문서·훅 검사 스크립트, git 훅 설치기, 빌드·실행 엔진 `dev.sh` (프로젝트 값은 `dev.conf`) | 배달 |
 | `docs/templates/` | 산출물 등록부 및 문서 템플릿 | 배달 |
 | `examples/seeds/` | 기술 스택별 씨앗 규칙 (`java-spring/`, `_template/`) | 배달 |
 | `docs/harness/` | 4개 레이어 설명과 현재 동작 요약 | 저장소 전용 |
@@ -104,7 +104,7 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 이 저장소 자체의 부품 계약, 훅 규약, 문서 스타일을 한 번에 검증하는 명령입니다.
 
 ```bash
-./scripts/verify.sh
+./scripts/dev.sh test   # scripts/verify.sh를 부른다
 ```
 
 ## 더 읽어보기

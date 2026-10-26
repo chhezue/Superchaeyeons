@@ -3,5 +3,8 @@
 .DS_Store
 .idea/
 
+# scripts/dev.sh 전체 로그 (dev.conf LOG_DIR)
+.dev/
+
 # 하네스와 무관한 개인 산출물 (포트폴리오·학습용 문서)
 docs/portfolio/

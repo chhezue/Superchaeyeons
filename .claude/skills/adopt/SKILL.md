@@ -46,7 +46,8 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 1. `harness-map.md` — 축·슬롯·플래그 값. 플래그 ❌면 해당 씨앗 훅을 등록하지 않는다 (규칙 절은 지우지 않는다). 그 파일의 "훅 상수와 짝" 목록(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`)을 값과 같은 턴에 고친다. `HARNESS_SELF_EDIT="0"`이면 `check-portability.sh`는 이 대입 줄의 값과 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`를 프로젝트 값 자리로 보고 검사하지 않는다
 2. **lang 팩** — `.claude/`에는 스택 파일이 없다. 실측한 lang 축에 맞는 씨앗이 `examples/seeds/{스택}/`에 있으면 그 README의 "무엇을 어디에 복사하나" 표대로 복사하고, 없으면 `examples/seeds/_template/`을 복사해 실측값으로 채운다. **파일명의 `local-` 접두사를 떼지 않는다** — `scripts/check-portability.sh`가 그 접두사로 local 층을 식별해 검사에서 빼므로, 접두사가 빠지면 복사 직후부터 검사기와 pre-commit이 막힌다. **복사한 씨앗은 즉시 대조한다** — 씨앗 README의 "씨앗 대조" 표에 있는 전제(의존성·버전·기반 클래스·표기 방식)마다 빌드 파일·코드를 열어 확인하고, 다르면 씨앗 본문을 고치고 근거 파일을 표에 적는다. 확인하지 않은 전제를 남기지 않는다 — 검증 없이 물려받은 전제가 같은 실수를 세 번 낳은 사례가 계기다. 씨앗 훅은 해당 플래그가 ☑일 때만 `.claude/hooks/`로 복사하고 `settings.json`에 등록한다
 3. `local-*.md` — 슬롯으로도 플래그로도 안 빠지는 **그 저장소만의 사실**이 있을 때만. `AGENTS.md`와 중복이면 만들지 않는다
-4. `AGENTS.template.md` → `AGENTS.md` 채움 · `./scripts/install-git-hooks.sh` · `commit-msg` 훅의 `COMMIT_RE`가 `{{커밋 메시지 형식}}`과 일치하는지 확인
+4. `scripts/dev.conf` — 씨앗에 `dev.conf`가 있으면 그 파일에서 시작하고, 없으면 `examples/seeds/_template/dev.conf`를 복사해 1단계 CI 워크플로의 실제 명령으로 채운다. 실행 엔진 `scripts/dev.sh`는 고치지 않는다. 키를 채운 근거(파일·명령)를 2단계 제안 표에 붙이고, 실측으로 정해지지 않는 것(로컬에서 띄울 의존 서비스·헬스 판정 주소)만 묻는다. 값이 있는 명령 슬롯은 `scripts/dev.sh <동사>`로 적는다
+5. `AGENTS.template.md` → `AGENTS.md` 채움 · `./scripts/install-git-hooks.sh` · `commit-msg` 훅의 `COMMIT_RE`가 `{{커밋 메시지 형식}}`과 일치하는지 확인
 
 **산출물 체크리스트** — 전부 통과해야 완료다. `pack.md` 계약 대신 이 목록이 생성물 품질을 지킨다.
 
@@ -58,6 +59,7 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 - [ ] `settings.json`의 훅 등록 상태 = 플래그 ☑/❌
 - [ ] `AGENTS.md`에 `{…}` 자리표시자가 0개
 - [ ] `{{커밋 메시지 형식}}`이 최근 커밋 20개와 일치한다 (`git log -20 --format=%s`)
+- [ ] `scripts/dev.sh test`·`build`를 한 번씩 실행해 종료 코드가 0 또는 1이다 — 2(환경 없음)면 `dev.conf` 값이나 실행 환경을 고친다. 앱이 있으면 `start`→`stop`도 한 번
 
 ### 4. 역스펙·초기 백로그 (기존 코드가 있을 때) → **승인 (G2 — Draft 스펙·감사 후보 목록)**
 

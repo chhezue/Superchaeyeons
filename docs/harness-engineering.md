@@ -81,7 +81,7 @@ core에 프로젝트 사실이 새면 `scripts/check-portability.sh`가 커밋�
 | `test-hooks.sh` | 훅 공통 규약 · 훅이 전부 등록돼 있고 쓰기 도구 매처가 빠짐없는가 |
 | `check-doc-style.sh` | 문서 개요·깊이·번역투(오류) · 제목 길이·약어·깨진 링크(경고) |
 
-`scripts/verify.sh`가 셋을 한 번에 돌리는 이 저장소의 `{{테스트 명령}}`이고, `Stop` 훅이 이 명령의 실행 기록과 결과를 본다. git `pre-commit`이 stage된 내용에 따라 같은 검사를, `commit-msg`가 커밋 메시지 형식을 판정한다. 오탐이 나면 스크립트가 아니라 데이터 파일(패턴·케이스)을 고친다. 판단이 필요한 항목은 검사기에 넣지 않는다 — 넣으면 오탐으로 커밋이 막히고, 막히는 검사기는 곧 우회된다.
+`scripts/verify.sh`가 셋과 `dev.sh` 엔진 테스트를 한 번에 돌린다. 이 저장소의 `{{테스트 명령}}`은 `scripts/dev.sh test`이고 `dev.conf`가 `verify.sh`를 부르며, `Stop` 훅이 이 명령의 실행 기록과 결과를 본다. git `pre-commit`이 stage된 내용에 따라 같은 검사를, `commit-msg`가 커밋 메시지 형식을 판정한다. 오탐이 나면 스크립트가 아니라 데이터 파일(패턴·케이스)을 고친다. 판단이 필요한 항목은 검사기에 넣지 않는다 — 넣으면 오탐으로 커밋이 막히고, 막히는 검사기는 곧 우회된다.
 
 ## 8. 실제로 겪고 고친 것
 
@@ -114,7 +114,7 @@ core에 프로젝트 사실이 새면 `scripts/check-portability.sh`가 커밋�
 2026-10-05 기준이다. 정확한 목록은 [`.claude/rules/README.md`](../.claude/rules/README.md)가 SSOT다.
 
 - 규칙: always-load 5개 · path-scoped 4개 · always-load 합계 27,341B / 상한 28,000B
-- 스킬 8개 · 서브에이전트 3개 · 배달 훅 3개 · 검사기 3개(+ `verify.sh` 래퍼) · git 훅 2개
+- 스킬 8개 · 서브에이전트 3개 · 배달 훅 3개 · 검사기 4개(+ `verify.sh` 래퍼) · 실행 엔진 `dev.sh` · git 훅 2개
 - 씨앗: `java-spring`(규칙 5 · 리뷰어 1 · 훅 3) · 스택 무관 골격 `_template`
 - `harness-map.md`: 축 4 · 슬롯 22 · 능력 플래그 8
 - 훅 규약 케이스 102개 (새 프로젝트에서는 복사하지 않은 씨앗 훅 10개를 건너뛴다)

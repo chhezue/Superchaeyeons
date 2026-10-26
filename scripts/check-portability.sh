@@ -2,7 +2,7 @@
 # 부품 계약 검사기 — core 규칙에 프로젝트 고유 사실이 없는지, always-load 규칙이 토큰 예산 안인지 판정한다.
 #
 # 사용:
-#   scripts/check-portability.sh                 # 배달물 전체(.claude/ 규칙·스킬·에이전트·훅·settings, git 훅, 견본) 검사 + 예산 판정 (기본)
+#   scripts/check-portability.sh                 # 배달물 전체(.claude/ 규칙·스킬·에이전트·훅·settings, git 훅, dev.sh 엔진, 견본) 검사 + 예산 판정 (기본)
 #   scripts/check-portability.sh --scope core    # core-*.md 만 (P0~P5 시절의 좁은 범위)
 #   scripts/check-portability.sh --skip C3       # 특정 분류 제외 (콤마 구분, 이행 중에만 사용)
 #   scripts/check-portability.sh --budget 30000  # always-load 상한(바이트) 변경
@@ -90,7 +90,7 @@ for f in .claude/rules/core-*.md; do
 	[ -f "$f" ] && targets="$targets $f"
 done
 if [ "$scope" = "all" ]; then
-	for f in .claude/rules/*.md .claude/skills/*/SKILL.md .claude/skills/*/references/*.md .claude/agents/*.md .claude/hooks/*.sh .claude/settings.json scripts/git-hooks/* AGENTS.template.md .github/CONTRIBUTING.md; do
+	for f in .claude/rules/*.md .claude/skills/*/SKILL.md .claude/skills/*/references/*.md .claude/agents/*.md .claude/hooks/*.sh .claude/settings.json scripts/git-hooks/* scripts/dev.sh AGENTS.template.md .github/CONTRIBUTING.md; do
 		[ -f "$f" ] || continue
 		case "$f" in
 		.claude/rules/core-*.md | .claude/rules/harness-map.md | .claude/*/local-*) continue ;;

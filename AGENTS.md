@@ -7,7 +7,7 @@ Claude Code용 **하네스**(규칙·스킬·에이전트·훅·검사 스크립
 | 경로 | 내용 | 새 프로젝트로 |
 |------|------|---------------|
 | `.claude/` | 규칙·스킬·에이전트·훅·`settings.json` — 목록 SSOT는 `.claude/rules/README.md` | 복사 |
-| `scripts/` | `verify.sh`와 검사기 3개 · `adopt-probe.sh` · git 훅 | 복사 |
+| `scripts/` | `verify.sh`와 검사기 4개 · `dev.sh` 실행 엔진 · `adopt-probe.sh` · git 훅 (`dev.conf`는 프로젝트가 채움) | 복사 |
 | `docs/templates/` | 산출물 등록부·문서 템플릿 | 복사 |
 | `examples/seeds/` | 스택별 lang 팩 씨앗 — `adopt`이 맞는 것만 `local-*` 이름으로 복사 | 필요한 것만 |
 | `AGENTS.template.md` · `.github/CONTRIBUTING.md` | 새 프로젝트 `AGENTS.md` 견본 · Git 컨벤션 견본 | 견본 |
@@ -17,7 +17,7 @@ Claude Code용 **하네스**(규칙·스킬·에이전트·훅·검사 스크립
 
 ## 이 저장소에서 작업할 때
 
-- **완료·통과를 말하기 전에 항상 `scripts/verify.sh`** — 이 저장소의 `{{테스트 명령}}`이다. 문서도 검사 대상이라 문서만 고친 작업도 돌린다 (`preflight`의 "문서 전용은 생략 가능"보다 이 줄이 우선)
+- **완료·통과를 말하기 전에 항상 `scripts/dev.sh test`** — 이 저장소의 `{{테스트 명령}}`이고 `scripts/verify.sh`를 부른다. 문서도 검사 대상이라 문서만 고친 작업도 돌린다 (`preflight`의 "문서 전용은 생략 가능"보다 이 줄이 우선)
 - **`core-*.md`에 프로젝트 고유 사실을 넣지 않는다** — 경로면 슬롯, 정책이면 플래그, 둘 다 아니면 `local-*.md`. 슬롯·플래그는 core가 실제로 쓸 때만 늘린다
 - **구성 요소를 추가·삭제·개명하면 `.claude/rules/README.md`를 같은 턴에** 고친다 — `check-portability.sh`가 실물과 대조한다
 - **훅을 고치거나 우회 경로를 찾으면 `scripts/hook-cases.txt`에 케이스부터** 넣는다 — `deny-*`는 판정 불가(python3 없음 포함)도 막아야 하고, 새 훅은 `settings.json`에 등록해야 통과한다

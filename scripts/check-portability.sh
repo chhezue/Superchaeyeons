@@ -128,6 +128,8 @@ violations="$(
 		infm { next }
 		{
 			if (index($0, "채운 예") > 0 || index($0, "다스택 예시") > 0) next
+			# Stop 훅의 TEST_CMD는 하네스 공통 값(dev.sh 호출)만 허용한다 — 프로젝트 명령은 dev.conf가 갖는다
+			if (FILENAME == ".claude/hooks/deny-unverified-completion.sh" && $0 ~ /^TEST_CMD="scripts\/dev\.sh test"[ \t]*$/) next
 			if (adopted == 1 && ((FILENAME == ".claude/hooks/deny-out-of-scope-write.sh" && $0 ~ /^(SCOPE|HARNESS_SELF_EDIT)=/) ||
 			    (FILENAME == ".claude/hooks/deny-unverified-completion.sh" && $0 ~ /^TEST_CMD=/) ||
 			    (FILENAME == "scripts/git-hooks/pre-commit" && $0 ~ /^FORMAT_(CMD|PATHS)=/) ||

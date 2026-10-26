@@ -327,6 +327,8 @@ do_start() {
 	set -m   # 앱을 새 프로세스 그룹으로 — stop이 그 그룹만 끈다
 	bash -c "$cmd" >"$applog" 2>&1 </dev/null &
 	p=$!
+	# 작업 표에서 뺀다 — 남겨 두면 stop_app으로 끈 뒤 bash 3.2가 "Terminated: 15" 줄을 출력 맨 앞에 끼워 넣는다
+	disown 2>/dev/null || true
 	set +m
 	echo "$p" >"$pidfile"
 	log="$applog"

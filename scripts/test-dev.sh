@@ -69,6 +69,24 @@ run "$(conf placeholder "BUILD_CMD={빌드 명령}")" build
 run "$(conf verb)" deploy
 [ "$rc" = 2 ] && ok "모르는 동사 → exit 2" || ng "모르는 동사 → exit 2 (실제 $rc)" "$out"
 
+# ---- 설정 파일 찾는 순서: DEV_CONF → 루트 dev.conf → scripts/dev.conf ----
+# 엔진은 자기 위치의 상위 폴더를 저장소 루트로 보므로, 엔진과 차단 훅을 임시 저장소에 복사해 돌린다.
+lk="$tmp/lookup"; mkdir -p "$lk/scripts" "$lk/.claude/hooks"
+cp "$dev" "$lk/scripts/dev.sh"; cp "$repo_root/.claude/hooks/deny-dangerous-bash.sh" "$lk/.claude/hooks/"
+cp "$(conf lk-root "BUILD_CMD=true" "LOG_DIR=$lk/from-root")" "$lk/dev.conf"
+cp "$(conf lk-scripts "BUILD_CMD=true" "LOG_DIR=$lk/from-scripts")" "$lk/scripts/dev.conf"
+cp "$(conf lk-env "BUILD_CMD=true" "LOG_DIR=$lk/from-env")" "$lk/env.conf"
+out="$(env -u DEV_CONF "$lk/scripts/dev.sh" build 2>&1)"; rc=$?
+[ "$rc" = 0 ] && [ -f "$lk/from-root/build.log" ] && [ ! -e "$lk/from-scripts/build.log" ] \
+	&& ok "루트 dev.conf가 있으면 scripts/dev.conf보다 먼저 읽는다" || ng "루트 dev.conf가 있으면 scripts/dev.conf보다 먼저 읽는다 (실제 $rc)" "$out"
+out="$(DEV_CONF="$lk/env.conf" "$lk/scripts/dev.sh" build 2>&1)"; rc=$?
+[ "$rc" = 0 ] && [ -f "$lk/from-env/build.log" ] \
+	&& ok "DEV_CONF가 루트 dev.conf보다 앞선다" || ng "DEV_CONF가 루트 dev.conf보다 앞선다 (실제 $rc)" "$out"
+rm "$lk/dev.conf"
+out="$(env -u DEV_CONF "$lk/scripts/dev.sh" build 2>&1)"; rc=$?
+[ "$rc" = 0 ] && [ -f "$lk/from-scripts/build.log" ] \
+	&& ok "루트 dev.conf가 없으면 scripts/dev.conf를 읽는다" || ng "루트 dev.conf가 없으면 scripts/dev.conf를 읽는다 (실제 $rc)" "$out"
+
 # ---- 없음 ----
 run "$(conf nothing)" start
 [ "$rc" = 0 ] && [ "$(lines)" = 1 ] && [[ "$out" == "dev start: 없음 — 테스트" ]] \

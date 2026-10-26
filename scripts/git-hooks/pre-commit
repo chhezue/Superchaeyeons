@@ -27,7 +27,7 @@ if [ -n "$staged_hooks" ] && [ -x scripts/test-hooks.sh ]; then
 fi
 
 # dev.sh 엔진·테스트·설정이 stage에 있으면 엔진 테스트 — 실패하면 커밋을 막는다 (scripts/test-dev.sh)
-staged_dev="$(git -c core.quotepath=false diff --cached --name-only -- 'scripts/dev.sh' 'scripts/test-dev.sh' 'scripts/dev.conf')"
+staged_dev="$(git -c core.quotepath=false diff --cached --name-only -- 'scripts/dev.sh' 'scripts/test-dev.sh' 'scripts/dev.conf' 'dev.conf')"
 if [ -n "$staged_dev" ] && [ -x scripts/test-dev.sh ]; then
 	if ! scripts/test-dev.sh >/dev/null; then
 		scripts/test-dev.sh | grep -E 'FAIL|케이스' >&2

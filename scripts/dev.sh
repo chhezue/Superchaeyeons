@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# 프로젝트 빌드·테스트·실행 엔진 — 모든 프로젝트가 같은 이 파일을 쓰고, 프로젝트마다 다른 값은 scripts/dev.conf에만 둔다.
+# 프로젝트 빌드·테스트·실행 엔진 — 모든 프로젝트가 같은 이 파일을 쓰고, 프로젝트마다 다른 값은 설정 파일(dev.conf)에만 둔다.
 # 이 파일을 프로젝트에서 고치지 않는다. 특별한 절차가 필요하면 그 절차를 프로젝트 스크립트로 만들어 dev.conf 명령 자리에 적는다.
 # 스펙: {{스펙 저장소}}의 cross-cutting/dev-script.md (이 머리가 동사·종료 코드·출력·설정 키의 SSOT)
 #
 # 사용:
 #   scripts/dev.sh build | test [인자…] | fmt | deps | start | stop | status | logs [N]
 #   DEV_CONF=<경로> scripts/dev.sh …      # 다른 설정 파일 (scripts/test-dev.sh가 쓴다)
+#
+# 설정 파일은 DEV_CONF → 저장소 루트 dev.conf → scripts/dev.conf 순으로 찾는다. scripts/는 배달되므로 scripts/dev.conf는 배달본에서
+# 빈칸이고 붙여 쓰는 프로젝트가 채운다. 하네스 원본처럼 배달하지 않을 자기 값이 있는 저장소만 루트 dev.conf를 둔다.
 #
 # 종료 코드: 0 성공(값이 "없음"인 동사 포함) · 1 실패 · 2 환경 없음(설정 파일·키 · 컨테이너 런타임 · 포트 점유 · 위험 명령 차단)
 #
@@ -35,7 +38,7 @@
 set -u
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
-conf="${DEV_CONF:-scripts/dev.conf}"
+if [ -n "${DEV_CONF:-}" ]; then conf="$DEV_CONF"; elif [ -f dev.conf ]; then conf="dev.conf"; else conf="scripts/dev.conf"; fi
 guard="$root/.claude/hooks/deny-dangerous-bash.sh"
 KEYS="BUILD_CMD TEST_CMD TEST_REPORT FMT_CMD DEPS_CMD RUN_ENV SERVICES EXTRA_CONTAINERS WAIT_SERVICES START_CMD APP_PORT HEALTH_URL WAIT_HEALTH LOG_DIR"
 verb="${1:-}"; [ $# -gt 0 ] && shift

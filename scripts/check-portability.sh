@@ -90,11 +90,13 @@ for f in .claude/rules/core-*.md; do
 	[ -f "$f" ] && targets="$targets $f"
 done
 if [ "$scope" = "all" ]; then
-	for f in .claude/rules/*.md .claude/skills/*/SKILL.md .claude/skills/*/references/*.md .claude/agents/*.md .claude/hooks/*.sh .claude/settings.json scripts/git-hooks/* scripts/dev.sh AGENTS.template.md .github/CONTRIBUTING.md; do
+	for f in .claude/rules/*.md .claude/skills/*/SKILL.md .claude/skills/*/references/*.md .claude/agents/*.md .claude/hooks/*.sh .claude/settings.json scripts/git-hooks/* scripts/dev.sh scripts/dev.conf AGENTS.template.md .github/CONTRIBUTING.md; do
 		[ -f "$f" ] || continue
 		case "$f" in
 		.claude/rules/core-*.md | .claude/rules/harness-map.md | .claude/*/local-*) continue ;;
 		.github/CONTRIBUTING.md) [ "$adopted" = 1 ] && continue ;;
+		# 배달본 scripts/dev.conf는 빈칸이어야 한다 — 붙여 쓰는 프로젝트에서는 그 프로젝트의 값 자리라 보지 않는다
+		scripts/dev.conf) [ "$adopted" = 1 ] && continue ;;
 		esac
 		targets="$targets $f"
 	done

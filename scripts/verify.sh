@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 기계 검증 4개를 순서대로 돌리고 하나라도 실패하면 exit 1. 이 저장소의 {{테스트 명령}}(`scripts/dev.sh test`)이 dev.conf의 TEST_CMD로 이 파일을 부른다.
+# 기계 검증 4개를 순서대로 돌리고 하나라도 실패하면 exit 1. 이 저장소의 {{테스트 명령}}(`scripts/dev.sh test`)이 dev.conf의 TEST_CMD로 이 파일을 부른다(루트 dev.conf — scripts/dev.conf는 배달본이라 빈칸).
 #   1. scripts/check-portability.sh   배달물 부품 계약 · 슬롯·구성 요소 목록 대조 · always-load 예산
 #   2. scripts/test-hooks.sh          훅 공통 규약 (케이스 파일 + python3 부재 fail-closed + 등록·매처 대조)
 #   3. scripts/check-doc-style.sh     문서 스타일 (추적·미추적 .md 전부, 오류만 판정)

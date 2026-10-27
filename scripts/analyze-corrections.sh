@@ -25,8 +25,8 @@
 # 읽기 도구만 쓴다(--tools). 파일 쓰기는 이 스크립트가 결과를 받아서 한다 — 규칙·스킬은 사람 승인 없이 바뀌지 않는다.
 #
 # 아래 상수는 훅 상수처럼 본문에 직접 적는다. MODEL·BUDGET은 첫 실행 결과로 정한다(스펙 "분석 모델"·"비용 상한"):
-#   MODEL  — 기준 사례로 sonnet·opus를 한 번씩 돌려, 둘 다 그 증상을 후보로 내면 sonnet, sonnet만 놓치면 opus
-#   BUDGET — 첫 실행 2달러, 그 뒤 runs.tsv의 실제 비용의 2배. 응답 하나가 끝난 뒤 확인해 조금 넘을 수 있다
+#   MODEL  — 기준 사례로 sonnet·opus를 한 번씩 돌려, 둘 다 그 증상을 후보로 내면 sonnet, sonnet만 놓치면 opus — 2026-10-28 첫 실행: sonnet만 기준 증상을 잡아 sonnet
+#   BUDGET — 첫 실행 2달러, 그 뒤 runs.tsv의 실제 비용의 2배. 응답 하나가 끝난 뒤 확인해 조금 넘을 수 있다 — 2026-10-28 첫 실행 실측 $0.43(세션 1개). 첫 정기 분석이 쌓인 세션을 한꺼번에 보므로 2배($0.86)를 올려 1달러
 # LEDGER는 {{문서 루트}}/audits/harness-retro.md다 — 문서 루트가 다르면 이 줄을 고친다.
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -34,8 +34,8 @@ STORE="$ROOT/.claude/corrections"
 TRANSCRIPTS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/$(printf '%s' "$ROOT" | sed 's/[^A-Za-z0-9]/-/g')"
 LEDGER="$ROOT/docs/audits/harness-retro.md"
 CLAUDE_BIN="claude"
-MODEL=""
-BUDGET="2"
+MODEL="sonnet"
+BUDGET="1"
 
 command -v python3 >/dev/null 2>&1 || { echo "python3가 필요합니다" >&2; exit 2; }
 

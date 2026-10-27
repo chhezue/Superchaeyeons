@@ -8,7 +8,8 @@
 #
 # exit 0 = 전부 통과 · exit 1 = 실패 있음 · exit 2 = 사용법·환경 오류
 # 케이스 형식은 scripts/hook-cases.txt 머리에 있다. 훅을 고치거나 새 우회 경로를 발견하면 케이스를 먼저 추가한다.
-# (부품성 원칙: bash 하나 + 데이터 파일 하나. 훅 본문에 테스트용 분기를 넣지 않는다 — SCOPE·HARNESS_SELF_EDIT·TEST_CMD는 임시 복사본에서 치환한다.)
+# (부품성 원칙: bash 하나 + 데이터 파일 하나. 훅 본문에 테스트용 분기를 넣지 않는다 — SCOPE·HARNESS_SELF_EDIT·TEST_CMD와 대문자 상수는 임시 복사본에서 치환한다.)
+# 훅과 짝으로 도는 scripts/의 도구(analyze-corrections.sh)도 같은 케이스 파일로 판정한다.
 
 set -u
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -24,8 +25,28 @@ tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/hook-test.XXXXXX")"
 trap 'rm -r -- "$tmpdir"' EXIT
 
 pass=0; fail=0; n=0; skip=0
-while IFS=$'\t' read -r hook scope expected stdin; do
-	case "$hook" in ''|'#'*) continue ;; esac
+# 케이스 값 안의 $REPO·$HOME·$TMP를 실제 경로로 바꾼다 ($TMP는 이 실행 동안 케이스끼리 공유하는 임시 폴더라 앞 케이스가 남긴 상태를 뒤 케이스가 본다)
+expand() { local v="$1"; v="${v//\$REPO/$repo_root}"; v="${v//\$HOME/$HOME}"; v="${v//\$TMP/$tmpdir}"; printf '%s' "$v"; }
+# 기대 열의 `;` 뒤 검사 하나를 판정한다. 실패하면 이유를 출력하고 1
+check() {
+	local c="$1" path pat want got
+	case "$c" in
+	out=) [ ! -s "$tmpdir/out" ] || { echo "출력이 비어야 하는데 있음: $(head -c 120 "$tmpdir/out")"; return 1; } ;;
+	out~*) grep -Eq -- "${c#out~}" "$tmpdir/out" || { echo "출력에 /${c#out~}/ 없음: $(head -c 120 "$tmpdir/out")"; return 1; } ;;
+	'out!~'*) ! grep -Eq -- "${c#out!~}" "$tmpdir/out" || { echo "출력에 /${c#out!~}/ 가 있으면 안 됨"; return 1; } ;;
+	file:*) path="$(expand "${c#file:}")"; pat="${path#*~}"; path="${path%%~*}"
+		grep -Eq -- "$pat" "$path" 2>/dev/null || { echo "$path 에 /$pat/ 없음"; return 1; } ;;
+	lines:*) path="$(expand "${c#lines:}")"; want="${path##*=}"; path="${path%=*}"
+		got=0; [ -f "$path" ] && got="$(grep -c '' "$path")"
+		[ "$got" = "$want" ] || { echo "$path 줄 수 $got (기대 $want)"; return 1; } ;;
+	nofile:*) path="$(expand "${c#nofile:}")"; [ ! -e "$path" ] || { echo "$path 가 없어야 함"; return 1; } ;;
+	*) echo "모르는 검사: $c"; return 1 ;;
+	esac
+}
+while IFS=$'\t' read -r spec scope expected stdin; do
+	case "$spec" in ''|'#'*) continue ;; esac
+	# 첫 열은 `파일 [인자…]` — 훅은 인자 없이, scripts/의 도구는 인자를 붙여 부른다
+	hook="${spec%% *}"; args=""; [ "$hook" != "$spec" ] && args="${spec#* }"
 	[ -n "$only" ] && [ "$hook" != "$only" ] && continue
 	n=$((n + 1))
 	src="$hooks_dir/$hook"
@@ -33,6 +54,8 @@ while IFS=$'\t' read -r hook scope expected stdin; do
 		# 배달물에 없으면 씨앗(examples/seeds/*/hooks/)에서 찾는다 — 씨앗 훅도 같은 규약을 지켜야 한다
 		for cand in examples/seeds/*/hooks/"$hook"; do [ -f "$cand" ] && src="$cand" && break; done
 	fi
+	# 훅이 아닌 도구(scripts/)도 같은 형식으로 판정한다 — 회고 루프의 분석 스크립트처럼 훅과 짝으로 도는 것
+	[ ! -f "$src" ] && [ -f "scripts/$hook" ] && src="scripts/$hook"
 	if [ ! -f "$src" ]; then
 		# 씨앗 훅(local-*)은 플래그가 ☑일 때만 복사되고 examples/는 배달하지 않는다 — 어디에도 없으면 건너뛴다.
 		# 배달물 훅(접두사 없음)이 없으면 실패다. 이름을 직접 지정했는데 없으면 아래 0건 검사가 잡는다.
@@ -44,30 +67,44 @@ while IFS=$'\t' read -r hook scope expected stdin; do
 	run="$src"
 	# scope 열: `-` 원본 · `값` SCOPE 치환 · 뒤에 `;self=N`·`;test=CMD`를 붙이면 HARNESS_SELF_EDIT·TEST_CMD도 치환
 	# (배달본은 TEST_CMD가 비어 있어 Stop 훅 판정을 시험하려면 값을 넣은 복사본이 필요하다)
+	# `;대문자이름=값`은 본문의 `대문자이름=…` 줄을 `대문자이름="값"`으로 바꾼다 (예: `-;STORE=$TMP/q` — SCOPE는 그대로)
 	scope_val="${scope%%;*}"; extras=""; [ "$scope" != "$scope_val" ] && extras="${scope#*;}"
 	if [ "$scope" != "-" ]; then
 		run="$tmpdir/$hook.$n"
-		sed "s|^SCOPE=\".*\"|SCOPE=\"$scope_val\"|" "$src" >"$run"
+		cp "$src" "$run"
+		if [ "$scope_val" != "-" ]; then
+			sed -i.bak "s|^SCOPE=\".*\"|SCOPE=\"$scope_val\"|" "$run" && rm -f "$run.bak"
+		fi
 		IFS=';' read -r -a extra_list <<<"$extras"
 		for extra in "${extra_list[@]+"${extra_list[@]}"}"; do
 			case "$extra" in
 			self=*) sed -i.bak "s|^HARNESS_SELF_EDIT=\".*\"|HARNESS_SELF_EDIT=\"${extra#self=}\"|" "$run" && rm -f "$run.bak" ;;
 			test=*) sed -i.bak "s|^TEST_CMD=\".*\"|TEST_CMD=\"${extra#test=}\"|" "$run" && rm -f "$run.bak" ;;
+			[A-Z]*=*) name="${extra%%=*}"; val="$(expand "${extra#*=}")"
+				sed -i.bak "s|^$name=.*|$name=\"$val\"|" "$run" && rm -f "$run.bak" ;;
 			esac
 		done
 		chmod +x "$run"
 	fi
-	stdin="${stdin//\$REPO/$repo_root}"
-	stdin="${stdin//\$HOME/$HOME}"
-	printf '%s' "$stdin" | "$run" >/dev/null 2>"$tmpdir/err"
+	stdin="$(expand "$stdin")"
+	argv=(); [ -n "$args" ] && read -r -a argv <<<"$(expand "$args")"
+	printf '%s' "$stdin" | "$run" "${argv[@]+"${argv[@]}"}" >"$tmpdir/out" 2>"$tmpdir/err"
 	actual=$?
-	label="$stdin"; [ -z "$label" ] && label="(빈 입력)"
-	if [ "$actual" = "$expected" ]; then
+	label="$stdin"; [ -z "$label" ] && label="${args:-(빈 입력)}"
+	# 기대 열: `exit` 또는 `exit;검사;검사…` — 검사 형식은 scripts/hook-cases.txt 머리
+	want_exit="${expected%%;*}"; checks=""; [ "$expected" != "$want_exit" ] && checks="${expected#*;}"
+	why=""
+	[ "$actual" = "$want_exit" ] || why="exit=$actual (기대 $want_exit)"
+	if [ -z "$why" ] && [ -n "$checks" ]; then
+		IFS=';' read -r -a check_list <<<"$checks"
+		for c in "${check_list[@]}"; do why="$(check "$c")" || break; why=""; done
+	fi
+	if [ -z "$why" ]; then
 		pass=$((pass + 1))
-		printf '  ok    %-28s scope=%-8s exit=%s  %s\n' "$hook" "$scope" "$actual" "${label:0:70}"
+		printf '  ok    %-28s scope=%-8s exit=%s  %s\n' "$hook" "${scope:0:8}" "$actual" "${label:0:70}"
 	else
 		fail=$((fail + 1))
-		printf '  FAIL  %-28s scope=%-8s exit=%s (기대 %s)  %s\n' "$hook" "$scope" "$actual" "$expected" "${label:0:70}"
+		printf '  FAIL  %-28s scope=%-8s %s  %s\n' "$hook" "${scope:0:8}" "$why" "${label:0:70}"
 		sed 's/^/          stderr: /' "$tmpdir/err" | head -3
 	fi
 done <"$cases_file"
@@ -100,6 +137,18 @@ if [ -z "$only" ] || [[ "$only" == *deny-* ]]; then
 			sed 's/^/          stderr: /' "$tmpdir/err" | head -3
 		fi
 	done
+fi
+
+# ---- 내장 케이스: 회고 기록 폴더는 커밋되지 않는다 -----------------------------------
+# 회고 루프 훅·분석 스크립트가 .claude/corrections/에 정정 기억 설명과 대화 원문 일부를 쓴다. .gitignore에서 빠지면 그대로 커밋될 수 있다
+# (harness-retro-loop 스펙 불변 조건). 케이스 파일로는 git 설정을 볼 수 없어 여기 둔다.
+if [ -z "$only" ]; then
+	n=$((n + 1))
+	if git check-ignore -q .claude/corrections/x 2>/dev/null; then
+		pass=$((pass + 1)); printf '  ok    %-28s scope=-        exit=0  (.claude/corrections/ 는 git이 무시)\n' "(기록 폴더 무시)"
+	else
+		fail=$((fail + 1)); printf '  FAIL  %-28s scope=-        (.claude/corrections/ 가 .gitignore에 없다 — 대화 원문이 커밋될 수 있다)\n' "(기록 폴더 무시)"
+	fi
 fi
 
 # ---- 내장 케이스: 훅 등록 대조 ---------------------------------------------------

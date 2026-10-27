@@ -8,3 +8,6 @@
 
 # 하네스와 무관한 개인 산출물 (포트폴리오·학습용 문서)
 docs/portfolio/
+
+# 회고 루프 기록 — 정정 기억 설명·대화 원문 일부가 들어간다 (harness-retro-loop 스펙)
+.claude/corrections/

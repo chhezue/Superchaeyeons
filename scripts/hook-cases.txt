@@ -1,9 +1,14 @@
 # test-hooks.sh가 읽는 훅 케이스. 한 줄에 하나, `#`은 주석.
-# 형식: 훅파일<TAB>SCOPE<TAB>기대exit<TAB>stdin
+# 형식: 파일[ 인자…]<TAB>SCOPE<TAB>기대<TAB>stdin
+#   파일: .claude/hooks/ → 씨앗(examples/seeds/*/hooks/) → scripts/ 순으로 찾는다. 공백 뒤는 인자(훅은 보통 없음)
 #   SCOPE: `-`면 훅 원본 그대로, 값이 있으면 훅 본문의 `SCOPE="…"` 줄을 그 값으로 바꾼 임시 복사본으로 실행.
 #          `;self=0`을 붙이면 `HARNESS_SELF_EDIT="…"` 줄도 그 값으로 바꾼다 (예: `.;self=0`)
 #          `;test=CMD`를 붙이면 `TEST_CMD="…"` 줄도 바꾼다 (예: `.;test=`는 빈 값). 여러 개는 `;`로 잇는다
-#   stdin 안의 $REPO는 저장소 루트 절대경로, $HOME은 홈 디렉터리로 치환된다
+#          `;대문자이름=값`은 본문의 `대문자이름=…` 줄을 `대문자이름="값"`으로 바꾼다. SCOPE를 두고 상수만 바꾸려면 `-;STORE=$TMP/q`
+#   기대: 종료 코드, 뒤에 `;검사`를 붙일 수 있다 — `out=`(출력 없음) · `out~ERE` · `out!~ERE` · `file:경로~ERE` ·
+#         `lines:경로=N`(없는 파일은 0줄) · `nofile:경로`. 열이 탭으로 갈려서 ERE의 탭은 `[[:space:]]`로 쓴다
+#   stdin·인자·상수 값·검사 경로 안의 $REPO는 저장소 루트, $HOME은 홈, $TMP는 이번 실행의 임시 폴더로 치환된다.
+#   $TMP는 케이스끼리 공유하므로 앞 케이스가 남긴 상태(정정 대기열 등)를 뒤 케이스가 이어서 본다
 # 훅 공통 규약 — 모든 deny-* 훅은 (1) 정상 범위는 통과 (2) 위반은 exit 2 (3) 판정 불가(JSON 깨짐·키 없음·빈 입력·python3 없음)는 exit 2
 # python3 없음 케이스는 PATH를 바꿔야 해서 이 파일이 아니라 test-hooks.sh 내장 케이스가 deny-* 전부에 자동으로 돌린다.
 # 이 파일은 "훅이 한 번 열렸다"(baro 회고 4)를 재발 방지하는 장치다 — 새 우회 경로를 발견하면 케이스를 먼저 추가한다.
@@ -156,3 +161,21 @@ deny-unverified-completion.sh	.;test=	0	{"transcript_path":"$REPO/scripts/hook-f
 # Stop 훅은 판정 불가면 통과 (명시적 예외 — 대화가 끝나지 못하는 피해가 더 크다)
 deny-unverified-completion.sh	-	0	not json
 deny-unverified-completion.sh	-	0	{"transcript_path":"/nonexistent.jsonl","stop_hook_active":false}
+
+# ---- 회고 루프 (harness-retro-loop 스펙) — 견본은 scripts/hook-fixtures/corrections/ ----
+# auto-correction-queue.sh (PostToolUse) — 기억 폴더의 `type: feedback` 파일이 쓰이면 정정 대기열에 한 줄, 같은 파일이면 횟수만 올린다.
+# 경로 판정이 틀리면 루프 입력이 조용히 빈다. 어떤 입력에도 exit 0이고, 쓰지 못하면 systemMessage로 알린다
+auto-correction-queue.sh	-;STORE=$TMP/q	0;out=;lines:$TMP/q/queue.tsv=1;file:$TMP/q/queue.tsv~^[0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]]sess-1[[:space:]]fb-a\.md[[:space:]]정정 A 설명[[:space:]]1$	{"session_id":"sess-1","tool_name":"Write","tool_input":{"file_path":"$REPO/scripts/hook-fixtures/corrections/.claude/projects/p/memory/fb-a.md","content":"x"}}
+auto-correction-queue.sh	-;STORE=$TMP/q	0;out=;lines:$TMP/q/queue.tsv=1;file:$TMP/q/queue.tsv~fb-a\.md[[:space:]]정정 A 설명[[:space:]]2$	{"session_id":"sess-2","tool_name":"Edit","tool_input":{"file_path":"$REPO/scripts/hook-fixtures/corrections/.claude/projects/p/memory/fb-a.md","old_string":"a","new_string":"b"}}
+auto-correction-queue.sh	-;STORE=$TMP/q	0;out=;lines:$TMP/q/queue.tsv=2;file:$TMP/q/queue.tsv~sess-2[[:space:]]fb-b\.md[[:space:]]정정 B 설명[[:space:]]1$	{"session_id":"sess-2","tool_name":"MultiEdit","tool_input":{"file_path":"$REPO/scripts/hook-fixtures/corrections/.claude/projects/p/memory/fb-b.md","edits":[]}}
+auto-correction-queue.sh	-;STORE=$TMP/q	0;out=;lines:$TMP/q/queue.tsv=2	{"session_id":"sess-2","tool_name":"Write","tool_input":{"file_path":"$REPO/scripts/hook-fixtures/corrections/.claude/projects/p/memory/user-x.md","content":"x"}}
+auto-correction-queue.sh	-;STORE=$TMP/q	0;out=;lines:$TMP/q/queue.tsv=2	{"session_id":"sess-2","tool_name":"Write","tool_input":{"file_path":"$REPO/scripts/hook-fixtures/corrections/not-memory/fb.md","content":"x"}}
+auto-correction-queue.sh	-;STORE=$TMP/q	0;out=;lines:$TMP/q/queue.tsv=2	{"session_id":"sess-2","tool_name":"NotebookEdit","tool_input":{"notebook_path":"$REPO/a.ipynb","new_source":"x"}}
+auto-correction-queue.sh	-;STORE=$TMP/q	0;out~systemMessage;lines:$TMP/q/queue.tsv=2	not json
+auto-correction-queue.sh	-;STORE=/dev/null/q	0;out~systemMessage;out~정정 대기열에 쓰지 못했다	{"session_id":"sess-3","tool_name":"Write","tool_input":{"file_path":"$REPO/scripts/hook-fixtures/corrections/.claude/projects/p/memory/fb-a.md","content":"x"}}
+# auto-correction-notice.sh (SessionStart) — 세 값이 모두 0이면 출력 없음(매 세션 토큰이 들지 않게), 있으면 한 줄을 사용자 화면과 Claude에 함께
+auto-correction-notice.sh	-;STORE=$REPO/scripts/hook-fixtures/corrections/store-zero	0;out=	{"session_id":"cur","transcript_path":"$TMP/no-sessions/cur.jsonl","source":"startup"}
+auto-correction-notice.sh	-;STORE=$REPO/scripts/hook-fixtures/corrections/store-zero	0;out=	not json
+auto-correction-notice.sh	-;STORE=$REPO/scripts/hook-fixtures/corrections/store-pending	0;out~systemMessage;out~additionalContext;out~2026-10-20;out~세션 0개;out~정정 기억 2건;out~검토할 후보 1건	{"session_id":"cur","transcript_path":"$TMP/no-sessions/cur.jsonl","source":"startup"}
+# 상태 파일이 없으면(분석을 한 번도 안 돌림) 첫 실행 안내 — 위 대기열 케이스가 $TMP/q에 2줄을 남겼다
+auto-correction-notice.sh	-;STORE=$TMP/q	0;out~한 번도;out~세션 2개;out~정정 기억 2건;out~검토할 후보 0건	{"session_id":"cur","transcript_path":"$REPO/scripts/hook-fixtures/corrections/sessions/cur.jsonl","source":"startup"}

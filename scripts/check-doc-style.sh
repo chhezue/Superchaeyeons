@@ -50,8 +50,8 @@ case "${1:-}" in
 	;;
 esac
 
-# examples/는 견본이라 검사하지 않는다. 존재하는 파일만 남긴다.
-files="$(printf '%s\n' "$files" | grep -v '^examples/' | while IFS= read -r f; do [ -n "$f" ] && [ -f "$f" ] && printf '%s\n' "$f"; done)"
+# examples/는 견본이고 scripts/hook-fixtures/는 훅 테스트 입력(정정 기억 모양의 파일 등)이라 검사하지 않는다. 존재하는 파일만 남긴다.
+files="$(printf '%s\n' "$files" | grep -v -e '^examples/' -e '^scripts/hook-fixtures/' | while IFS= read -r f; do [ -n "$f" ] && [ -f "$f" ] && printf '%s\n' "$f"; done)"
 [ -z "$files" ] && { echo "검사할 마크다운 파일이 없습니다."; exit 0; }
 
 # 파일 목록은 임시 파일로 넘긴다 — heredoc이 stdin을 차지하므로 파이프로는 전달할 수 없다

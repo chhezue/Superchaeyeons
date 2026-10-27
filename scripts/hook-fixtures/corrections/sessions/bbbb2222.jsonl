@@ -1,0 +1,2 @@
+{"type": "user", "message": {"role": "user", "content": "회고는 왜 자동으로 안 해요?"}}
+{"type": "assistant", "message": {"role": "assistant", "content": [{"type": "text", "text": "확인하겠습니다"}]}}

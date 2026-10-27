@@ -31,7 +31,7 @@ skip="${PORTABILITY_SKIP:-}"
 # 래칫: 실측 합계를 상한으로 못 박아 늘어나는 커밋은 막고, 줄이는 작업은 이 값을 낮추며 진행한다. 이유 없이 올리지 않는다.
 # 이력: 2026-09-06 65,000B(P6 실측 63,096B) → 같은 날 토큰 최적화(라우터 통합·요약 표 제거·priority 절 local화) 뒤 52,000B
 #       → 2026-10-05 경량화 감사(규칙 3개 통합·워크플로 규모 단계·유지보수 열 삭제, 실측 27,341B) 뒤 28,000B
-#       → 2026-10-27 G4 상세를 preflight로·map 설명을 rules/README.md로·guardrails 예시 축소(실측 24,460B) 뒤 25,000B.
+#       → 2026-10-27 G4 상세를 verify-work로·map 설명을 rules/README.md로·guardrails 예시 축소(실측 24,460B) 뒤 25,000B.
 budget_bytes="${PORTABILITY_BUDGET_BYTES:-25000}"
 # 상한이 확정됐으므로 초과는 기본 차단이다. 이행 중 한 번 넘겨야 하면 PORTABILITY_BUDGET_STRICT=0.
 strict_budget="${PORTABILITY_BUDGET_STRICT:-1}"
@@ -72,7 +72,7 @@ fi
 
 # ---- 1. 검사 대상 수집 -------------------------------------------------------
 # 배달물 = 새 프로젝트로 그대로 복사되는 것 전부. 프로젝트가 고유 사실을 적는 자리(harness-map.md · .claude/ 안의 local-* 파일)와
-# 견본(examples/)만 제외한다. 스택 씨앗은 examples/seeds/ 에 살고, harness-init이 .claude/rules·agents·hooks로 복사할 때도 local- 접두사를
+# 견본(examples/)만 제외한다. 스택 씨앗은 examples/seeds/ 에 살고, init-harness가 .claude/rules·agents·hooks로 복사할 때도 local- 접두사를
 # 유지하므로(씨앗 파일명이 이미 local-*) 복사 뒤에도 검사 밖이다 — 접두사가 곧 층 표시다.
 # 붙여 쓰는 프로젝트(하네스 자기 수정 ❌ = HARNESS_SELF_EDIT "0")에서는 두 가지가 프로젝트 값 자리라 검사 밖이다.
 #   .github/CONTRIBUTING.md — 그 프로젝트의 {{Git 컨벤션 SSOT}}. 원본 저장소(☑)에서는 견본이라 검사한다

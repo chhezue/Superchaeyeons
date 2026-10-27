@@ -1,6 +1,6 @@
 # Harness Map — 채운 예 (baro-farm-be · `baro-ai`)
 
-`harness-init` 1단계 실측(`scripts/harness-init-probe.sh ~/IdeaProjects/baro-farm-be baro-ai`, 2026-09-06)을 근거로 2단계 제안 형태로 채운 견본이다. 원본 저장소와 네 축이 전부 반대쪽이라, 슬롯·플래그만으로 표현되는지 확인하는 두 번째 케이스다. 실제 baro 저장소의 `harness-map.md`가 아니라 **이 하네스 v2가 baro에 붙었을 때의 모습**이다. 사람이 확인해야 할 값은 `[확인 필요]`로 남겼다.
+`init-harness` 1단계 실측(`scripts/init-harness-probe.sh ~/IdeaProjects/baro-farm-be baro-ai`, 2026-09-06)을 근거로 2단계 제안 형태로 채운 견본이다. 원본 저장소와 네 축이 전부 반대쪽이라, 슬롯·플래그만으로 표현되는지 확인하는 두 번째 케이스다. 실제 baro 저장소의 `harness-map.md`가 아니라 **이 하네스 v2가 baro에 붙었을 때의 모습**이다. 사람이 확인해야 할 값은 `[확인 필요]`로 남겼다.
 
 ## 축
 

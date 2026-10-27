@@ -49,7 +49,7 @@
 
 - [x] **`scripts/dev.sh` (core)** — 스택에 묶이지 않는 실행 엔진이다. 동사·종료 코드·출력 형식·설정 키 목록의 SSOT는 이 파일 머리다
   - 동사: `build` · `test [인자…]` · `fmt` · `deps` · `start` · `stop` · `status` · `logs [N]`. 설정 값이 `없음 — 이유`인 동사는 그 이유를 한 줄로 출력하고 exit 0으로 끝낸다
-  - 종료 코드: `0` 성공 · `1` 실패 · `2` 환경 없음(설정 파일 없음 · 필수 키 없음 · 컨테이너 런타임 없음 · 포트 점유 · 위험 명령 차단). `2`는 `preflight`의 "검증하지 못한 것"으로 넘긴다
+  - 종료 코드: `0` 성공 · `1` 실패 · `2` 환경 없음(설정 파일 없음 · 필수 키 없음 · 컨테이너 런타임 없음 · 포트 점유 · 위험 명령 차단). `2`는 `verify-work`의 "검증하지 못한 것"으로 넘긴다
   - 출력: 성공하면 `dev <동사>: 통과 — <요약>` 한 줄이다. 실패하면 `dev <동사>: 실패 <개수>` 한 줄, 실패 항목마다 이름과 원인 한 줄(최대 10개, 줄당 최대 300자), 마지막에 전체 로그 경로를 쓴다. 실패 줄은 `deny-unverified-completion.sh`의 `FAILED` 정규식에 걸리고, 성공 줄은 걸리지 않는다
   - 테스트 요약: `TEST_REPORT` 값이 `junit:<경로 패턴>`이면 JUnit XML(여러 언어의 테스트 도구가 내보내는 공통 결과 형식)을 `python3`으로 읽어 실패 항목을 만든다. `last-line`이면 명령 출력의 마지막 줄을 요약으로 쓴다
   - 전체 로그: 동사마다 `<LOG_DIR>/<동사>.log`에 덮어쓴다. 에이전트는 필요할 때만 이 파일을 grep한다
@@ -59,15 +59,15 @@
 - [x] **엔진 테스트** — `scripts/test-dev.sh`를 둔다. 가짜 명령(성공·실패하는 작은 셸 스크립트, 가짜 JUnit XML, `python3 -m http.server`로 띄운 헬스 응답)을 가리키는 임시 `dev.conf`로 동사·종료 코드·출력 형식을 판정한다. `scripts/verify.sh`의 4번째 단계로 넣는다
 - [x] **이 저장소의 `scripts/dev.conf`** — 결정 6대로 둔다. `LOG_DIR`은 `.dev/`(`.gitignore`에 추가)
 - [x] **`java-spring` 씨앗** — `examples/seeds/java-spring/dev.conf`. 키마다 한 줄 주석으로 무엇을 적는지 설명한다. 도메인·프로젝트 이름은 넣지 않는다
-- [x] **`_template` 씨앗** — `examples/seeds/_template/dev.conf`. 키 목록과 `{…}` 자리표시자만 둔다(구현 시 추가: `dev.sh`는 `{…}` 값이 남아 있으면 exit 2로 멈춘다 — 빈 값이면 빈 명령이 성공으로 지나가기 때문이다). 씨앗이 없는 스택은 `harness-init`이 CI 워크플로의 실제 명령으로 채운다
+- [x] **`_template` 씨앗** — `examples/seeds/_template/dev.conf`. 키 목록과 `{…}` 자리표시자만 둔다(구현 시 추가: `dev.sh`는 `{…}` 값이 남아 있으면 exit 2로 멈춘다 — 빈 값이면 빈 명령이 성공으로 지나가기 때문이다). 씨앗이 없는 스택은 `init-harness`가 CI 워크플로의 실제 명령으로 채운다
 - [x] **TripFit에서 검증** — core `dev.sh`와 `java-spring` 씨앗 `dev.conf`를 TripFit 클론에 복사하고, 아래 "검증 시나리오"를 모두 실행한다. TripFit에 커밋하지 않는다
 - [x] **완료 검사 훅 수정** — `deny-unverified-completion.sh`가 파일 이름이 아니라 `TEST_CMD` 전체(모든 단어)와 비교하게 한다. `TEST_CMD` 뒤에 인자가 더 붙은 실행은 전체 테스트로 보지 않는다. 훅의 `TEST_CMD` 값은 `scripts/dev.sh test`로 바꾼다
 - [x] **훅 케이스** — 위 훅 수정 전에 픽스처를 먼저 추가한다: `dev.sh test` 실행 → 통과 · `dev.sh build`만 실행 → 차단 · `dev.sh test --tests X`만 실행 → 차단 · 예전 값(`scripts/verify.sh`)만 실행 → 차단 · 테스트 뒤 heredoc 커밋 메시지에 `>`가 있음 → 통과(결정 9). 기존 픽스처의 테스트 실행 명령은 새 `TEST_CMD`로 바꾸고 판정(기대 종료 코드)은 그대로 둔다
 - [x] **슬롯 값** — `harness-map.md` 명령 슬롯 4개의 값을 `scripts/dev.sh <동사>`로 바꾼다. "훅 상수와 짝" 목록의 설명도 그에 맞게 고친다. `scripts/git-hooks/pre-commit`의 `FORMAT_CMD` 짝 설명도 고친다(이 저장소는 포맷 명령이 없으므로 값은 비운 채로 둔다). (구현 시 정정: 이 저장소는 빌드·포맷·의존성 조회 슬롯을 `(없음)`으로 둔다 — `dev.conf`에도 값이 없기 때문이다. 규칙은 "값이 있으면 `scripts/dev.sh <동사>`"로 `harness-map.md` 명령 슬롯 절 머리에 적었다)
 - [x] **이식성 검사 대상** — `check-portability.sh`의 배달물 목록에 `scripts/dev.sh`를 추가해서, core 엔진에 스택 이름·경로가 들어오지 않게 한다
 - [x] **행동 규칙 한 줄** — `core-workflow.md` "구현" 절에 "빌드·테스트·실행은 `scripts/dev.sh`로만 부르고, 같은 일을 하는 명령을 직접 조합하지 않는다. 명령을 바꿀 일이 생기면 `dev.conf`를 고친다"를 넣는다. always-load 예산(현재 27,362B / 상한 28,000B) 안에서 넣는다
-- [x] **`debug` 연결** — "로컬 재현" 단계에 "앱을 띄워 재현할 때는 `scripts/dev.sh start`, 끝나면 `stop`"을 넣는다
-- [x] **`harness-init` 연결** — 1단계 실측표의 CI 명령으로 `dev.conf`를 채운다(씨앗이 있으면 씨앗 `dev.conf`에서 시작한다). 산출물 체크리스트에 "`scripts/dev.sh test`·`build`의 종료 코드가 0 또는 1이다(2가 아니다)"를 추가한다
+- [x] **`fix-bug` 연결** — "로컬 재현" 단계에 "앱을 띄워 재현할 때는 `scripts/dev.sh start`, 끝나면 `stop`"을 넣는다
+- [x] **`init-harness` 연결** — 1단계 실측표의 CI 명령으로 `dev.conf`를 채운다(씨앗이 있으면 씨앗 `dev.conf`에서 시작한다). 산출물 체크리스트에 "`scripts/dev.sh test`·`build`의 종료 코드가 0 또는 1이다(2가 아니다)"를 추가한다
 - [x] **문서 갱신** — `AGENTS.md`(배달물 표의 `scripts/` 행, "항상 `scripts/verify.sh`" 줄) · `AGENTS.template.md` Commands 블록 · `README.md` 배달물 표 · `examples/seeds/README.md`·`java-spring/README.md`(복사 표와 "씨앗 대조" 표에 `dev.conf` 행) · `docs/harness/README.md` "지금의 실제 동작"(완료 검사 훅 판정 변경을 쉬운 말로 설명 — STOP §3)
 
 ### Nice to Have

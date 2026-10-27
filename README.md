@@ -10,8 +10,8 @@ AI 코딩 에이전트에게 말로만 "주의하라"고 당부하면 같은 실
 |-------------------------|---------------------------|
 | 위험한 명령 실행 (`git push -f`, `rm -rf`, `DROP TABLE`) | **훅(`deny-*`)이 셸 레벨에서 결정적으로 차단** |
 | 테스트도 안 돌리고 "구현 완료했습니다" 거짓말 | **`Stop` 훅이 테스트 미실행 시 작업을 강제 되돌림** |
-| 기획·스펙 문서와 코드가 다를 때 임의 구현 | **스스로 판단하지 않고 작업을 멈춘 뒤 질문(`ask`)** |
-| "알아서 적당히 만들어줘" 같은 모호한 지시로 폭주 | **결정이 빈 요청이면 멈추고 질문하는 규칙 + 인터뷰 스킬(`ask`)** |
+| 기획·스펙 문서와 코드가 다를 때 임의 구현 | **스스로 판단하지 않고 작업을 멈춘 뒤 질문(`ask-decisions`)** |
+| "알아서 적당히 만들어줘" 같은 모호한 지시로 폭주 | **결정이 빈 요청이면 멈추고 질문하는 규칙 + 인터뷰 스킬(`ask-decisions`)** |
 | 방금 수정한 자기 훅이나 설정을 스스로 해제 | **붙여 쓰는 프로젝트는 파일 쓰기 도구로 훅·설정을 고치지 못하게 훅이 막음** (Bash 편집은 규칙으로만 금지) |
 
 ## 3단계 빠른 시작
@@ -28,10 +28,10 @@ cp -R .claude docs/templates scripts <새-프로젝트>/
 
 ### 2단계: 자동 환경 측정과 슬롯 설정
 
-새 프로젝트에서 Claude Code를 켜고 `harness-init` 스킬을 실행합니다.
+새 프로젝트에서 Claude Code를 켜고 `init-harness` 스킬을 실행합니다.
 
 ```text
-/harness-init
+/init-harness
 ```
 
 저장소를 자동으로 실측해 언어·스택·테스트 명령을 파악하고, [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md)의 설정값(축·슬롯·능력 플래그)을 제안합니다. 승인하면 프로젝트 맞춤 설정이 끝납니다.
@@ -50,15 +50,15 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 
 | 단계 | 작업 내용 | 하네스의 통제 장치 |
 |:---:|---|---|
-| **0** | **저장소 탐색 (Exploration)**<br>구조·스택·컨벤션을 읽어 멘탈 모델 수립 | `harness-init` 자동 실측 및 진입 문서 확인 순서 |
-| **1** | **요구사항 분석 (Requirements)**<br>모호한 부분을 질문하고 범위 확정 | `ask` 스킬 (라운드 인터뷰) |
-| **2** | **불변 조건 정의 (Invariant & Acceptance Criteria)**<br>절대 깨지면 안 되는 조건과 완료 기준 확정 | G2 승인 게이트 & `specify` 스펙 문서 |
+| **0** | **저장소 탐색 (Exploration)**<br>구조·스택·컨벤션을 읽어 멘탈 모델 수립 | `init-harness` 자동 실측 및 진입 문서 확인 순서 |
+| **1** | **요구사항 분석 (Requirements)**<br>모호한 부분을 질문하고 범위 확정 | `ask-decisions` 스킬 (라운드 인터뷰) |
+| **2** | **불변 조건 정의 (Invariant & Acceptance Criteria)**<br>절대 깨지면 안 되는 조건과 완료 기준 확정 | G2 승인 게이트 & `write-spec` 스펙 문서 |
 | **3** | **외부 지식 조사 (Research)**<br>최신 라이브러리 문서·공식 사양 확인 | G1 리서치 게이트 & `researcher` 에이전트 |
 | **4** | **결정 기록 (ADR)**<br>설계 대안 비교 및 트레이드오프 기록 | `{{결정 기록}}` 슬롯 (ADR 템플릿) |
 | **5** | **컨텍스트 갱신 (Rules Update)**<br>새로 합의된 결정을 규칙 문서에 동기화 | G4 문서 갱신 점검 |
 | **6** | **작업 분해 (Task Breakdown)**<br>독립 검증 가능한 단위로 태스크 쪼개기 | G2 다단계 계획 (`1. [단계] → verify: [확인]`) — 강제 수단은 없음 |
-| **7** | **실행 환경 사전 검증 (Preflight)**<br>구현 전 빌드·의존성·테스트 동작 확인 | `preflight` 사전 모드 |
-| **8** | **핵심 구현 루프 (Task Loop)**<br>계획 ➜ 선행 테스트 ➜ 구현 ➜ 실행 ➜ 셀프리뷰 ➜ 커밋 | `tdd` 스킬(승인된 테스트 먼저 지점·버그 수정) · `core-testing.md` · 커밋 전 승인 |
+| **7** | **실행 환경 사전 검증 (Preflight)**<br>구현 전 빌드·의존성·테스트 동작 확인 | `verify-work` 사전 모드 |
+| **8** | **핵심 구현 루프 (Task Loop)**<br>계획 ➜ 선행 테스트 ➜ 구현 ➜ 실행 ➜ 셀프리뷰 ➜ 커밋 | `test-first` 스킬(승인된 테스트 먼저 지점·버그 수정) · `core-testing.md` · 커밋 전 승인 |
 | **9** | **동시성·부하·실패 테스트**<br>단위 테스트로 잡히지 않는 한계 검증 | 공통 부품에는 없음. Java 씨앗의 스택 리뷰어가 트랜잭션 경계·동시 쓰기 충돌(lost update)을 점검 |
 | **10**| **독립 코드 리뷰 (Independent Review)**<br>확증 편향 없는 제3의 시선으로 검토 | 구현 대화를 모르는 별도 컨텍스트 리뷰 — 코드는 `code-review`·`simplify`, 문서는 `doc-reviewer` |
 | **11**| **문서화 및 작업 보고 (Report)**<br>사용자 문서와 작업 한계·결정사항 기록 | `report.md` (검증하지 못한 것 명시) |
@@ -78,7 +78,7 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 ```text
 [ 수정 권한 3층 구조 ]
 - Core (부품) : core-*.md, 공통 훅, 공통 스킬 (수정 금지, 100% 이식성 보장)
-- Map (연결)  : harness-map.md (harness-init 스킬이 프로젝트 실측값으로 채움)
+- Map (연결)  : harness-map.md (init-harness 스킬이 프로젝트 실측값으로 채움)
 - Local (고유): local-*.md (각 프로젝트 고유의 도메인·기술 스택 규칙)
 ```
 
@@ -91,7 +91,7 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 | 경로 | 내용 | 배달 여부 |
 |------|------|:---------:|
 | `.claude/rules/` | 행동 규칙 (`core-*`, `harness-map.md`, `doc-writing.md`) — 목록은 [`.claude/rules/README.md`](.claude/rules/README.md) | 배달 |
-| `.claude/skills/` | 표준 워크플로 스킬 (`harness-init`, `ask`, `specify`, `tdd`, `preflight` 등) | 배달 |
+| `.claude/skills/` | 표준 워크플로 스킬 (`init-harness`, `ask-decisions`, `write-spec`, `test-first`, `verify-work` 등) | 배달 |
 | `.claude/agents/` | 보조 에이전트 (`researcher`, `test-writer`, `doc-reviewer`) | 배달 |
 | `.claude/hooks/` | 결정적 차단 훅 (`deny-*`) | 배달 |
 | `scripts/` | 이식성·문서·훅 검사 스크립트, git 훅 설치기, 빌드·실행 엔진 `dev.sh` (프로젝트 값은 `dev.conf`) | 배달 |
@@ -113,4 +113,4 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 - [하네스 레이어와 현재 동작](docs/harness/README.md): 4개 레이어와 지금 실제로 일어나는 일
 - [하네스 엔지니어링 기록](docs/harness-engineering.md): 설계 철학과 실제 인시던트 해결 과정
 - [참고 자료 및 출처](docs/references.md): 영감을 받은 선행 연구와 차용한 개념
-- [상세 적용 순서](AGENTS.md): harness-init 단계별 상세 동작 원리
+- [상세 적용 순서](AGENTS.md): init-harness 단계별 상세 동작 원리

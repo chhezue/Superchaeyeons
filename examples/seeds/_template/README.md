@@ -1,6 +1,6 @@
 # lang 팩 템플릿
 
-`harness-init` 3단계가 실측한 lang 축에 **맞는 씨앗이 없을 때** 채우는 골격이다. 씨앗은 특정 스택에서 검증된 규칙이고, 이 템플릿은 어느 스택이든 lang 팩이 갖춰야 할 **절의 목록**이다. Node·Python·Go 프로젝트에 하네스를 붙이면 `harness-init`이 이 골격을 복사해 실측값으로 채운다 — 검증되지 않은 스택의 씨앗을 미리 지어 두지 않는 이유는 `docs/out-of-scope/README.md`에 있다.
+`init-harness` 3단계가 실측한 lang 축에 **맞는 씨앗이 없을 때** 채우는 골격이다. 씨앗은 특정 스택에서 검증된 규칙이고, 이 템플릿은 어느 스택이든 lang 팩이 갖춰야 할 **절의 목록**이다. Node·Python·Go 프로젝트에 하네스를 붙이면 `init-harness`가 이 골격을 복사해 실측값으로 채운다 — 검증되지 않은 스택의 씨앗을 미리 지어 두지 않는 이유는 `docs/out-of-scope/README.md`에 있다.
 
 ## 파일
 
@@ -23,7 +23,7 @@ core 규칙이 `[플래그: X]` 배지로 부르는 절은 **이름을 그대로
 | 패키지 · 모듈 구조 | 새 코드가 들어갈 자리 | `core-workflow` 구현 |
 | 레이어 규칙 | 계층별 하는 일·하지 않는 일, 정적 검사가 이미 잡는 것 | `core-workflow` 구현 · 스택 리뷰어 |
 | 주석 규칙 | 이 언어의 문서화 주석 문법·필드 주석 위치 (원칙은 `core-code-comments.md`) | `core-code-comments` · `core-reporting` 적용 안 함 표 |
-| 테스트 규칙 | 실행 명령 · 위치 · "유의미한 테스트만" 기준 | `core-workflow` G3 · `preflight` |
+| 테스트 규칙 | 실행 명령 · 위치 · "유의미한 테스트만" 기준 | `core-workflow` G3 · `verify-work` |
 | **같은 턴 즉시 갱신** — 에러 코드 · 권한 게이트·활동 기록 | 계약에 닿는 변경을 같은 턴에 끝내는 스택별 체크 표 | `core-guardrails` §1.7 · 플래그 2개 |
 | **DB 스키마 정책** | 운영 데이터 유무에 따른 스키마 SSOT · ERD 개선 제안 기준 | 플래그 "DB 마이그레이션 금지" · `core-guardrails` §2 |
 | **API 계약 변경** | 계약 diff 도구 · 사유 트레일러 · 프론트 알림 | 플래그 "API 계약 보호" · `core-workflow` G3 |

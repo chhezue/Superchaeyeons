@@ -6,13 +6,13 @@ paths:
 
 # Testing
 
-테스트를 어떻게 돌리고, 어디에 두고, 어떻게 표기하는지 정한 규칙이다. 무엇을 확인하는 테스트인가(S1~S8)는 `core-testing.md`, 테스트 먼저 순서는 `tdd` 스킬이 SSOT이고, 이 파일은 그 원칙의 이 스택 표기만 갖는다.
+테스트를 어떻게 돌리고, 어디에 두고, 어떻게 표기하는지 정한 규칙이다. 무엇을 확인하는 테스트인가(S1~S8)는 `core-testing.md`, 테스트 먼저 순서는 `test-first` 스킬이 SSOT이고, 이 파일은 그 원칙의 이 스택 표기만 갖는다.
 
 ## 실행
 
 ```bash
 ./gradlew test          # 전체
-./gradlew test --tests {루트패키지}.auth.service.FooServiceTest   # tdd RED 단계: 테스트 하나만
+./gradlew test --tests {루트패키지}.auth.service.FooServiceTest   # test-first RED 단계: 테스트 하나만
 ```
 
 ## 프로필
@@ -43,6 +43,6 @@ void create{Domain}_whenInvalidRequest_throwsBadRequest() { ... }
 
 ## 완료 기준
 
-- 스펙 "테스트 먼저 지점"은 `tdd` 증거 표로 확인한다
+- 스펙 "테스트 먼저 지점"은 `test-first` 증거 표로 확인한다
 - 새 REST endpoint → `@SpringBootTest` 통합 테스트로 성공·거절 케이스 (단순 위임만 하는 service 메서드에 별도 단위 테스트를 만들지 않는다)
 - `./gradlew test` 통과 후 PR/완료 보고

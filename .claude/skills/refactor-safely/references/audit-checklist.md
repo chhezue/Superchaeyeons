@@ -1,6 +1,6 @@
 # Audit Checklist
 
-`safe-refactor` 스킬의 1단계(Audit) 서브에이전트 프롬프트에 그대로 포함하는 점검 항목 14개. 스택 무관하게 쓴 목록이라, 프레임워크별 구체 관례(트랜잭션 표기·ORM 설정·주입 방식)는 lang 팩 규칙이 채우고 감사 프롬프트에 그 파일을 함께 넘긴다. 불변 조건은 [`SKILL.md`](../SKILL.md)가, A/B/C/D 분류 기준과 산출물 포맷은 [`audit-template.md`](audit-template.md)가 SSOT다.
+`refactor-safely` 스킬의 1단계(Audit) 서브에이전트 프롬프트에 그대로 포함하는 점검 항목 14개. 스택 무관하게 쓴 목록이라, 프레임워크별 구체 관례(트랜잭션 표기·ORM 설정·주입 방식)는 lang 팩 규칙이 채우고 감사 프롬프트에 그 파일을 함께 넘긴다. 불변 조건은 [`SKILL.md`](../SKILL.md)가, A/B/C/D 분류 기준과 산출물 포맷은 [`audit-template.md`](audit-template.md)가 SSOT다.
 
 ## 1. 중복 코드
 

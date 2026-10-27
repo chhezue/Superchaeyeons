@@ -14,28 +14,28 @@
 
 ## 산출물 등록부
 
-위쪽은 하네스가 배달하는 산출물이라 **경로 패턴이 모든 프로젝트에 같다** — `{{슬롯}}`만 `harness-map.md` 값으로 읽으면 된다. 아래쪽 "프로젝트 문서" 행은 **값 자체가 저장소마다 다르다** — `harness-init`이 채우며, 여기엔 이 저장소(하네스 템플릿 자체)의 `harness-map.md` 값을 그대로 옮겨 적었다.
+위쪽은 하네스가 배달하는 산출물이라 **경로 패턴이 모든 프로젝트에 같다** — `{{슬롯}}`만 `harness-map.md` 값으로 읽으면 된다. 아래쪽 "프로젝트 문서" 행은 **값 자체가 저장소마다 다르다** — `init-harness`가 채우며, 여기엔 이 저장소(하네스 템플릿 자체)의 `harness-map.md` 값을 그대로 옮겨 적었다.
 
 | 산출물 | 만드는 것 | 저장 경로 | 유형 | 템플릿 |
 |--------|-----------|-----------|------|--------|
-| 기능 스펙 | `specify` 스킬 (범위를 미룰 때의 Draft 포함) | `{{스펙 저장소}}/{unit}/{kebab-case}.md` | 참조 | 골격은 [`spec-template.md`](../../.claude/skills/specify/references/spec-template.md) (참조 유형의 작업 산출물 판) |
-| 아키텍처 감사 | `safe-refactor` 스킬 (Audit 단계) | `{{감사 로그}}/{unit}/{NNN}-{kebab-topic}.md` (작업 단위 안에서 001부터 증가) | 문제 해결 | 골격은 [`audit-template.md`](../../.claude/skills/safe-refactor/references/audit-template.md) (문제 해결 유형의 작업 산출물 판) |
-| 리팩터 반영 이력 | `safe-refactor` 스킬 (G4 Report) | `{{감사 로그}}/{unit}/refactor-log.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
-| 하네스 회고 백로그 | `retro` 스킬 | `{{문서 루트}}/audits/harness-retro.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
+| 기능 스펙 | `write-spec` 스킬 (범위를 미룰 때의 Draft 포함) | `{{스펙 저장소}}/{unit}/{kebab-case}.md` | 참조 | 골격은 [`spec-template.md`](../../.claude/skills/write-spec/references/spec-template.md) (참조 유형의 작업 산출물 판) |
+| 아키텍처 감사 | `refactor-safely` 스킬 (Audit 단계) | `{{감사 로그}}/{unit}/{NNN}-{kebab-topic}.md` (작업 단위 안에서 001부터 증가) | 문제 해결 | 골격은 [`audit-template.md`](../../.claude/skills/refactor-safely/references/audit-template.md) (문제 해결 유형의 작업 산출물 판) |
+| 리팩터 반영 이력 | `refactor-safely` 스킬 (G4 Report) | `{{감사 로그}}/{unit}/refactor-log.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
+| 하네스 회고 백로그 | `improve-harness` 스킬 | `{{문서 루트}}/audits/harness-retro.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 아키텍처 결정 (ADR) | 사용자 승인 후 수동 작성 | `{{결정 기록}}/{번호}-{kebab-case}.md` | 설명 | [`explanation-doc.md`](explanation-doc.md) "작업 산출물로 쓸 때" |
-| 하네스 슬롯 값 | `harness-init` 스킬 | `.claude/rules/harness-map.md` | 참조 | 파일 자체가 골격 |
+| 하네스 슬롯 값 | `init-harness` 스킬 | `.claude/rules/harness-map.md` | 참조 | 파일 자체가 골격 |
 | 작업 보고서 (`report.md`) | G4 — L 규모(3파일 이상·API·DB) 작업 끝에 | `{{문서 루트}}/reports/{YYYY-MM-DD}-{kebab-topic}.md` | 참조 | [`reference-doc.md`](reference-doc.md) "작업 보고서" |
-| 안 하기로 한 것 | 검토 후 기각 결정이 날 때 (G4·`retro`) | `{{문서 루트}}/out-of-scope/README.md` — 이 저장소 이력, 배달 안 함 | 참조 | [`reference-doc.md`](reference-doc.md) |
+| 안 하기로 한 것 | 검토 후 기각 결정이 날 때 (G4·`improve-harness`) | `{{문서 루트}}/out-of-scope/README.md` — 이 저장소 이력, 배달 안 함 | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 하네스 설계 배경 | 사용자 승인 후 수동 작성 | `{{문서 루트}}/harness/README.md` · `harness-engineering.md` — 이 저장소 이력, 배달 안 함 | 설명 | [`explanation-doc.md`](explanation-doc.md) |
 | 폴더 인덱스 | 사용자 승인 후 수동 작성 | `{{문서 루트}}/README.md` · 하위 `README.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 참조 자료 (차용 출처) | 외부 저장소·문서를 참고해 하네스를 바꿀 때 | `{{문서 루트}}/references.md` — 이 저장소 이력, 배달 안 함 | 참조 | [`reference-doc.md`](reference-doc.md) |
-| *프로젝트 문서 — `harness-init`이 채운다* | | | | |
+| *프로젝트 문서 — `init-harness`가 채운다* | | | | |
 | 제품 범위 | 사용자 승인 후 수동 작성 | `{{제품 범위}}` — 이 저장소: `AGENTS.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 용어집 | 사용자 승인 후 수동 작성 | `{{용어집}}` — 이 저장소: (없음) | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 클라이언트 전제 | 사용자 승인 후 수동 작성 | `{{클라이언트 전제}}` — 이 저장소: (없음) | 설명 | [`explanation-doc.md`](explanation-doc.md) |
 | 현재동작 요약 | 보안·아키텍처 변경과 같은 턴 | `{{현재동작 요약}}` — 이 저장소: `docs/harness/README.md` | 설명 | [`explanation-doc.md`](explanation-doc.md) |
 
-**마크다운을 만들지 않는 것들.** 훅은 stderr 메시지만 내보내고 파일을 쓰지 않는다. `preflight`·`debug` 스킬과 `doc-reviewer`·`researcher`·스택 리뷰어 에이전트는 결과를 채팅으로만 보고한다. 이들의 결과를 문서로 남겨야 한다고 판단되면 위 등록부에 행을 추가하는 것이 먼저다 — 임의 경로에 파일을 만들지 않는다.
+**마크다운을 만들지 않는 것들.** 훅은 stderr 메시지만 내보내고 파일을 쓰지 않는다. `verify-work`·`fix-bug` 스킬과 `doc-reviewer`·`researcher`·스택 리뷰어 에이전트는 결과를 채팅으로만 보고한다. 이들의 결과를 문서로 남겨야 한다고 판단되면 위 등록부에 행을 추가하는 것이 먼저다 — 임의 경로에 파일을 만들지 않는다.
 
 ## 유형별 템플릿
 

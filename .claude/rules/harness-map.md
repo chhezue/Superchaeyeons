@@ -1,6 +1,6 @@
 # Harness Map — 이 프로젝트의 슬롯
 
-규칙(`core-*.md`)은 경로·명령을 `{{역할 이름}}`으로 부르고, 이 파일이 실제 값을 잇는다. **새 프로젝트가 채우는 파일은 이것 하나다** (`harness-init` 스킬 · 채운 예: `examples/baro/harness-map.md`).
+규칙(`core-*.md`)은 경로·명령을 `{{역할 이름}}`으로 부르고, 이 파일이 실제 값을 잇는다. **새 프로젝트가 채우는 파일은 이것 하나다** (`init-harness` 스킬 · 채운 예: `examples/baro/harness-map.md`).
 
 `(없음)`인 슬롯을 규칙이 요구하면 멈추고 사용자에게 묻는다. 이 파일을 고칠 때의 규칙과 같은 턴에 고칠 훅 상수 짝은 `.claude/rules/README.md` "harness-map.md 고치기"에 있다 — 이 파일을 열면 함께 실린다.
 
@@ -61,10 +61,10 @@
 | **DB 마이그레이션 금지** | ❌ | `core-guardrails` §2 → lang 팩 "DB 스키마 정책" |
 | **에러 코드 카탈로그 동시갱신** | ❌ | `core-guardrails` §1.7 → lang 팩 "같은 턴 즉시 갱신" |
 | **권한 게이트·활동 기록 동시갱신** | ❌ | `core-guardrails` §1.7 → lang 팩 "같은 턴 즉시 갱신" |
-| **API 계약 보호** | ❌ | `core-workflow` G3 · `preflight` 4단계 → lang 팩 "API 계약 변경" |
+| **API 계약 보호** | ❌ | `core-workflow` G3 · `verify-work` 4단계 → lang 팩 "API 계약 변경" |
 | **생성 문서 검증** | ❌ | `core-guardrails` §1.6 → lang 팩 "생성 문서 검증" |
 | **스택 함정 메모** | ❌ | `core-workflow` G1 → lang 팩 "스택 함정 메모" |
-| **스택 리뷰어** | ❌ | `core-workflow` G3 · `preflight` 7단계 → 리뷰어 에이전트 |
+| **스택 리뷰어** | ❌ | `core-workflow` G3 · `verify-work` 7단계 → 리뷰어 에이전트 |
 | **하네스 자기 수정** | ☑ | `core-gates` §3 |
 
 이 저장소는 DB·API·애플리케이션 코드가 없어 스택 플래그가 전부 ❌이고, 하네스 자체를 고치는 곳이라 자기 수정만 ☑이다.

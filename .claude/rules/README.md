@@ -54,7 +54,7 @@ paths:
 │   ├── refactor-safely/              B 트랙 — 감사 → 승인 → 구현 → 기계 검증 (사용자 호출)
 │   ├── fix-bug/                      C 트랙 — 재현 → 원인 분리 → 최소 수정
 │   ├── verify-work/                  G2 직후 · G3 · G4 마무리 — 실행 결과만 보고 (G3 절차 · G4 상세 SSOT)
-│   └── improve-harness/              G4 — 하네스 개선 후보를 회고 백로그에
+│   └── improve-harness/              G4 — 회고 분석이 낸 하네스 개선 후보를 사람과 검토해 장부에 (분석 지시문 references/analyze.md)
 ├── agents/
 │   ├── researcher.md                 G1 — 외부 문서 조사, 결론·근거만 반환
 │   ├── test-writer.md                test-first 1단계 — 통제 영역 지점의 테스트를 스펙만 보고 작성 (Bash 없음)
@@ -136,6 +136,7 @@ paths:
 - 구성 요소 추가·삭제·개명 → 이 목록 · `core-workflow.md` 트랙 표 · 산출물이 md면 `{{문서 루트}}/templates/README.md` 등록부. 새 개념은 기존 개념을 대체할 때만 들인다
 - 훅 추가·수정 → `scripts/hook-cases.txt` 케이스 먼저 → `scripts/test-hooks.sh`
 - 규칙 수정 → `scripts/check-portability.sh` (always-load 예산은 래칫 — 낮추기만 한다)
+- 토큰 비용 → 하네스를 고치면 항상 실리는 글(규칙·스킬·에이전트 description) · 호출될 때 실리는 본문 · 실행 비용(훅 출력·별도 모델 실행)이 각각 얼마나 늘거나 주는지 바이트나 토큰으로 적는다. 늘리는 쪽이면 더 싼 층에 둘 수 없는지 먼저 본다
 - 문서 신설·50줄 이상 수정 → `scripts/check-doc-style.sh` 오류 0 + `doc-reviewer`
 - 안 하기로 한 것 → `{{문서 루트}}/out-of-scope/README.md`에 이유와 함께
 - 끝나면 `scripts/dev.sh test`

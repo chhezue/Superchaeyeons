@@ -84,8 +84,8 @@
 
 - [ ] 저장소 루트에 마켓플레이스 파일 `.claude-plugin/marketplace.json`을 두고, 플러그인 하나(`plugin/`, 상대 경로)를 등록한다. 플러그인 이름은 `superchaeyeons`
 - [ ] `plugin/.claude-plugin/plugin.json`에 `version`을 적지 않는다 — 커밋 SHA를 버전으로 쓴다
-- [ ] 스킬 8개·에이전트 3개·훅 3개를 `plugin/` 아래로 옮긴다. 훅 등록은 `plugin/hooks/hooks.json`이 하고 경로는 `${CLAUDE_PLUGIN_ROOT}`로 쓴다. 스킬 이름은 2026-10-28에 바꾼 동사-목적어 이름(`write-spec`·`verify-work` 등)을 쓴다. 플러그인 안에서는 `/superchaeyeons:write-spec`처럼 플러그인 이름이 앞에 붙는다
-- [ ] 도구 상자(`dev.sh`·`verify.sh`·검사기·`init-harness-probe.sh`)를 `plugin/scripts/`로 옮긴다. 스킬·주입 규칙은 `${CLAUDE_PLUGIN_ROOT}/scripts/…`로 부른다. `bin/`은 쓰지 않는다 — claude.ai·Cowork 설치를 막지 않기 위해서다
+- [ ] 스킬 8개·에이전트 3개·훅 5개(차단 3개 · [회고 루프](harness-retro-loop.md)의 `auto-correction-queue.sh`·`auto-correction-notice.sh`)를 `plugin/` 아래로 옮긴다. 훅 등록은 `plugin/hooks/hooks.json`이 하고 경로는 `${CLAUDE_PLUGIN_ROOT}`로 쓴다. 스킬 이름은 2026-10-28에 바꾼 동사-목적어 이름(`write-spec`·`verify-work` 등)을 쓴다. 플러그인 안에서는 `/superchaeyeons:write-spec`처럼 플러그인 이름이 앞에 붙는다
+- [ ] 도구 상자(`dev.sh`·`verify.sh`·검사기·`init-harness-probe.sh`·회고 분석 `analyze-corrections.sh`)를 `plugin/scripts/`로 옮긴다. 스킬·주입 규칙은 `${CLAUDE_PLUGIN_ROOT}/scripts/…`로 부른다. `bin/`은 쓰지 않는다 — claude.ai·Cowork 설치를 막지 않기 위해서다
 - [ ] git 훅(`pre-commit`·`commit-msg`)과 `install-git-hooks.sh`를 지운다. 같은 검사는 아래 "행동 강제"의 커밋 훅이 맡는다
 - [ ] 검사기가 `claude plugin validate plugin --json`을 돌려 `path`가 `version`인 경고만 허용한다. 다른 경고·오류가 있거나 결과를 해석하지 못하면 실패한다. `--strict`는 `version` 경고까지 실패로 쳐서 쓰지 않는다. 판정 케이스는 `version` 경고만 있음(통과) · 다른 경고 있음 · 오류 있음 · 결과를 해석하지 못함(실패)이다
 
@@ -207,9 +207,9 @@ Superchaeyeons/
 ├── plugin/                           배달물 (모든 프로젝트가 같은 파일)
 │   ├── .claude-plugin/plugin.json
 │   ├── skills/ · agents/
-│   ├── hooks/                        hooks.json · deny-* 3개 · ask-* 1개 · 주입 훅(세션 시작 2 · 서브에이전트 1 · 경로 1)
+│   ├── hooks/                        hooks.json · deny-* 3개 · ask-* 1개 · auto-correction-* 2개(회고 기록·알림) · 주입 훅(세션 시작 2 · 서브에이전트 1 · 경로 1)
 │   ├── rules/                        주입할 core 규칙 · 경로 조건부 규칙 원문
-│   └── scripts/                      dev.sh · verify.sh · 검사기 · init-harness-probe.sh
+│   └── scripts/                      dev.sh · verify.sh · 검사기 · init-harness-probe.sh · analyze-corrections.sh
 ├── .claude/                          이 저장소 전용 — harness.conf · settings.json · rules/README.md · local-*
 └── scripts/ · docs/ · examples/      scripts/에는 이 저장소 전용 도구(test-hooks.sh 등)만 남는다
 ```
@@ -271,6 +271,7 @@ Superchaeyeons/
 
 | 날짜 | 변경 |
 |------|------|
+| 2026-10-28 | [회고 루프 스펙](harness-retro-loop.md) 구현에 맞춰 amend — 옮길 훅에 `auto-correction-queue.sh`·`auto-correction-notice.sh`, 도구 상자에 `analyze-corrections.sh`를 더했다 |
 | 2026-10-28 | **스킬 이름 변경 반영.** 사용자가 스킬 이름을 동사-목적어로 바꾸기로 정했다(`ask`→`ask-decisions` · `specify`→`write-spec` · `tdd`→`test-first` · `safe-refactor`→`refactor-safely` · `debug`→`fix-bug` · `preflight`→`verify-work` · `retro`→`improve-harness` · `harness-init`→`init-harness`). "스킬 이름은 그대로 둔다"를 새 이름으로 고쳤다 |
 | 2026-10-27 | 초안 — 공식 문서 확인 결과 · Superpowers 벤치마킹 · 기존 결정 개정 제안 |
 | 2026-10-27 | 행동 강제(승인 창 훅) 추가 — 범주 4개 · 띄우지 않는 경우 테스트 · 채팅 승인 대체 · `core-gates.md` §3 개정 제안 |

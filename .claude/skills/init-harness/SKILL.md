@@ -48,6 +48,7 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 3. `local-*.md` — 슬롯으로도 플래그로도 안 빠지는 **그 저장소만의 사실**이 있을 때만. `AGENTS.md`와 중복이면 만들지 않는다
 4. `scripts/dev.conf` — 배달본은 `{…}` 빈칸이다. 씨앗에 `dev.conf`가 있으면 그 파일에서 시작하고, 없으면 `examples/seeds/_template/dev.conf`를 복사해 1단계 CI 워크플로의 실제 명령으로 채운다. 실행 엔진 `scripts/dev.sh`는 고치지 않는다. 키를 채운 근거(파일·명령)를 2단계 제안 표에 붙이고, 실측으로 정해지지 않는 것(로컬에서 띄울 의존 서비스·헬스 판정 주소)만 묻는다. 값이 있는 명령 슬롯은 `scripts/dev.sh <동사>`로 적는다
 5. `AGENTS.template.md` → `AGENTS.md` 채움 · `./scripts/install-git-hooks.sh` · 배달본에서 비어 온 `commit-msg` 훅의 `COMMIT_RE`를 `{{커밋 메시지 형식}}`에 맞는 정규식으로 채운다
+6. `.gitignore`에 `.claude/corrections/`가 없으면 한 줄 더한다 — 회고 루프 훅과 분석 스크립트가 정정 기억 설명과 대화 원문 일부를 쓰는 폴더라 커밋되면 안 된다. 하네스를 갱신하는 재동기화에서도 확인한다
 
 **산출물 체크리스트** — 전부 통과해야 완료다. `pack.md` 계약 대신 이 목록이 생성물 품질을 지킨다.
 
@@ -63,6 +64,7 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 - [ ] `scripts/dev.sh test`·`build`를 한 번씩 실행해 종료 코드가 0 또는 1이다 — 2(환경 없음)면 `dev.conf` 값이나 실행 환경을 고친다. 앱이 있으면 `start`→`stop`도 한 번
 - [ ] `{{기본 브랜치}}`·`{{머지 방식}}`·`{{이슈 연결}}`이 실측(첫 부모 merge 커밋 수·PR 이력·이슈 키)과 맞는다
 - [ ] `commit-msg`의 `COMMIT_RE`를 `{{커밋 메시지 형식}}`에 맞게 채웠다 — 형식이 `(없음)`이면 빈 값 그대로
+- [ ] `git check-ignore -q .claude/corrections/x`가 성공한다 — 빠지면 `scripts/test-hooks.sh`의 기록 폴더 검사도 실패한다
 
 ### 4. 역스펙·초기 백로그 (기존 코드가 있을 때) → **승인 (G2 — Draft 스펙·감사 후보 목록)**
 

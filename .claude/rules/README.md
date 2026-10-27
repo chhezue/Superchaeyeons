@@ -67,6 +67,8 @@ paths:
     └── auto-correction-notice.sh     SessionStart — 마지막 회고 분석 뒤 세션·정정 기억·검토할 후보 수를 한 줄로 (셋 다 0이면 출력 없음)
 ```
 
+회고 루프의 분석은 훅이 아니라 `scripts/analyze-corrections.sh`가 별도 실행으로 한다. 기록·분석 상태는 `.claude/corrections/`(git이 무시)에 있고, 형식은 그 스크립트 머리가 SSOT다.
+
 우선순위는 `core-guardrails` ⛔ > `core-gates` > `core-workflow` > 스킬 > 일반 관례다. 같은 주제를 여러 파일에 쓰지 않고, 아래쪽 파일은 위쪽을 가리킨다.
 
 ## 훅 공통 규약
@@ -103,6 +105,7 @@ paths:
 - `{{테스트 명령}}` ↔ `deny-unverified-completion.sh`의 `TEST_CMD`
 - `{{커밋 메시지 형식}}` ↔ `scripts/git-hooks/commit-msg`의 `COMMIT_RE`
 - `{{포맷 명령}}` ↔ `scripts/git-hooks/pre-commit`의 `FORMAT_CMD`·`FORMAT_PATHS`와 씨앗 포맷 훅
+- `{{문서 루트}}` ↔ `scripts/analyze-corrections.sh`의 `LEDGER`(장부 경로)
 
 **플래그를 켜거나 끌 때 할 일** — 표에 없는 플래그는 값만 바꾼다.
 

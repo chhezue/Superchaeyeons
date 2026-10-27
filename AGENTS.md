@@ -7,7 +7,7 @@ Claude Code용 **하네스**(규칙·스킬·에이전트·훅·검사 스크립
 | 경로 | 내용 | 새 프로젝트로 |
 |------|------|---------------|
 | `.claude/` | 규칙·스킬·에이전트·훅·`settings.json` — 목록 SSOT는 `.claude/rules/README.md` | 복사 |
-| `scripts/` | `verify.sh`와 검사기 4개 · `dev.sh` 실행 엔진 · `init-harness-probe.sh` · git 훅 (`dev.conf`는 프로젝트가 채움) | 복사 |
+| `scripts/` | `verify.sh`와 검사기 4개 · `dev.sh` 실행 엔진 · `init-harness-probe.sh` · 회고 분석 `analyze-corrections.sh` · git 훅 (`dev.conf`는 프로젝트가 채움) | 복사 |
 | `docs/templates/` | 산출물 등록부·문서 템플릿 | 복사 |
 | `examples/seeds/` | 스택별 lang 팩 씨앗 — `init-harness`가 맞는 것만 `local-*` 이름으로 복사 | 필요한 것만 |
 | `AGENTS.template.md` · `.github/CONTRIBUTING.md` | 새 프로젝트 `AGENTS.md` 견본 · Git 컨벤션 견본 | 견본 |

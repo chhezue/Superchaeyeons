@@ -56,7 +56,7 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 
 - [ ] `scripts/check-portability.sh` exit 0 (core가 순수한 채로 남았다)
 - [ ] `harness-map.md`에 ⬜와 이유 없는 `(없음)`이 0개 — `grep -cE '\| ⬜ \||\| \(없음\) \|' .claude/rules/harness-map.md`가 `0`
-- [ ] "스택 팩" 표의 파일 목록 = 실제 `.claude/rules/`·`.claude/agents/` 파일
+- [ ] ☑인 스택 플래그마다 그 본문을 가진 `local-*` 파일이 `.claude/rules/`·`.claude/agents/`에 실제로 있다
 - [ ] 복사한 씨앗의 "씨앗 대조" 표에 빈 칸이 없다 (전제마다 근거 파일)
 - [ ] `{{문서 루트}}/templates/README.md` 산출물 등록부의 "프로젝트 문서" 행이 이 저장소 값으로 채워졌다
 - [ ] `settings.json`의 훅 등록 상태 = 플래그 ☑/❌

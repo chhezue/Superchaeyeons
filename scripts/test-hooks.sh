@@ -33,6 +33,7 @@ check() {
 	case "$c" in
 	out=) [ ! -s "$tmpdir/out" ] || { echo "출력이 비어야 하는데 있음: $(head -c 120 "$tmpdir/out")"; return 1; } ;;
 	out~*) grep -Eq -- "${c#out~}" "$tmpdir/out" || { echo "출력에 /${c#out~}/ 없음: $(head -c 120 "$tmpdir/out")"; return 1; } ;;
+	err~*) grep -Eq -- "${c#err~}" "$tmpdir/err" || { echo "stderr에 /${c#err~}/ 없음: $(head -c 120 "$tmpdir/err")"; return 1; } ;;
 	'out!~'*) ! grep -Eq -- "${c#out!~}" "$tmpdir/out" || { echo "출력에 /${c#out!~}/ 가 있으면 안 됨"; return 1; } ;;
 	file:*) path="$(expand "${c#file:}")"; pat="${path#*~}"; path="${path%%~*}"
 		grep -Eq -- "$pat" "$path" 2>/dev/null || { echo "$path 에 /$pat/ 없음"; return 1; } ;;

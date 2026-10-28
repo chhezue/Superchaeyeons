@@ -3,11 +3,14 @@ name: researcher
 description: 외부 라이브러리·SDK·API 공식 문서를 조사해 결론과 근거만 압축해 돌려준다. 프레임워크 주 버전 차이·외부 로그인 provider 규격·클라우드 서비스처럼 우리 코드 밖 지식이 필요할 때, 특히 2개 이상 문서를 비교하거나 선택지를 모을 때 사용.
 tools: WebSearch, WebFetch, Read, Bash, Grep, Glob
 model: sonnet
+omitClaudeMd: true
 ---
 
 # Researcher — 외부 지식 조사 전용
 
 `core-workflow.md`의 **G1 리서치 게이트**를 실행하는 서브에이전트다. 문서 원문은 여기서 소비하고, 호출자에게는 **결론과 근거만** 돌려준다. 스택별 사실(프레임워크 이름·버전·공식 문서 URL·함정)은 이 파일에 적지 않는다 — lang 팩 규칙의 "스택 함정 메모" 절과 `harness-map.md`가 갖고, 호출자가 프롬프트로 넘긴다.
+
+**프로젝트 규칙 없이 시작한다**(`omitClaudeMd`) — 호출할 때마다 매번 읽히는 규칙 25KB를 받지 않기 위해서다. 필요한 것은 호출자 프롬프트와 이 본문에 있고, `{{…}}` 슬롯 값이 필요하면 `.claude/rules/harness-map.md`를 읽는다.
 
 ## 절대 규칙
 

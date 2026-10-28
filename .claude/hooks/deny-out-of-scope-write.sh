@@ -67,11 +67,11 @@ case "$verdict" in
     exit 2 ;;
   DENY_HARNESS:*)
     rel="${verdict#DENY_HARNESS:}"
-    echo "'$rel'는 하네스의 훅 본문 또는 훅 등록 파일입니다. 이 프로젝트는 능력 플래그 \"하네스 자기 수정\"이 ❌라 에이전트가 고칠 수 없습니다 (harness-map.md). 고칠 내용을 diff로 제안하고 사용자가 직접 반영하거나, 사용자가 플래그와 훅 상수 HARNESS_SELF_EDIT를 바꿉니다. Blocked by .claude/hooks/deny-out-of-scope-write.sh." >&2
+    echo "'$rel'는 하네스의 훅 본문 또는 훅 등록 파일입니다. 이 프로젝트는 능력 플래그 \"하네스 자기 수정\"이 ❌라 에이전트가 고칠 수 없습니다 (harness-map.md). 훅은 구두 승인을 모릅니다 — Bash 등 다른 도구로도 고치지 말고, 고칠 내용을 diff로 제안한 뒤 멈추세요. 사용자가 직접 반영하거나 플래그와 훅 상수 HARNESS_SELF_EDIT를 바꿉니다. Blocked by .claude/hooks/deny-out-of-scope-write.sh." >&2
     exit 2 ;;
   DENY:*)
     rel="${verdict#DENY:}"
-    echo "'$rel'는 이 하네스의 쓰기 범위(${SCOPE}/ + .claude/) 밖입니다 (harness-map.md {{작업 범위}}). 우회하지 말고 사용자에게 보고하세요 — 승인은 사용자가 SCOPE를 넓히거나 그 파일을 직접 고치는 것으로 이뤄집니다. Blocked by .claude/hooks/deny-out-of-scope-write.sh." >&2
+    echo "'$rel'는 이 하네스의 쓰기 범위(${SCOPE}/ + .claude/) 밖입니다 (harness-map.md {{작업 범위}}). 훅은 구두 승인을 모릅니다 — 다른 도구로 우회하지 말고, 막힌 사실과 이유, 사용자가 바꿀 것(훅 상수 SCOPE를 넓히거나 그 파일을 직접 고치기)을 한 줄로 보고하고 멈추세요. Blocked by .claude/hooks/deny-out-of-scope-write.sh." >&2
     exit 2 ;;
   *)
     echo "훅 내부 오류로 판정할 수 없어 차단합니다 ($verdict). Blocked by .claude/hooks/deny-out-of-scope-write.sh." >&2

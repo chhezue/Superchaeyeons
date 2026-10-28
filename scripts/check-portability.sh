@@ -177,6 +177,20 @@ for f in $always_files; do
 	budget_table="$budget_table$(printf '  %7d  %s' "$b" "$f")
 "
 done
+# 스킬·에이전트 설명 줄(description·when_to_use)도 세션마다 목록으로 읽힌다. local-*(프로젝트 층)는 규칙처럼 빼고,
+# disable-model-invocation 스킬은 목록에 실리지 않아 뺀다. 한 줄로 쓴 값만 센다 — 여러 줄 YAML이면 적게 잡힌다.
+desc_bytes=0; desc_n=0
+for f in .claude/skills/*/SKILL.md .claude/agents/*.md; do
+	[ -f "$f" ] || continue
+	case "$f" in .claude/skills/local-*|.claude/agents/local-*) continue ;; esac
+	b=$(awk 'NR==1 && $0!="---" {exit} NR>1 && $0=="---" {exit} /^disable-model-invocation:[ \t]*true/ {off=1}
+		/^(description|when_to_use):/ { sub(/^[a-z_]+:[ \t]*/, ""); n += length($0) } END { print off ? -1 : n+0 }' "$f")
+	[ "$b" -lt 0 ] && continue
+	desc_bytes=$((desc_bytes + b)); desc_n=$((desc_n + 1))
+done
+total_bytes=$((total_bytes + desc_bytes))
+budget_table="$budget_table$(printf '  %7d  스킬·에이전트 설명 줄 %d개' "$desc_bytes" "$desc_n")
+"
 
 # ---- 3b. 대조 검사 (S 슬롯 · I 구성 요소 목록) ---------------------------------
 # --scope와 무관하게 배달물 전체를 본다(슬롯이 스킬·훅에서만 쓰여도 "쓰는 곳"이다).

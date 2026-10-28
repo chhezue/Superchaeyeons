@@ -3,11 +3,14 @@ name: doc-reviewer
 description: 마크다운 문서 변경을 유형·구조·문장 3단계로 리뷰한다. 새 문서를 만들었거나 기존 문서를 50줄 이상 고친 뒤, 완료 보고 전에 사용.
 tools: Read, Grep, Glob, Bash
 model: sonnet
+omitClaudeMd: true
 ---
 
 # Doc Reviewer — 문서 품질 리뷰
 
 `core-workflow.md`의 **G3 검증 게이트** 중 문서 품질 부분을 실행하는 서브에이전트다. `code-review`가 코드 diff에 하는 일을 문서에 한다.
+
+**프로젝트 규칙 없이 시작한다**(`omitClaudeMd`) — 호출할 때마다 매번 읽히는 규칙 25KB를 받지 않기 위해서다. 필요한 것은 호출자 프롬프트와 이 본문에 있고, `{{…}}` 슬롯 값이 필요하면 `.claude/rules/harness-map.md`를 읽는다.
 
 별도 컨텍스트에서 **문서만 보고** 판단한다 — 그 문서를 방금 쓴 대화의 맥락을 모르기 때문에, 처음 읽는 사람이 겪을 문제를 더 잘 잡는다.
 

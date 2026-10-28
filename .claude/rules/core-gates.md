@@ -38,9 +38,5 @@
 | 커밋 실행 · 이슈·브랜치·PR 생성 (승인·명시 요청 없이) | `core-workflow.md` G4 |
 | `[미정]` 확정 · 우선순위 라벨 부여·변경 | `core-guardrails.md` §1.8 |
 | `.claude/rules/` 추가·수정 — 제안만 | `core-workflow.md` G4 · `improve-harness` 스킬 |
-| `{{작업 범위}}` 밖 파일 수정 | `deny-out-of-scope-write.sh` (상수 `SCOPE`) |
-| **[플래그: 하네스 자기 수정]** ❌면 `.claude/hooks/`·`settings.json` 수정 — 훅은 Write·Edit 계열만 막으므로 Bash 편집도 하지 않는다. ☑이어도 diff를 제안하고 승인 뒤 반영 | `deny-out-of-scope-write.sh` (상수 `HARNESS_SELF_EDIT`) |
-| 훅이 막은 것을 다른 도구(`Bash` 포함)로 우회 · 통과시키려고 훅·`settings.json`을 고치기 | 이 절 |
-| `{{테스트 명령}}`을 돌리지 않고 완료·통과 선언 | `core-workflow.md` G3 · `deny-unverified-completion.sh` |
-
-**훅 승인 통로는 설정 변경뿐이다.** 훅은 구두 승인을 모른다. 알게 만들면(환경 변수·마커 파일) 그 통로를 에이전트도 열 수 있어 결정론이 무너진다. 승인은 사용자가 `harness-map.md`의 슬롯·플래그 값과 짝인 훅 상수를 바꾸거나 그 파일을 직접 고치는 것이다. 에이전트는 막힌 사실과 이유, 사용자가 바꿀 것을 한 줄로 보고하고 멈춘다. 채팅으로 하는 G2 승인은 이 절의 대상이 아니다.
+| **[플래그: 하네스 자기 수정]** ❌면 `.claude/hooks/`·`settings.json` 수정(Bash 편집 포함). ☑이어도 diff를 제안하고 승인 뒤 반영 | `deny-out-of-scope-write.sh` |
+| 훅이 막은 일을 다른 도구(Bash·변수·`eval`·별도 스크립트)로 하기 · 통과시키려고 훅·`settings.json`을 고치기 — 막히면 차단 메시지대로 보고하고 멈춘다 | 각 `deny-*` 훅 |

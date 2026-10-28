@@ -72,7 +72,7 @@
 | [`harness-slot-system-v2.md`](harness-slot-system-v2.md) "부품성 원칙" 1번 | "플러그인 매니페스트를 요구하는 장치는 채택하지 않는다" | 원칙의 목적(별도 런타임·무거운 장치 금지)은 유지하고, 플러그인 매니페스트는 금지 목록에서 뺀다. 매니페스트는 JSON 파일 하나이고 실행할 런타임이 없다 |
 | [`out-of-scope/README.md`](../../out-of-scope/README.md) "`inject-rules.sh`" 행 | 주입이 실패하면 규칙이 조용히 사라진다는 이유로 기각 | 기각 당시에 없던 이유(플러그인은 규칙 파일을 배달할 수 없음)가 생겼다. "조용히"를 Must Have의 실패 경고로 막고 채택으로 바꾼다 |
 | `harness-slot-system-v2.md` 리스크·미결정 "하네스 배달 방식" | [미정] | 이 스펙이 승인되면 "결정: 플러그인 + 세션 시작 훅"으로 고치고 이 스펙을 가리킨다 |
-| [`core-gates.md`](../../../.claude/rules/core-gates.md) §3 "훅 승인 통로는 설정 변경뿐이다" | 훅은 구두 승인을 모르므로 승인은 사용자가 설정을 바꾸는 것뿐이다 | 승인 창(`ask-decisions`)을 두 번째 통로로 더한다. 사용자가 창에서 직접 누르는 것이라 에이전트가 열 수 없다는 원칙은 그대로다. 환경 변수·마커 파일 통로를 금지한 [`out-of-scope/README.md`](../../out-of-scope/README.md) "훅 승인 우회 통로" 행과도 어긋나지 않는다 |
+| [`.claude/rules/README.md`](../../../.claude/rules/README.md) "훅 공통 규약"과 `deny-*` 훅 차단 메시지의 "훅은 구두 승인을 모릅니다"(2026-10-28 [`core-gates.md`](../../../.claude/rules/core-gates.md) §3에서 옮김) | 훅은 구두 승인을 모르므로 승인은 사용자가 설정을 바꾸는 것뿐이다 | 승인 창(`ask-decisions`)을 두 번째 통로로 더한다. 사용자가 창에서 직접 누르는 것이라 에이전트가 열 수 없다는 원칙은 그대로다. 환경 변수·마커 파일 통로를 금지한 [`out-of-scope/README.md`](../../out-of-scope/README.md) "훅 승인 우회 통로" 행과도 어긋나지 않는다 |
 
 `out-of-scope/README.md`의 "서드파티 워크플로 플러그인" 행은 Superpowers를 **설치해 쓰는 것**을 기각한 기록이다. 이 스펙은 방식만 참고하므로 그 행은 바꾸지 않는다.
 

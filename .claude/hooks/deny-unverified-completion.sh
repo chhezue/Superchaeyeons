@@ -314,7 +314,7 @@ else:
 
 case "$verdict" in
   BLOCK_NOT_RUN)
-    echo "[하네스 · G3] 이 턴에 코드 파일을 고쳤는데(도구 편집 또는 Bash의 sed -i·리다이렉션·tee) 그 뒤 \`$TEST_CMD\`를 실행한 기록이 없는 채로 완료·통과를 선언했습니다. 지금 \`$TEST_CMD\`를 실제로 돌리고 결과를 보고하세요. 돌릴 수 없는 환경이면 완료 선언 대신 \"검증하지 못한 것\"으로 남기세요 (core-gates.md §3). Blocked by .claude/hooks/deny-unverified-completion.sh." >&2
+    echo "[하네스 · G3] 이 턴에 코드 파일을 고쳤는데(도구 편집 또는 Bash의 sed -i·리다이렉션·tee) 그 뒤 \`$TEST_CMD\`를 실행한 기록이 없는 채로 완료·통과를 선언했습니다. 지금 \`$TEST_CMD\`를 실제로 돌리고 결과를 보고하세요. 돌릴 수 없는 환경이면 완료 선언 대신 \"검증하지 못한 것\"으로 남기세요 (core-workflow.md G3). Blocked by .claude/hooks/deny-unverified-completion.sh." >&2
     exit 2 ;;
   BLOCK_FAILED)
     echo "[하네스 · G3] \`$TEST_CMD\`를 돌렸지만 결과가 실패였는데 완료·통과를 선언했습니다. 실패 원인을 고치고 다시 돌리거나, 완료 선언 대신 실패 내용을 그대로 보고하세요 (verify-work 스킬 사후 모드 1단계). Blocked by .claude/hooks/deny-unverified-completion.sh." >&2

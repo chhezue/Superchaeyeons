@@ -94,10 +94,12 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 | `.claude/skills/` | 표준 워크플로 스킬 (`init-harness`, `ask-decisions`, `write-spec`, `test-first`, `verify-work` 등) | 배달 |
 | `.claude/agents/` | 보조 에이전트 (`researcher`, `test-writer`, `doc-reviewer`) | 배달 |
 | `.claude/hooks/` | 결정적 차단 훅 (`deny-*`) | 배달 |
-| `scripts/` | 이식성·문서·훅 검사 스크립트, git 훅 설치기, 빌드·실행 엔진 `dev.sh` (프로젝트 값은 `dev.conf`) | 배달 |
+| `scripts/` | 이식성·문서·훅 검사 스크립트(`verify.sh`가 묶음), git 훅 설치기, 빌드·실행 엔진 `dev.sh`(프로젝트 값은 `dev.conf`), `init-harness-probe.sh`, 회고 분석 `analyze-corrections.sh`, 글 다듬기 `polish-with-gemini.sh` | 배달 |
 | `docs/templates/` | 산출물 등록부 및 문서 템플릿 | 배달 |
-| `examples/seeds/` | 기술 스택별 씨앗 규칙 (`java-spring/`, `_template/`) | 배달 |
+| `examples/seeds/` | 기술 스택별 씨앗 규칙 (`java-spring/`, `_template/`). `init-harness`가 맞는 것만 `local-*` 이름으로 복사 | 필요한 것만 |
+| `AGENTS.template.md` · `.github/CONTRIBUTING.md` | 새 프로젝트 `AGENTS.md` 견본 · Git 컨벤션 견본 | 견본 |
 | `docs/harness/` | 4개 레이어 설명과 현재 동작 요약 | 저장소 전용 |
+| `docs/` 나머지 | 이 저장소의 스펙·보고서·설계 기록·안 하기로 한 것 | 저장소 전용 |
 
 ## 자체 검증 명령
 

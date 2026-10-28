@@ -55,7 +55,7 @@ PATTERNS=(
 )
 joined=$(printf '%s|' "${PATTERNS[@]}"); joined="${joined%|}"
 if echo "$command" | grep -qE "$joined"; then
-  echo "위험한 명령이 차단되었습니다 (force push · rm -rf · find -delete · git reset --hard/clean -f/branch -D/stash drop/filter-branch · git commit --no-verify · .env 커밋 · SQL DROP · 컨테이너 볼륨 삭제 · curl|sh · chmod -R 777 · dd of=/dev). Blocked by .claude/hooks/deny-dangerous-bash.sh — use safer alternatives or ask the user explicitly." >&2
+  echo "위험한 명령이 차단되었습니다 (force push · rm -rf · find -delete · git reset --hard/clean -f/branch -D/stash drop/filter-branch · git commit --no-verify · .env 커밋 · SQL DROP · 컨테이너 볼륨 삭제 · curl|sh · chmod -R 777 · dd of=/dev). 훅은 구두 승인을 모릅니다 — 변수·eval·별도 스크립트로 감싸 다시 실행하지 말고, 더 안전한 방법을 쓰거나 사용자에게 직접 실행을 요청하세요. Blocked by .claude/hooks/deny-dangerous-bash.sh." >&2
   exit 2
 fi
 

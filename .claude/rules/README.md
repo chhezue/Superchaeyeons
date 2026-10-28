@@ -56,7 +56,7 @@ paths:
 │   ├── verify-work/                  G2 직후 · G3 · G4 마무리 — 실행 결과만 보고 (G3 절차 · G4 상세 SSOT)
 │   ├── improve-harness/              G4 — 회고 분석이 낸 하네스 개선 후보를 사람과 검토해 장부에 (분석 지시문 references/analyze.md)
 │   └── local-track-issues/           프로젝트 층 트래커 안내 — 이슈 확인·만들기·연결의 수단·키·표기. `{{이슈 연결}}`이 가리킨다 (씨앗 `examples/seeds/tracker-*`·`_template`)
-├── agents/
+├── agents/                           셋 다 omitClaudeMd — 매번 읽히는 규칙 없이 시작, 슬롯 값은 harness-map.md를 읽는다
 │   ├── researcher.md                 G1 — 외부 문서 조사, 결론·근거만 반환
 │   ├── test-writer.md                test-first 1단계 — 통제 영역 지점의 테스트를 스펙만 보고 작성 (Bash 없음)
 │   └── doc-reviewer.md               G3 — 문서 유형·구조·문장 리뷰 (advisory)
@@ -80,7 +80,7 @@ paths:
 - `Stop` 훅만 판정 불가와 재진입(`stop_hook_active`)이면 통과한다 — 대화가 끝나지 못하는 피해가 더 크다
 - `auto-*`(기록·알림)는 막지 않는다 — 어떤 입력에도 exit 0이고, 기록하지 못하면 `systemMessage`로 알린다. 세션마다 도니 bash 3.2 내장 기능과 macOS 기본 명령만 쓴다(python3 없음). 출력과 남긴 파일은 케이스의 `out~`·`file:` 검사로 판정한다
 - 훅 경로는 `$CLAUDE_PROJECT_DIR` 기준이다. `.claude/hooks/*.sh`는 전부 `settings.json`에 등록돼야 하고, 쓰기 도구 매처는 `Write`·`Edit`·`MultiEdit`·`NotebookEdit`를 모두 덮어야 한다 — 매처는 정확한 이름 목록이라 `Write|Edit`만 두면 나머지 둘이 훅을 건너뛴다
-- "확인받았으면 통과" 통로는 없다. 승인은 사용자가 `harness-map.md` 값과 짝인 훅 상수를 바꾸는 것이다 (`core-gates.md` §3)
+- "확인받았으면 통과" 통로는 없다. 승인은 사용자가 `harness-map.md` 값과 짝인 훅 상수를 바꾸는 것이다. 막힐 때 각 `deny-*` 훅의 차단 메시지가 이 안내를 Claude에게 준다
 - 훅은 명령 문자열만 본다. 변수·`eval`·별도 스크립트 간접 실행과 Bash로 하네스 파일을 고치는 것은 못 보므로 규칙으로만 막는다
 - 판단이 필요한 것은 훅에 넣지 않는다. advisory 훅이 필요하면 `command`-type으로 — `agent`-type 훅이 "막지 마라"는 지시에도 커밋을 막은 사고가 있었다
 - 씨앗 훅(`local-*`)은 플래그가 ☑일 때 `init-harness`가 복사·등록한다. 복사하지 않은 씨앗의 케이스는 `test-hooks.sh`가 건너뛴다
@@ -97,7 +97,7 @@ paths:
 4. 옵션을 끄려고 규칙 절을 지우지 않는다 — ❌면 `[플래그: X]` 절을 무시한다
 5. `core-*.md`는 손대지 않는다. 고유 사실은 map(값)과 `.claude/` 안의 `local-*`(규칙·복사한 씨앗)에만. 클라이언트 전제·배포 토폴로지처럼 스택이 아닌 고유 사실은 `local-*.md`로 쓴다
 6. 축은 붙이는 시점에 실측해 적는다. 규칙은 축을 직접 부르지 않는다 — 슬롯·플래그 값을 고르는 근거다. 기존 저장소에 붙일 때 명령·형식 슬롯은 기본값을 물려받지 않고 `init-harness`가 이력에서 실측한다
-7. lang 팩은 `init-harness`가 씨앗(`examples/seeds/{스택}/`)을 `local-*` 이름 그대로 복사하거나 `_template/`을 채운다. map "스택 팩" 표에는 실제로 있는 파일만 적는다
+7. lang 팩은 `init-harness`가 씨앗(`examples/seeds/{스택}/`)을 `local-*` 이름 그대로 복사하거나 `_template/`을 채운다. lang 팩 목록은 map에 적지 않고 `ls .claude/rules/local-*`로 본다
 
 **훅 상수와 짝:** 훅·git 훅은 map을 읽지 못해 값을 본문에 직접 적는다. 아래 값을 바꾸면 짝을 같은 턴에 고친다.
 
@@ -117,7 +117,7 @@ paths:
 | API 계약 보호 | ☑면 씨앗 `local-warn-breaking-change.sh` 복사·등록 |
 | 하네스 자기 수정 | ❌면 `HARNESS_SELF_EDIT="0"`. **붙여 쓰는 프로젝트는 ❌가 기본** |
 
-**옛 모양 map 정리:** map에 `## 규칙` 절 · 훅 상수 짝 목록 · 플래그 표 "켜거나 끌 때 할 일" 열이 들어 있으면 옛 모양이다. 하네스를 갱신하면 always-load 예산을 넘으니 `init-harness` 재동기화에서 그 셋과 축·명령 슬롯·스택 팩 표 앞의 작성 안내를 지우고, 머리에 `(없음)` 슬롯 문장과 이 절을 가리키는 문장만 남긴다. 값 표는 건드리지 않는다.
+**옛 모양 map 정리:** map에 `## 규칙` 절 · 훅 상수 짝 목록 · 플래그 표 "켜거나 끌 때 할 일" 열이 들어 있으면 옛 모양이다. 하네스를 갱신하면 always-load 예산을 넘으니 `init-harness` 재동기화에서 그 셋과 축·명령 슬롯 표 앞의 작성 안내를 지우고, 머리에 `(없음)` 슬롯 문장과 이 절을 가리키는 문장만 남긴다. 값 표는 건드리지 않는다. 2026-10-28 뒤로는 축 표·"스택 팩" 표·플래그 표 아래 설명 문단도 옛 모양이다 — 축은 값 그대로 `**축:**` 한 줄로 옮기고, 나머지 둘은 지운다.
 
 ## 작명
 
@@ -137,7 +137,8 @@ paths:
 
 - 구성 요소 추가·삭제·개명 → 이 목록 · `core-workflow.md` 트랙 표 · 산출물이 md면 `{{문서 루트}}/templates/README.md` 등록부. 새 개념은 기존 개념을 대체할 때만 들인다
 - 훅 추가·수정 → `scripts/hook-cases.txt` 케이스 먼저 → `scripts/test-hooks.sh`
-- 규칙 수정 → `scripts/check-portability.sh` (always-load 예산은 래칫 — 낮추기만 한다)
+- 규칙 수정 → `scripts/check-portability.sh` (always-load 예산은 래칫 — 낮추기만 한다. 스킬·에이전트 설명 줄도 합계에 든다)
+- **새 규칙을 넣을 곳** → 종료 코드로 판정되면 훅 → 끝난 뒤 확인해도 되면 `verify-work` 점검표 → 특정 파일을 다룰 때만 필요하면 `paths:` 규칙 → 구현 도중 늘 지켜야 할 때만 매번 읽히는 규칙. 앞 층으로 안 되는 이유가 있어야 다음 층으로 간다
 - 토큰 비용 → 하네스를 고치면 항상 실리는 글(규칙·스킬·에이전트 description) · 호출될 때 실리는 본문 · 실행 비용(훅 출력·별도 모델 실행)이 각각 얼마나 늘거나 주는지 바이트나 토큰으로 적는다. 늘리는 쪽이면 더 싼 층에 둘 수 없는지 먼저 본다
 - 문서 신설·50줄 이상 수정 → `scripts/check-doc-style.sh` 오류 0 + `doc-reviewer`
 - 안 하기로 한 것 → `{{문서 루트}}/out-of-scope/README.md`에 이유와 함께

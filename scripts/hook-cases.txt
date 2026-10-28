@@ -6,7 +6,7 @@
 #          `;test=CMD`를 붙이면 `TEST_CMD="…"` 줄도 바꾼다 (예: `.;test=`는 빈 값). 여러 개는 `;`로 잇는다
 #          `;대문자이름=값`은 본문의 `대문자이름=…` 줄을 `대문자이름="값"`으로 바꾼다. SCOPE를 두고 상수만 바꾸려면 `-;STORE=$TMP/q`
 #          `;env:이름=값`은 그 실행에만 환경 변수를 준다. `;cp:원본=대상`은 실행 전에 파일·폴더를 복사한다(저장소 파일을 고치는 도구를 $TMP 복사본으로 시험할 때)
-#   기대: 종료 코드, 뒤에 `;검사`를 붙일 수 있다 — `out=`(출력 없음) · `out~ERE` · `out!~ERE` · `file:경로~ERE` ·
+#   기대: 종료 코드, 뒤에 `;검사`를 붙일 수 있다 — `out=`(출력 없음) · `out~ERE` · `out!~ERE` · `err~ERE`(차단 메시지) · `file:경로~ERE` ·
 #         `lines:경로=N`(없는 파일은 0줄) · `nofile:경로`. 열이 탭으로 갈려서 ERE의 탭은 `[[:space:]]`로 쓴다
 #   stdin·인자·상수 값·검사 경로 안의 $REPO는 저장소 루트, $HOME은 홈, $TMP는 이번 실행의 임시 폴더로 치환된다.
 #   $TMP는 케이스끼리 공유하므로 앞 케이스가 남긴 상태(정정 대기열 등)를 뒤 케이스가 이어서 본다
@@ -30,6 +30,9 @@ deny-out-of-scope-write.sh	sub	2
 deny-out-of-scope-write.sh	.	0	{"tool_input":{"file_path":"other/a.md"}}
 # 하네스 자기 수정 플래그 ❌(self=0)이면 SCOPE와 무관하게 훅 본문·settings.json 쓰기를 막는다 — 규칙은 여전히 허용 (2026-09-07 감사)
 deny-out-of-scope-write.sh	.;self=0	2	{"tool_input":{"file_path":".claude/hooks/deny-dangerous-bash.sh"}}
+# 차단 메시지가 규칙 글 대신 승인 통로를 알린다 — 구두 승인으로 풀리지 않음 · 사용자가 바꿀 상수 · 보고하고 멈춤 (always-load-reduce 2단계)
+deny-out-of-scope-write.sh	.;self=0	2;err~구두 승인;err~HARNESS_SELF_EDIT;err~Bash 등 다른 도구로도;err~멈추세요	{"tool_input":{"file_path":".claude/hooks/deny-dangerous-bash.sh"}}
+deny-out-of-scope-write.sh	sub	2;err~구두 승인;err~SCOPE;err~우회하지 말고;err~멈추세요	{"tool_input":{"file_path":"other/a.md"}}
 deny-out-of-scope-write.sh	.;self=0	2	{"tool_input":{"file_path":"$REPO/.claude/settings.json"}}
 deny-out-of-scope-write.sh	.;self=0	2	{"tool_input":{"file_path":".claude/hooks/../hooks/new-hook.sh"}}
 deny-out-of-scope-write.sh	.;self=0	0	{"tool_input":{"file_path":".claude/rules/harness-map.md"}}
@@ -51,6 +54,7 @@ local-deny-db-migration.sh	-	2
 deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"git status"}}
 deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"rm file.txt"}}
 deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"rm -rf build"}}
+deny-dangerous-bash.sh	-	2;err~구두 승인;err~eval	{"tool_input":{"command":"rm -rf build"}}
 deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"rm -fr build"}}
 deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"git push --force origin main"}}
 deny-dangerous-bash.sh	-	2	{"tool_input":{"command":"git push -f"}}
@@ -316,3 +320,7 @@ polish-with-gemini.sh message	-;POLISH_ENABLED=1;KEYCHAIN_SERVICE=polish-test-no
 polish-with-gemini.sh message	-;POLISH_ENABLED=1;KEYCHAIN_SERVICE=polish-test-no-such-entry;GEMINI_ENDPOINT=file://$REPO/scripts/hook-fixtures/polish/models/{model}.json;FALLBACK_MODEL=;ROOT=$TMP/pf;env:GEMINI_API_KEY=test-key-0001;env:GEMINI_MODEL=busy	1;out~503	{"kind":"commit","fields":{"message":"Docs: tidy the readme"}}
 polish-with-gemini.sh message	-;POLISH_ENABLED=1;KEYCHAIN_SERVICE=polish-test-no-such-entry;GEMINI_ENDPOINT=file://$REPO/scripts/hook-fixtures/polish/models/{model}.json;FALLBACK_MODEL=ok-msg;ROOT=$TMP/pf;env:GEMINI_API_KEY=test-key-0001;env:GEMINI_MODEL=quota	1;out~한도 초과	{"kind":"commit","fields":{"message":"Docs: tidy the readme"}}
 polish-with-gemini.sh docs $TMP/pf2/docs/specs/sample.md	-;POLISH_ENABLED=1;KEYCHAIN_SERVICE=polish-test-no-such-entry;GEMINI_ENDPOINT=file://$REPO/scripts/hook-fixtures/polish/models/{model}.json;FALLBACK_MODEL=ok-sample;ROOT=$TMP/pf2;env:GEMINI_API_KEY=test-key-0001;env:GEMINI_MODEL=busy;cp:$REPO/scripts/hook-fixtures/polish/root=$TMP/pf2	0;out~다듬음-샘플;file:$TMP/pf2/docs/specs/sample.md~다듬음-샘플
+# check-portability.sh 예산 — 스킬·에이전트 설명 줄(description·when_to_use)도 세션마다 읽혀 합계에 넣는다. local-* 스킬과
+# disable-model-invocation 스킬은 뺀다 (always-load-reduce 5단계). 견본: s1 "가나다"+"abc" 12B · a1 "xyz" 3B = 15B
+hook-fixtures/portability/run.sh $TMP/port 25000	-	0;out~설명 줄 2개;out~[[:space:]]15[[:space:]]+스킬·에이전트 설명 줄;out~→ OK
+hook-fixtures/portability/run.sh $TMP/port2 30	-	0;out~FAIL: 상한 초과

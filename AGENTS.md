@@ -4,16 +4,7 @@ Claude Code용 **하네스**(규칙·스킬·에이전트·훅·검사 스크립
 
 ## 무엇이 들어 있나
 
-| 경로 | 내용 | 새 프로젝트로 |
-|------|------|---------------|
-| `.claude/` | 규칙·스킬·에이전트·훅·`settings.json` — 목록 SSOT는 `.claude/rules/README.md` | 복사 |
-| `scripts/` | `verify.sh`와 검사기 4개 · `dev.sh` 실행 엔진 · `init-harness-probe.sh` · 회고 분석 `analyze-corrections.sh` · git 훅 (`dev.conf`는 프로젝트가 채움) | 복사 |
-| `docs/templates/` | 산출물 등록부·문서 템플릿 | 복사 |
-| `examples/seeds/` | 스택별 lang 팩 씨앗 — `init-harness`가 맞는 것만 `local-*` 이름으로 복사 | 필요한 것만 |
-| `AGENTS.template.md` · `.github/CONTRIBUTING.md` | 새 프로젝트 `AGENTS.md` 견본 · Git 컨벤션 견본 | 견본 |
-| `docs/` 나머지 | 이 저장소의 스펙·보고서·설계 기록·안 하기로 한 것 | 안 함 |
-
-붙이는 순서는 `README.md` "빠른 시작"이 SSOT다. 하네스를 붙이는 경로는 `init-harness` 스킬 하나다.
+구성과 새 프로젝트로 가는지는 `README.md` "디렉터리 안내"가 SSOT다. 규칙·스킬·에이전트·훅 목록은 `.claude/rules/README.md`다. 붙이는 순서는 `README.md` "빠른 시작"이 SSOT다. 하네스를 붙이는 경로는 `init-harness` 스킬 하나다.
 
 ## 이 저장소에서 작업할 때
 

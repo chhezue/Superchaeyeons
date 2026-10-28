@@ -66,6 +66,13 @@ def tool_result_text(part):
         return " ".join(x.get("text", "") for x in c if isinstance(x, dict))
     return ""
 
+def local_date(ts):
+    """대화 기록의 UTC 시각을 이 컴퓨터 날짜로. 장부 날짜가 이 컴퓨터 날짜라서다. 못 읽으면 빈 값"""
+    try:
+        return datetime.datetime.fromisoformat(str(ts).replace("Z", "+00:00")).astimezone().date().isoformat()
+    except ValueError:
+        return ""
+
 def digest(path):
     msgs, bad, lines = [], 0, 0
     sig = {"rejected": 0, "hook_blocked": 0, "stop_hook": 0, "interrupted": 0}
@@ -117,7 +124,7 @@ def digest(path):
                 b = t.encode("utf-8")
                 if len(b) > CAP:
                     t = b[:CAP].decode("utf-8", "ignore") + " …"
-                msgs.append({"n": len(msgs) + 1, "text": t})
+                msgs.append({"n": len(msgs) + 1, "text": t, "date": local_date(d.get("timestamp"))})
     sid = os.path.basename(path)[:-len(".jsonl")] if path.endswith(".jsonl") else os.path.basename(path)
     return {"session": sid, "date": datetime.date.fromtimestamp(os.path.getmtime(path)).isoformat(),
             "message_count": len(msgs), "messages": msgs, "signals": sig, "unparsed_lines": bad,
@@ -162,6 +169,7 @@ def judge(c, digests, rows):
             return f"이번 분석에 없는 세션 {(e or {}).get('session')}"
         if not isinstance(n, int) or not 1 <= n <= d["message_count"]:
             return f"세션 {d['session']}에 없는 메시지 번호 {n}"
+    ev = c["evidence"] = tidy(ev, kind, lid, digests, rows, c)
     if c.get("effect", "") not in EFFECTS:
         return f"모르는 효과 값 {c.get('effect')}"
     if kind == "new" and len(ev) < 2:
@@ -176,6 +184,25 @@ def judge(c, digests, rows):
     if kind == "revert" and rows[lid]["효과"] not in ("효과 없음", "해로움"):
         return f"{lid}의 효과가 효과 없음·해로움으로 확정되지 않음"
     return None
+
+def tidy(ev, kind, lid, digests, rows, c):
+    """근거를 실제 횟수로 줄인다. 같은 글은 한 건으로 센다 — 이어 하기·복제로 같은 메시지가 두 세션에 들어간다.
+    값 변경은 반영한 날 뒤의 메시지만 재발로 센다 — 반영한 날의 메시지는 조치를 만들게 한 지적일 수 있다."""
+    text = lambda e: digests[e["session"]]["messages"][e["message"] - 1]
+    m = re.search(r"반영\((\d{4}-\d{2}-\d{2})\)", rows[lid]["상태"]) if kind == "update" and lid else None
+    kept, seen, dup, before = [], set(), 0, 0
+    for e in ev:
+        msg = text(e)
+        if msg["text"] in seen:
+            dup += 1
+            continue
+        seen.add(msg["text"])
+        if m and msg.get("date") and msg["date"] <= m.group(1):
+            before += 1
+            continue
+        kept.append(e)
+    c["dropped"] = {"같은 글": dup, "반영 전": before}
+    return kept
 
 def render(c, digests):
     lid = (c.get("ledger_id") or "").strip()
@@ -192,10 +219,13 @@ def render(c, digests):
     ev = c.get("evidence") or []
     if c["kind"] == "update":
         sessions = {e["session"] for e in ev}
-        last = max(digests[s]["date"] for s in sessions)
+        last = max(digests[e["session"]]["messages"][e["message"] - 1].get("date") or digests[e["session"]]["date"] for e in ev)
         out.append(f"- 재발: 이번 분석에서 세션 {len(sessions)}개 · 마지막 {last}")
     if c.get("effect"):
         out.append(f"- 효과 제안: {c['effect']}")
+    dropped = ", ".join(f"{k} {n}건" for k, n in (c.get("dropped") or {}).items() if n)
+    if dropped:
+        out.append(f"- 뺀 근거: {dropped}")
     for e in ev:
         d = digests[e["session"]]
         quote = d["messages"][e["message"] - 1]["text"].replace("\n", " ")[:100]
@@ -295,7 +325,8 @@ def run(argv):
     queue_path = os.path.join(STORE, "queue.tsv")
     queue = open(queue_path, encoding="utf-8").read().splitlines() if os.path.isfile(queue_path) else []
     ledger = open(LEDGER, encoding="utf-8").read() if os.path.isfile(LEDGER) else ""
-    payload = {"sessions": list(digests.values()),
+    # 메시지 날짜는 판정에만 쓰고 모델에는 넘기지 않는다 — 세션마다 메시지 수만큼 입력이 늘어난다
+    payload = {"sessions": [dict(d, messages=[{"n": m["n"], "text": m["text"]} for m in d["messages"]]) for d in digests.values()],
                "correction_queue": [dict(zip(["date", "session", "file", "description", "count"], q.split("\t"))) for q in queue],
                "ledger": ledger}
     prompt = open(PROMPT, encoding="utf-8").read() + "\n\n## 입력\n\n```json\n" + json.dumps(payload, ensure_ascii=False, indent=1) + "\n```\n"

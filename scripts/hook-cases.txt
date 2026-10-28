@@ -180,6 +180,19 @@ auto-correction-notice.sh	-;STORE=$REPO/scripts/hook-fixtures/corrections/store-
 auto-correction-notice.sh	-;STORE=$REPO/scripts/hook-fixtures/corrections/store-pending	0;out~systemMessage;out~additionalContext;out~2026-10-20;out~세션 0개;out~정정 기억 2건;out~검토할 후보 1건	{"session_id":"cur","transcript_path":"$TMP/no-sessions/cur.jsonl","source":"startup"}
 # 상태 파일이 없으면(분석을 한 번도 안 돌림) 첫 실행 안내 — 위 대기열 케이스가 $TMP/q에 2줄을 남겼다
 auto-correction-notice.sh	-;STORE=$TMP/q	0;out~한 번도;out~세션 2개;out~정정 기억 2건;out~검토할 후보 0건	{"session_id":"cur","transcript_path":"$REPO/scripts/hook-fixtures/corrections/sessions/cur.jsonl","source":"startup"}
+# 주간 자동 분석 — 정기 분석을 한 번 이상 돌렸고(last-analysis 있음) INTERVAL_MIN이 지났고 새 세션이 있으면 뒤에서 띄운다. 분석기 자리에 가짜(fake-analyze.sh, 3초 머묾)
+# 분석을 한 번도 안 돌렸으면 기한과 상관없이 띄우지 않는다 — 붙여 쓴 프로젝트가 모르게 돈을 쓰지 않게
+auto-correction-notice.sh	-;STORE=$TMP/q;INTERVAL_MIN=0;ANALYZE=$REPO/scripts/hook-fixtures/corrections/fake-analyze.sh	0;out~한 번도;out!~뒤에서;nofile:$TMP/q/auto.log	{"session_id":"cur","transcript_path":"$REPO/scripts/hook-fixtures/corrections/sessions/cur.jsonl","source":"startup"}
+# 기한이 지났어도 새 세션이 없으면 띄우지 않는다
+auto-correction-notice.sh	-;STORE=$TMP/auto;INTERVAL_MIN=0;ANALYZE=$REPO/scripts/hook-fixtures/corrections/fake-analyze.sh;cp:$REPO/scripts/hook-fixtures/corrections/store-zero=$TMP/auto	0;out=;nofile:$TMP/auto/auto.log	{"session_id":"cur","transcript_path":"$TMP/no-sessions/cur.jsonl","source":"startup"}
+# 새 세션이 있어도 기한(기본 7일) 전이면 알림만
+auto-correction-notice.sh	-;STORE=$TMP/auto;ANALYZE=$REPO/scripts/hook-fixtures/corrections/fake-analyze.sh;cp:$REPO/scripts/hook-fixtures/corrections/sessions=$TMP/auto-sess	0;out~세션 2개;out!~뒤에서;nofile:$TMP/auto/auto.log	{"session_id":"cur","transcript_path":"$TMP/auto-sess/cur.jsonl","source":"startup"}
+# 끄는 상수가 0이면 기한이 지나도 알림만
+auto-correction-notice.sh	-;STORE=$TMP/auto;INTERVAL_MIN=0;AUTO_ANALYZE=0;ANALYZE=$REPO/scripts/hook-fixtures/corrections/fake-analyze.sh	0;out~세션 2개;out!~뒤에서;nofile:$TMP/auto/auto.log	{"session_id":"cur","transcript_path":"$TMP/auto-sess/cur.jsonl","source":"startup"}
+# 기한이 지나면 뒤에서 띄우고 알림에 적는다. 시작 줄은 훅이 바로 쓴다
+auto-correction-notice.sh	-;STORE=$TMP/auto;INTERVAL_MIN=0;ANALYZE=$REPO/scripts/hook-fixtures/corrections/fake-analyze.sh	0;out~세션 2개;out~뒤에서 시작;file:$TMP/auto/auto.log~자동 분석 시작 — 세션 2개	{"session_id":"cur","transcript_path":"$TMP/auto-sess/cur.jsonl","source":"startup"}
+# 앞 분석이 아직 돌고 있으면(잠금) 두 번 띄우지 않는다 — 세션 두 개를 함께 열 때
+auto-correction-notice.sh	-;STORE=$TMP/auto;INTERVAL_MIN=0;ANALYZE=$REPO/scripts/hook-fixtures/corrections/fake-analyze.sh	0;out~이미 돌고;out!~뒤에서 시작	{"session_id":"cur","transcript_path":"$TMP/auto-sess/cur.jsonl","source":"startup"}
 # analyze-corrections.sh digest — 요약 추출. 메타 줄·요약 글·시스템 알림·명령 래퍼 제외 · 메시지마다 500B 상한 · 신호 횟수 · 해석 못 한 줄 수.
 # 대화 기록 형식이 바뀌면 이 케이스가 먼저 깨진다
 analyze-corrections.sh digest $REPO/scripts/hook-fixtures/corrections/digest/normal.jsonl	-	0;out~"message_count": 4;out~"text": "첫 요청입니다";out~"text": "두 번째 요청";out!~무시;out!~숨김;out!~요약 글 본문;out!~Caveat;out!~/clear	

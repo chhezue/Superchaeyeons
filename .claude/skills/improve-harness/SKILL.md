@@ -10,7 +10,7 @@ description: 회고 분석이 낸 하네스 개선 후보를 사용자와 하나
 | 단계 | 누가 | 결과 |
 |---|---|---|
 | 기록 | 훅 `auto-correction-queue.sh` — 정정 기억이 저장될 때마다, 모델 비용 0 | `.claude/corrections/queue.tsv` |
-| 분석 | `scripts/analyze-corrections.sh` — 사용자가 직접 또는 예약 실행으로 따로 돌린다 | `.claude/corrections/candidates.md` |
+| 분석 | `scripts/analyze-corrections.sh` — 첫 정기 분석은 사용자가 직접, 그 뒤 세션 시작 훅이 7일마다 따로 띄운다 | `.claude/corrections/candidates.md` |
 | 검토 | **이 스킬** — 세션 안에서 사용자와 | 장부(`{{문서 루트}}/audits/harness-retro.md`) |
 
 세션 시작 알림(`auto-correction-notice.sh`)이 "검토할 후보 K건"을 띄우면 이 스킬을 쓸 때다. 이 스킬은 대화 이력을 다시 읽어 후보를 찾지 않는다 — 분석은 이미 별도 실행에서 세션별 사용자 메시지 요약을 보고 근거(세션 ID·메시지 번호)를 검사했다.

@@ -17,7 +17,7 @@ if [ -n "$staged_core" ] && [ -x scripts/check-portability.sh ]; then
 fi
 
 # 훅·케이스·settings.json이 stage에 있으면 훅 규약 테스트 — 한 케이스라도 실패하면 커밋을 막는다 (scripts/test-hooks.sh)
-staged_hooks="$(git -c core.quotepath=false diff --cached --name-only -- '.claude/hooks/' '.claude/settings.json' 'scripts/hook-cases.txt' 'scripts/hook-fixtures/' 'scripts/test-hooks.sh' 'examples/seeds/*/hooks/')"
+staged_hooks="$(git -c core.quotepath=false diff --cached --name-only -- '.claude/hooks/' '.claude/settings.json' 'scripts/hook-cases.txt' 'scripts/hook-fixtures/' 'scripts/test-hooks.sh')"
 if [ -n "$staged_hooks" ] && [ -x scripts/test-hooks.sh ]; then
 	if ! scripts/test-hooks.sh >/dev/null; then
 		scripts/test-hooks.sh | grep -E 'FAIL|케이스' >&2
@@ -47,7 +47,7 @@ fi
 # ---- 자동 포맷 (프로젝트별) ----------------------------------------------------
 # FORMAT_CMD·FORMAT_PATHS는 harness-map.md의 {{포맷 명령}}과 같은 값이어야 한다 — 훅은 슬롯을 읽지 못하므로 여기 직접 적는다.
 # 포맷 도구가 있으면 FORMAT_CMD는 `scripts/dev.sh fmt`이고 실제 명령은 scripts/dev.conf의 FMT_CMD다.
-# 슬롯을 바꾸면 이 두 줄도 함께 고칠 것. 비어 있으면 포맷 단계를 건너뛴다. (씨앗 예: examples/seeds/java-spring/README.md)
+# 슬롯을 바꾸면 이 두 줄도 함께 고칠 것. 비어 있으면 포맷 단계를 건너뛴다.
 FORMAT_CMD=""
 FORMAT_PATHS=""
 

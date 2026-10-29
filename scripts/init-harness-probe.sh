@@ -114,7 +114,7 @@ echo "| 항목 | 값 | 근거 |"
 echo "|------|-----|------|"
 echo "| 커밋 수 · 태그 수 | $(git rev-list --count HEAD 2>/dev/null) · $(git tag 2>/dev/null | wc -l | tr -d ' ') | \`git rev-list\` · \`git tag\` |"
 mig=$(find "$target" -type d \( -name migration -o -name migrations -o -name migrate -o -name flyway -o -name liquibase \) -not -path '*/node_modules/*' 2>/dev/null | head -3 | sed "s|$root/||" | tr '\n' ' ')
-echo "| 마이그레이션 디렉터리 | ${mig:-없음} | 디렉터리 이름 — 있으면 \"DB 마이그레이션 금지\" 플래그는 ❌ 후보 |"
+echo "| 마이그레이션 디렉터리 | ${mig:-없음} | 디렉터리 이름 — stage 축 근거(마이그레이션 도구를 쓰는 프로젝트) |"
 prod=$(find "$target" -maxdepth 4 \( -name '*prod*' -o -name '*production*' \) -not -path '*/node_modules/*' -not -path '*/.git/*' 2>/dev/null | head -3 | sed "s|$root/||" | tr '\n' ' ')
 echo "| 운영 환경 설정 흔적 | ${prod:-없음} | 파일 이름에 prod — 운영 보존 데이터 유무는 사람이 확인 |"
 echo

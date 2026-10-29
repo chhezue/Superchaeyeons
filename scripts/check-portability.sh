@@ -15,7 +15,7 @@
 #
 # exit 0 = 통과 · exit 1 = 위반 있음 · exit 2 = 사용법·환경 오류
 # 패턴은 scripts/portability-patterns.txt 한 파일에 데이터로 둔다 (부품성 원칙: bash 하나 + 데이터 파일 하나).
-# 계약 원문: docs/specs/cross-cutting/harness-slot-system-v2.md "부품 계약" · "비즈니스 규칙" C1~C4
+# 계약 원문: docs/specs/cross-cutting/harness-slot-system-v2.md "부품 계약" · "비즈니스 규칙" C1~C3
 
 set -u
 export LC_ALL=C
@@ -72,8 +72,7 @@ fi
 
 # ---- 1. 검사 대상 수집 -------------------------------------------------------
 # 배달물 = 새 프로젝트로 그대로 복사되는 것 전부. 프로젝트가 고유 사실을 적는 자리(harness-map.md · .claude/ 안의 local-* 파일)와
-# 견본(examples/)만 제외한다. 스택 씨앗은 examples/seeds/ 에 살고, init-harness가 .claude/rules·agents·hooks로 복사할 때도 local- 접두사를
-# 유지하므로(씨앗 파일명이 이미 local-*) 복사 뒤에도 검사 밖이다 — 접두사가 곧 층 표시다.
+# 견본(examples/)만 제외한다. local- 접두사가 곧 층 표시다.
 # 붙여 쓰는 프로젝트(하네스 자기 수정 ❌ = HARNESS_SELF_EDIT "0")에서는 두 가지가 프로젝트 값 자리라 검사 밖이다.
 #   .github/CONTRIBUTING.md — 그 프로젝트의 {{Git 컨벤션 SSOT}}. 원본 저장소(☑)에서는 견본이라 검사한다
 #   훅 상수 대입 줄의 값 — .claude/rules/README.md "훅 상수와 짝". 원본 저장소에서는 기본값도 견본이라 검사한다 (아래 awk)
@@ -150,7 +149,7 @@ violations="$(
 # ---- 3. always-load 토큰 예산 -----------------------------------------------
 # always-load = frontmatter에 paths:가 없는 .claude/rules/*.md + CLAUDE.md + CLAUDE.md가 @로 불러오는 파일.
 # 예산은 배달물(core·map·AGENTS·CLAUDE)의 래칫이다 — 프로젝트가 스스로 얹는 local-*.md는 합계에 넣지 않고 참고로만 보여 준다.
-# (넣으면 이 저장소 실측으로 정한 상한이 씨앗 하나 복사한 프로젝트에서 곧바로 깨진다.)
+# (넣으면 이 저장소 실측으로 정한 상한이 local 규칙을 둔 프로젝트에서 곧바로 깨진다.)
 always_files=""
 local_files=""
 for f in .claude/rules/*.md; do
@@ -195,7 +194,7 @@ budget_table="$budget_table$(printf '  %7d  스킬·에이전트 설명 줄 %d�
 # ---- 3b. 대조 검사 (S 슬롯 · I 구성 요소 목록) ---------------------------------
 # --scope와 무관하게 배달물 전체를 본다(슬롯이 스킬·훅에서만 쓰여도 "쓰는 곳"이다).
 # 참조 검사는 두 종류 파일을 다르게 본다.
-#   하네스가 쓰는 파일(배달물·템플릿·씨앗): `core-x`·`core-x.md`·`deny-x.sh` 표기가 실제 규칙·훅을 가리켜야 한다.
+#   하네스가 쓰는 파일(배달물·템플릿): `core-x`·`core-x.md`·`deny-x.sh` 표기가 실제 규칙·훅을 가리켜야 한다.
 #   프로젝트가 쓰는 파일(AGENTS.md·README.md·CONTRIBUTING 등): 프로젝트 고유 이름("core-domain 모듈")과 겹치므로
 #     `.md`·`.sh`까지 쓴 표기만 보고, 저장소 어딘가에 같은 이름의 파일이 있으면 통과시킨다.
 # 스킬·에이전트는 이름이 내장·플러그인과 겹치므로 git 이력에서 **지워진** 하네스 스킬·에이전트를 가리킬 때만 잡는다.
@@ -214,7 +213,7 @@ def is_local(f):
     return os.path.basename(f).startswith("local-")
 harness_files = [f for f in files([".claude/rules/*.md", ".claude/skills/*/SKILL.md", ".claude/skills/*/references/*.md",
                                    ".claude/agents/*.md", ".claude/hooks/*.sh", "scripts/git-hooks/*", "AGENTS.template.md",
-                                   "docs/templates/*.md", "examples/seeds/**/*.md"])
+                                   "docs/templates/*.md"])
                  if not (f.startswith(".claude/") and is_local(f))]
 project_files = files(["AGENTS.md", "CLAUDE.md", "README.md", ".github/CONTRIBUTING.md", "docs/README.md", "docs/harness/README.md"])
 # --- S: 슬롯 ---
@@ -234,7 +233,7 @@ for slot in sorted(defined - set(used)):
 readme = open(".claude/rules/README.md", encoding="utf-8").read()
 skills = {os.path.basename(os.path.dirname(p)) for p in glob.glob(".claude/skills/*/SKILL.md")}
 agents_all = {os.path.basename(p)[:-3] for p in glob.glob(".claude/agents/*.md")}
-hooks_all = {os.path.basename(p) for p in glob.glob(".claude/hooks/*.sh")} | {os.path.basename(p) for p in glob.glob("examples/seeds/*/hooks/*.sh")}
+hooks_all = {os.path.basename(p) for p in glob.glob(".claude/hooks/*.sh")}
 rules_all = {os.path.basename(p) for p in glob.glob(".claude/rules/*.md")}
 # 목록 SSOT에는 배달물(local-* 제외)이 전부 있어야 한다
 hooks_here = {os.path.basename(p) for p in glob.glob(".claude/hooks/*.sh")}

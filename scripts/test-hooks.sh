@@ -24,7 +24,7 @@ only="${1:-}"
 tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/hook-test.XXXXXX")"
 trap 'rm -r -- "$tmpdir"' EXIT
 
-pass=0; fail=0; n=0; skip=0
+pass=0; fail=0; n=0
 # 케이스 값 안의 $REPO·$HOME·$TMP를 실제 경로로 바꾼다 ($TMP는 이 실행 동안 케이스끼리 공유하는 임시 폴더라 앞 케이스가 남긴 상태를 뒤 케이스가 본다)
 expand() { local v="$1"; v="${v//\$REPO/$repo_root}"; v="${v//\$HOME/$HOME}"; v="${v//\$TMP/$tmpdir}"; printf '%s' "$v"; }
 # 기대 열의 `;` 뒤 검사 하나를 판정한다. 실패하면 이유를 출력하고 1
@@ -51,18 +51,9 @@ while IFS=$'\t' read -r spec scope expected stdin; do
 	[ -n "$only" ] && [ "$hook" != "$only" ] && continue
 	n=$((n + 1))
 	src="$hooks_dir/$hook"
-	if [ ! -f "$src" ]; then
-		# 배달물에 없으면 씨앗(examples/seeds/*/hooks/)에서 찾는다 — 씨앗 훅도 같은 규약을 지켜야 한다
-		for cand in examples/seeds/*/hooks/"$hook"; do [ -f "$cand" ] && src="$cand" && break; done
-	fi
 	# 훅이 아닌 도구(scripts/)도 같은 형식으로 판정한다 — 회고 루프의 분석 스크립트처럼 훅과 짝으로 도는 것
 	[ ! -f "$src" ] && [ -f "scripts/$hook" ] && src="scripts/$hook"
 	if [ ! -f "$src" ]; then
-		# 씨앗 훅(local-*)은 플래그가 ☑일 때만 복사되고 examples/는 배달하지 않는다 — 어디에도 없으면 건너뛴다.
-		# 배달물 훅(접두사 없음)이 없으면 실패다. 이름을 직접 지정했는데 없으면 아래 0건 검사가 잡는다.
-		case "$hook" in
-		local-*) n=$((n - 1)); skip=$((skip + 1)); continue ;;
-		esac
 		printf '  FAIL  %-28s (훅 파일 없음)\n' "$hook"; fail=$((fail + 1)); continue
 	fi
 	run="$src"
@@ -126,7 +117,7 @@ fi
 if [ -z "$only" ] || [[ "$only" == *deny-* ]]; then
 	mkdir -p "$tmpdir/nopy"
 	printf '#!/bin/sh\nexit 127\n' >"$tmpdir/nopy/python3"; chmod +x "$tmpdir/nopy/python3"
-	for src in "$hooks_dir"/deny-*.sh "$hooks_dir"/local-deny-*.sh examples/seeds/*/hooks/local-deny-*.sh examples/seeds/*/hooks/deny-*.sh; do
+	for src in "$hooks_dir"/deny-*.sh "$hooks_dir"/local-deny-*.sh; do
 		[ -f "$src" ] || continue
 		hook="$(basename "$src")"
 		case "$hook" in deny-unverified-completion.sh) continue ;; esac
@@ -153,7 +144,7 @@ if [ -z "$only" ] || [[ "$only" == *deny-* ]]; then
 	mkdir -p "$tmpdir/hijack"
 	printf '%s\n' 'def load(f):' '    return {"tool_input": {"command": "ls", "file_path": "sub/a.md"}, "stop_hook_active": True}' \
 		'def loads(s):' '    return load(None)' >"$tmpdir/hijack/json.py"
-	for src in "$hooks_dir"/deny-*.sh "$hooks_dir"/local-deny-*.sh examples/seeds/*/hooks/local-deny-*.sh examples/seeds/*/hooks/deny-*.sh; do
+	for src in "$hooks_dir"/deny-*.sh "$hooks_dir"/local-deny-*.sh; do
 		[ -f "$src" ] || continue
 		hook="$(basename "$src")"
 		[ -n "$only" ] && [ "$hook" != "$only" ] && continue
@@ -189,7 +180,7 @@ fi
 
 # ---- 내장 케이스: 훅 등록 대조 ---------------------------------------------------
 # 훅은 settings.json에 등록돼야 존재한다. (1) .claude/hooks/*.sh 전부가 등록돼 있고 (2) 등록된 command 경로가 실존·실행 가능해야 한다.
-# 등록만 지운 커밋이 검사기를 통과했던 사고(2026-09-07 감사 실험 B)가 계기다. 씨앗 훅은 복사 전이라 대상이 아니다.
+# 등록만 지운 커밋이 검사기를 통과했던 사고(2026-09-07 감사 실험 B)가 계기다.
 # (3) 파일 쓰기 도구에 걸린 매처는 Write·Edit·MultiEdit·NotebookEdit를 모두 덮어야 한다 (2026-10-05 감사: MultiEdit·NotebookEdit 우회).
 if [ -z "$only" ]; then
 	n=$((n + 1))
@@ -255,5 +246,5 @@ PY
 fi
 
 echo
-echo "케이스 $n · 통과 $pass · 실패 $fail$([ "$skip" -gt 0 ] && echo " · 건너뜀 $skip (복사하지 않은 씨앗 훅)")"
+echo "케이스 $n · 통과 $pass · 실패 $fail"
 [ "$fail" -eq 0 ]

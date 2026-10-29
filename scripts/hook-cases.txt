@@ -1,6 +1,6 @@
 # test-hooks.sh가 읽는 훅 케이스. 한 줄에 하나, `#`은 주석.
 # 형식: 파일[ 인자…]<TAB>SCOPE<TAB>기대<TAB>stdin
-#   파일: .claude/hooks/ → 씨앗(examples/seeds/*/hooks/) → scripts/ 순으로 찾는다. 공백 뒤는 인자(훅은 보통 없음)
+#   파일: .claude/hooks/ → scripts/ 순으로 찾는다. 공백 뒤는 인자(훅은 보통 없음)
 #   SCOPE: `-`면 훅 원본 그대로, 값이 있으면 훅 본문의 `SCOPE="…"` 줄을 그 값으로 바꾼 임시 복사본으로 실행.
 #          `;self=0`을 붙이면 `HARNESS_SELF_EDIT="…"` 줄도 그 값으로 바꾼다 (예: `.;self=0`)
 #          `;test=CMD`를 붙이면 `TEST_CMD="…"` 줄도 바꾼다 (예: `.;test=`는 빈 값). 여러 개는 `;`로 잇는다
@@ -39,16 +39,6 @@ deny-out-of-scope-write.sh	.;self=0	0	{"tool_input":{"file_path":".claude/rules/
 deny-out-of-scope-write.sh	.;self=0	0	{"tool_input":{"file_path":"scripts/verify.sh"}}
 deny-out-of-scope-write.sh	sub;self=0	2	{"tool_input":{"file_path":".claude/settings.json"}}
 deny-out-of-scope-write.sh	.;self=1	0	{"tool_input":{"file_path":".claude/hooks/deny-dangerous-bash.sh"}}
-
-# ---- local-deny-db-migration.sh ----
-local-deny-db-migration.sh	-	2	{"tool_input":{"file_path":"src/main/resources/db/migration/V1__init.sql"}}
-local-deny-db-migration.sh	-	2	{"tool_input":{"file_path":"anywhere/V2.1__add_col.sql"}}
-local-deny-db-migration.sh	-	2	{"tool_input":{"file_path":"x/R__repeat.sql"}}
-local-deny-db-migration.sh	-	0	{"tool_input":{"file_path":"src/main/java/App.java"}}
-local-deny-db-migration.sh	-	0	{"tool_input":{"file_path":"docs/specs/a.md"}}
-local-deny-db-migration.sh	-	2	not json
-local-deny-db-migration.sh	-	2	{"tool_input":{}}
-local-deny-db-migration.sh	-	2
 
 # ---- deny-dangerous-bash.sh ----
 deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"git status"}}
@@ -342,10 +332,6 @@ deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"bash -euo pipefail -c 'echo
 deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"bash scripts/x.sh 2>/dev/null"}}
 deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"python3 -B scripts/x.py < input.json"}}
 deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"cat <<'E' | python3 scripts/x.py\ngit reset --hard 설명\nE"}}
-
-# ---- local-warn-breaking-change.sh — advisory, 어떤 입력에도 exit 0 ----
-local-warn-breaking-change.sh	-	0	{"tool_input":{"command":"git commit -m \"Feat: x\""}}
-local-warn-breaking-change.sh	-	0	not json
 
 # ---- deny-unverified-completion.sh (Stop) — 픽스처 transcript는 scripts/hook-fixtures/ ----
 deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}

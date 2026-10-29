@@ -27,18 +27,6 @@ Issue · PR · 브랜치 · 커밋 규칙을 하네스(`{{문서 루트}}`, `.cl
 
 같은 스크립트가 설치하는 `pre-commit` 훅은 배달물이 stage에 있으면 `scripts/check-portability.sh`(부품 계약·always-load 예산), 훅·케이스가 있으면 `scripts/test-hooks.sh`(훅 규약), `scripts/dev.sh`·`test-dev.sh`·`dev.conf`가 있으면 `scripts/test-dev.sh`(실행 엔진), 마크다운이 있으면 `scripts/check-doc-style.sh`(문서 스타일)를 돌려 위반이면 커밋을 막는다. 자동 포맷은 훅 본문의 `FORMAT_CMD`(= `{{포맷 명령}}`)가 비어 있지 않을 때만 실행한다. 이행 중 특정 분류를 잠시 빼려면 `PORTABILITY_SKIP=C3 git commit ...`처럼 환경 변수로 넘긴다.
 
-### 계약 변경 사유 트레일러
-
-> **[플래그: API 계약 보호]** 외부 클라이언트가 API 계약을 소비하는 프로젝트만. 상세 기준은 lang 팩 규칙의 "API 계약 변경" 절.
-
-프론트가 **조금이라도 대응해야 하는** API 계약 변경(필드 추가·삭제·이름변경·타입변경·필수화 — optional 추가 포함, 열거 값 추가·삭제, 에러 코드 신규·변경·삭제, 경로·메서드 변경)이 포함된 커밋은 본문에 `Breaking-Change-Reason: <한 줄 사유>` 트레일러를 추가한다. "필드 하나 추가일 뿐"·"optional이라 안전함"은 생략 사유가 아니다 — 스키마 diff 도구는 파괴적 변경만 잡아내므로, 그보다 넓은 실제 프론트 영향은 커밋 시점에 직접 남긴다.
-
-```
-<{{커밋 메시지 형식}}대로 쓴 제목>
-
-Breaking-Change-Reason: <프론트가 대응해야 하는 이유 한 줄>
-```
-
 ## 풀 리퀘스트(PR)
 
 PR을 열고 합칠 때의 형식과 절차다.

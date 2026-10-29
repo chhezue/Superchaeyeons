@@ -1,0 +1,6 @@
+{"type": "user", "message": {"role": "user", "content": "처음 요청"}}
+{"type": "attachment", "attachment": {"type": "queued_command", "prompt": "작업 중에 보낸 정정입니다"}}
+{"type": "attachment", "attachment": {"type": "queued_command", "prompt": [{"type": "text", "text": "블록으로 온 정정<system-reminder>숨김 알림</system-reminder>"}], "origin": {"kind": "unclassified"}}}
+{"type": "attachment", "attachment": {"type": "queued_command", "prompt": "<task-notification>배경 작업 끝</task-notification>", "isMeta": true}}
+{"type": "attachment", "attachment": {"type": "queued_command", "prompt": "다른 세션이 보낸 말", "origin": {"kind": "peer"}}}
+{"type": "attachment", "attachment": {"type": "date", "date": "2026-10-29"}}

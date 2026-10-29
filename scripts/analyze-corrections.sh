@@ -73,9 +73,33 @@ def local_date(ts):
     except ValueError:
         return ""
 
+def queued_texts(att):
+    """작업 도중 보낸 사용자 메시지. 사용자 줄이 아니라 queued_command 첨부로 남는다.
+    메타(작업 알림 등)와 다른 세션(peer)이 보낸 것은 사람이 쓴 말이 아니라 뺀다"""
+    if att.get("type") != "queued_command" or att.get("isMeta") or (att.get("origin") or {}).get("kind") == "peer":
+        return []
+    prompt = att.get("prompt")
+    if isinstance(prompt, str):
+        return [prompt]
+    if isinstance(prompt, list):
+        return [p.get("text") or "" for p in prompt if isinstance(p, dict) and p.get("type") == "text"]
+    return []
+
 def digest(path):
     msgs, bad, lines = [], 0, 0
     sig = {"rejected": 0, "hook_blocked": 0, "stop_hook": 0, "interrupted": 0}
+
+    def add(t, ts):
+        if WRAPPER.match(t):
+            return
+        t = REMINDER.sub("", t).strip()
+        if not t:
+            return
+        b = t.encode("utf-8")
+        if len(b) > CAP:
+            t = b[:CAP].decode("utf-8", "ignore") + " …"
+        msgs.append({"n": len(msgs) + 1, "text": t, "date": local_date(ts)})
+
     with open(path, encoding="utf-8", errors="replace") as fh:
         for raw in fh:
             if not raw.strip():
@@ -88,6 +112,10 @@ def digest(path):
                 continue
             if not isinstance(d, dict):
                 bad += 1
+                continue
+            if d.get("type") == "attachment" and isinstance(d.get("attachment"), dict):
+                for t in queued_texts(d["attachment"]):
+                    add(t, d.get("timestamp"))
                 continue
             if d.get("type") != "user":
                 continue
@@ -116,15 +144,9 @@ def digest(path):
                 if head.startswith("[Request interrupted"):
                     sig["interrupted"] += 1
                     continue
-                if d.get("isMeta") or d.get("isCompactSummary") or WRAPPER.match(t):
+                if d.get("isMeta") or d.get("isCompactSummary"):
                     continue
-                t = REMINDER.sub("", t).strip()
-                if not t:
-                    continue
-                b = t.encode("utf-8")
-                if len(b) > CAP:
-                    t = b[:CAP].decode("utf-8", "ignore") + " …"
-                msgs.append({"n": len(msgs) + 1, "text": t, "date": local_date(d.get("timestamp"))})
+                add(t, d.get("timestamp"))
     sid = os.path.basename(path)[:-len(".jsonl")] if path.endswith(".jsonl") else os.path.basename(path)
     return {"session": sid, "date": datetime.date.fromtimestamp(os.path.getmtime(path)).isoformat(),
             "message_count": len(msgs), "messages": msgs, "signals": sig, "unparsed_lines": bad,

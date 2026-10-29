@@ -579,6 +579,7 @@ PDF가 하네스를 **코드 저장소와 분리된 별도 저장소**(레포별
 
 | 날짜 | 변경 |
 |------|------|
+| 2026-10-29 | lang 팩·씨앗과 C4(팩 참조) 검사를 [lang 팩·씨앗 제거](lang-pack-seed-removal.md)로 지웠다. 이 문서의 팩·씨앗 서술은 당시 기록이다 |
 | 2026-10-26 | **배달본에서 프로젝트 값 제거.** squash merge·외부 이슈 트래커·이모지 커밋 형식을 쓰는 백엔드 저장소에 붙이려다 core `core-workflow.md` G2·G4에 원본 프로젝트의 base 브랜치·merge commit 유지·`Closes #n`이 규율로 남아 있는 것이 드러났다. §5 규율에서 둘을 빼 슬롯 `{{기본 브랜치}}`·`{{머지 방식}}`·`{{이슈 연결}}`을 신설하고, `core-guardrails`·`preflight`의 `gh issue` 호출도 트래커 일반어와 `{{이슈 연결}}`로 바꿨다. 배달본 `COMMIT_RE`와 `.github/CONTRIBUTING.md` 견본을 비웠다. Stop 훅 `TEST_CMD`는 하네스 공통 `scripts/dev.sh test`로 두고 프로젝트 명령은 `dev.conf`가 갖는다 — §4 표의 "기본값" 열은 더 이상 배달되지 않는다. 검사기에 머지 방식·이슈 트래커·기본 브랜치·커밋 형식·채워진 훅 상수 패턴을 추가했다(`TEST_CMD`는 `dev.sh` 호출만 허용) ([작업 보고서](../../reports/2026-10-26-empty-delivery-defaults.md)) |
 | 2026-10-16 | **부품 계약 판정 범위 — 붙여 쓰는 프로젝트 예외.** TripFit 사본에 붙이자 `check-portability.sh`가 `adopt`이 채운 훅 상수 4건과 프로젝트 Git 문서인 `.github/CONTRIBUTING.md` 17건을 위반으로 잡았다(§2 "`.github/CONTRIBUTING.md`가 있는 프로젝트는 `{{Git 컨벤션 SSOT}}`을 그 파일로 지정"과 충돌). `HARNESS_SELF_EDIT="0"`이면 (파일, 상수) 쌍으로 정한 훅 상수의 값과 `CONTRIBUTING.md`를 금지 패턴·슬롯 검사에서 뺀다. 원본 저장소는 그대로 검사. `commit-msg` 정규식을 `COMMIT_RE` 상수로 분리 ([실측 보고서](../../reports/2026-10-16-harness-effect-measurement.md)) |
 | 2026-09-05 | 초안 — 세 저장소 실측(`.claude` 30·34·34개 파일) 후 4축 팩·배지 판정·Stop & Ask 게이트 설계 |

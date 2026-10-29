@@ -59,7 +59,7 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 | **6** | **작업 분해 (Task Breakdown)**<br>독립 검증 가능한 단위로 태스크 쪼개기 | G2 다단계 계획 (`1. [단계] → verify: [확인]`) — 강제 수단은 없음 |
 | **7** | **실행 환경 사전 검증 (Preflight)**<br>구현 전 빌드·의존성·테스트 동작 확인 | `verify-work` 사전 모드 |
 | **8** | **핵심 구현 루프 (Task Loop)**<br>계획 ➜ 선행 테스트 ➜ 구현 ➜ 실행 ➜ 셀프리뷰 ➜ 커밋 | `test-first` 스킬(승인된 테스트 먼저 지점·버그 수정) · `core-testing.md` · 커밋 전 승인 |
-| **9** | **동시성·부하·실패 테스트**<br>단위 테스트로 잡히지 않는 한계 검증 | 공통 부품에는 없음. Java 씨앗의 스택 리뷰어가 트랜잭션 경계·동시 쓰기 충돌(lost update)을 점검 |
+| **9** | **동시성·부하·실패 테스트**<br>단위 테스트로 잡히지 않는 한계 검증 | 공통 부품에는 없음. 프로젝트에 리뷰어 에이전트가 있으면 `verify-work`가 부른다 |
 | **10**| **독립 코드 리뷰 (Independent Review)**<br>확증 편향 없는 제3의 시선으로 검토 | 구현 대화를 모르는 별도 컨텍스트 리뷰 — 코드는 `code-review`·`simplify`, 문서는 `doc-reviewer` |
 | **11**| **문서화 및 작업 보고 (Report)**<br>사용자 문서와 작업 한계·결정사항 기록 | `report.md` (검증하지 못한 것 명시) |
 
@@ -96,7 +96,7 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 | `.claude/hooks/` | 결정적 차단 훅 (`deny-*`) | 배달 |
 | `scripts/` | 이식성·문서·훅 검사 스크립트(`verify.sh`가 묶음), git 훅 설치기, 빌드·실행 엔진 `dev.sh`(프로젝트 값은 `dev.conf`), `init-harness-probe.sh`, 회고 분석 `analyze-corrections.sh`, 글 다듬기 `polish-with-gemini.sh` | 배달 |
 | `docs/templates/` | 산출물 등록부 및 문서 템플릿 | 배달 |
-| `examples/seeds/` | 기술 스택별 씨앗 규칙 (`java-spring/`, `_template/`). `init-harness`가 맞는 것만 `local-*` 이름으로 복사 | 필요한 것만 |
+| `examples/` | 채운 예 — `harness-map.md`(`baro/`)·GitHub 트래커 안내(`tracker-github/`) | 참고 자료 |
 | `AGENTS.template.md` · `.github/CONTRIBUTING.md` | 새 프로젝트 `AGENTS.md` 견본 · Git 컨벤션 견본 | 견본 |
 | `docs/harness/` | 4개 레이어 설명과 현재 동작 요약 | 저장소 전용 |
 | `docs/` 나머지 | 이 저장소의 스펙·보고서·설계 기록·안 하기로 한 것 | 저장소 전용 |

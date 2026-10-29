@@ -1,6 +1,6 @@
 # lang 팩·씨앗 제거
 
-> 상태: Approved (2026-10-29 사용자 승인)
+> 상태: Implemented (2026-10-29)
 > MVP: In scope
 > 관련 BR: N/A
 
@@ -58,10 +58,11 @@ lang 팩·lang 축·스택 팩 언급은 22개 파일 46곳이다. 씨앗 언급
 ### REMOVED
 
 - `examples/seeds/` 전체 — `java-spring/`(규칙 5 · 리뷰어 1 · 훅 3 · `dev.conf` · README) · `_template/`의 `rules/lang-conventions.md` · `agents/stack-reviewer.md` · `README.md` · `seeds/README.md`. 골격 2개는 ADDED 위치로 옮긴다
-- `scripts/hook-cases.txt`의 씨앗 훅 케이스 12개
+- `scripts/hook-cases.txt`의 씨앗 훅 케이스 10개
 - 능력 플래그 7개 — 아래 "플래그 정리"의 삭제 행
 - `.claude/rules/README.md`의 "스택 규칙(lang 팩)은 배달물에 없다" 문단 · 유지보수 7번 · "플래그를 켜거나 끌 때 할 일"의 씨앗 행 2개 · 작명 표 "씨앗에서 복사한 파일" 행
 - `AGENTS.md` "씨앗 파일은 `local-*` 이름을 유지한다" 줄
+- `.github/CONTRIBUTING.md` "계약 변경 사유 트레일러" 절 — 지운 "API 계약 보호" 플래그를 부르던 견본 절. 플러그인 배달의 커밋 승인 창 `CONTRACT_PATHS` 표시가 대신한다
 
 ## 요구사항
 
@@ -79,8 +80,8 @@ lang 팩·lang 축·스택 팩 언급은 22개 파일 46곳이다. 씨앗 언급
 | 스택 함정 메모 | 삭제 | `core-workflow.md` G1 — 버전을 확인한 공식 문서를 보는 문장이 이미 있다 |
 | 스택 리뷰어 | 삭제 | `verify-work` 7단계 → "프로젝트에 리뷰어 에이전트가 있으면 부른다" |
 
-- [ ] 위 표대로 `harness-map.md` 능력 플래그 표와 그 플래그를 부르는 core·스킬 문장을 고친다
-- [ ] `check-portability.sh`의 슬롯·플래그 정의-사용 대조가 통과한다(지운 플래그를 부르는 곳이 남지 않는다)
+- [x] 위 표대로 `harness-map.md` 능력 플래그 표와 그 플래그를 부르는 core·스킬 문장을 고친다
+- [x] `check-portability.sh`의 슬롯·플래그 정의-사용 대조가 통과한다(지운 플래그를 부르는 곳이 남지 않는다)
 
 **참조 바꾸기**
 
@@ -94,27 +95,27 @@ lang 팩·lang 축·스택 팩 언급은 22개 파일 46곳이다. 씨앗 언급
 | "계약 diff 도구(lang 팩)"(`refactor-safely` · 스펙 템플릿) | "계약 diff 도구가 있으면" |
 | `AGENTS.template.md` "주석·테스트 표기: {lang 팩 파일}" | 줄 삭제. 프로젝트 관례는 견본의 다른 절에 직접 적는다 |
 
-- [ ] 위 표대로 고친 뒤 `.claude/`·`scripts/`·`AGENTS*.md`·`README.md`에 "lang 팩"·"스택 팩"·"씨앗"이 남지 않는다. 축 이름 "lang"(`harness-map.md` **축:** 줄)은 실측 기록이라 남긴다
+- [x] 위 표대로 고친 뒤 `.claude/`·`scripts/`·`AGENTS*.md`·`README.md`에 "lang 팩"·"스택 팩"·"씨앗"이 남지 않는다. 축 이름 "lang"(`harness-map.md` **축:** 줄)은 실측 기록이라 남긴다
 
 **`init-harness`**
 
-- [ ] 씨앗 복사(2단계)·트래커 씨앗(2-1단계)·`dev.conf` 씨앗(4단계)·체크리스트 "씨앗 대조" 행·보고의 "지운 스택 팩"을 지운다
-- [ ] 트래커 안내는 `references/` 골격을 `.claude/skills/local-track-issues/`로 복사해 실측으로 채운다. 확인하지 못한 항목은 지금처럼 "(확인 못 함 — 이유)"로 남긴다
-- [ ] `dev.conf`는 `references/` 골격을 복사해 CI 워크플로의 실제 명령으로 채운다
-- [ ] 프로젝트 고유 관례를 적을 곳이 필요하면 `local-*.md`를 만들 수 있다는 한 줄을 남긴다. `init-harness`가 스택 규칙을 지어 쓰지는 않는다
+- [x] 씨앗 복사(2단계)·트래커 씨앗(2-1단계)·`dev.conf` 씨앗(4단계)·체크리스트 "씨앗 대조" 행·보고의 "지운 스택 팩"을 지운다
+- [x] 트래커 안내는 `references/` 골격을 `.claude/skills/local-track-issues/`로 복사해 실측으로 채운다. 확인하지 못한 항목은 지금처럼 "(확인 못 함 — 이유)"로 남긴다
+- [x] `dev.conf`는 `references/` 골격을 복사해 CI 워크플로의 실제 명령으로 채운다
+- [x] 프로젝트 고유 관례를 적을 곳이 필요하면 `local-*.md`를 만들 수 있다는 한 줄을 남긴다. `init-harness`가 스택 규칙을 지어 쓰지는 않는다
 
 **같은 변경에서 고칠 문서**
 
-- [ ] 위 "고쳐야 하는 기존 결정" 네 곳
-- [ ] `{{현재동작 요약}}`(`docs/harness/README.md`) — 플래그가 줄었고 스택 규칙이 자동으로 들어가지 않는다는 것을 쉬운 말로 (`core-guardrails.md` §3)
-- [ ] `README.md` 9단계 행 · "디렉터리 안내" 표 · `docs/README.md` 붙이는 순서 · `docs/harness-engineering.md` 씨앗 문단과 "숫자로 보는 현재" · `doc-writing.md` "씨앗은 `init-harness`의 씨앗 대조 표가" 문장
+- [x] 위 "고쳐야 하는 기존 결정" 네 곳
+- [x] `{{현재동작 요약}}`(`docs/harness/README.md`) — 플래그가 줄었고 스택 규칙이 자동으로 들어가지 않는다는 것을 쉬운 말로 (`core-guardrails.md` §3)
+- [x] `README.md` 9단계 행 · "디렉터리 안내" 표 · `docs/README.md` 붙이는 순서 · `docs/harness-engineering.md` 씨앗 문단과 "숫자로 보는 현재" · `doc-writing.md` "씨앗은 `init-harness`의 씨앗 대조 표가" 문장
 
 **플러그인 배달 스펙에 더할 것** (이 스펙 구현과 같은 PR에서 amend만 한다. 훅 구현은 그 스펙의 단계에서 한다)
 
-- [ ] 리스크 12 확정과 Must "씨앗" 항목 교체
-- [ ] 커밋 승인 창 범주에 `CONTRACT_PATHS` 표시(위 "플래그 정리")
-- [ ] 공통 포맷 훅 — `PostToolUse`에서 고친 파일이 `FORMAT_PATHS`에 맞으면 `FORMAT_CMD`를 돌린다. 그 스펙이 git 훅 `pre-commit`을 지우면서 포맷을 맡을 곳이 비어 있다
-- [ ] `harness.conf` 키 목록에 `CONTRACT_PATHS` 추가
+- [x] 리스크 12 확정과 Must "씨앗" 항목 교체
+- [x] 커밋 승인 창 범주에 `CONTRACT_PATHS` 표시(위 "플래그 정리")
+- [x] 공통 포맷 훅 — `PostToolUse`에서 고친 파일이 `FORMAT_PATHS`에 맞으면 `FORMAT_CMD`를 돌린다. 그 스펙이 git 훅 `pre-commit`을 지우면서 포맷을 맡을 곳이 비어 있다
+- [x] `harness.conf` 키 목록에 `CONTRACT_PATHS` 추가
 
 ### Nice to Have
 
@@ -133,7 +134,7 @@ lang 팩·lang 축·스택 팩 언급은 22개 파일 46곳이다. 씨앗 언급
 | 플래그 정리 | 아님 | `check-portability.sh`의 정의-사용 대조가 판정한다. 지운 플래그를 부르는 문장이 남으면 이미 실패한다 |
 | 참조 바꾸기 | 아님 | 문서 문장 교체다. 남은 언급은 완료 기준의 `grep`이 판정한다 |
 | `init-harness` | 아님 | 스킬 문서다. 통제 영역에 닿지 않는다 |
-| 검사기·훅 테스트에서 씨앗 경로 빼기 | 아님 | 지우는 변경이다. `scripts/dev.sh test` 통과와 케이스 수 감소(12개)로 판정한다 |
+| 검사기·훅 테스트에서 씨앗 경로 빼기 | 아님 | 지우는 변경이다. `scripts/dev.sh test` 통과와 케이스 수 감소(10개)로 판정한다 |
 | 플러그인 배달 스펙 amend | 아님 | 문서다 |
 
 ## 불변 조건 (Invariant)
@@ -153,21 +154,21 @@ API 없음. 바뀌는 접점은 `harness-map.md` 능력 플래그 표(행 9개 �
 
 ### 정상
 
-- [ ] `scripts/dev.sh test` 통과
-- [ ] `grep -rn "lang 팩\|스택 팩\|씨앗\|examples/seeds" .claude scripts AGENTS.md AGENTS.template.md README.md docs/README.md`가 아무것도 찾지 않는다
-- [ ] `init-harness` 본문만 읽고 트래커 안내와 `dev.conf`를 어디서 시작하는지 알 수 있다(`references/` 경로가 실제로 있다)
+- [x] `scripts/dev.sh test` 통과
+- [x] `grep -rn "lang 팩\|스택 팩\|씨앗\|examples/seeds" .claude scripts AGENTS.md AGENTS.template.md README.md docs/README.md`가 아무것도 찾지 않는다
+- [x] `init-harness` 본문만 읽고 트래커 안내와 `dev.conf`를 어디서 시작하는지 알 수 있다(`references/` 경로가 실제로 있다)
 
 ### 엣지 · 실패
 
-- [ ] 지운 플래그 이름 하나를 core에 다시 써 넣으면 `check-portability.sh`가 실패한다
-- [ ] `hook-cases.txt`에서 씨앗 케이스가 빠진 뒤 "건너뜀" 줄이 출력되지 않는다
+- [x] 지운 플래그 이름 하나를 core에 다시 써 넣으면 `check-portability.sh`가 실패한다
+- [x] `hook-cases.txt`에서 씨앗 케이스가 빠진 뒤 "건너뜀" 줄이 출력되지 않는다
 
 ## 완료 기준
 
-- [ ] `scripts/dev.sh test` 통과
-- [ ] 위 검증 시나리오 전부
-- [ ] `REMOVED` 항목 실제 삭제 확인 — `examples/seeds/` 없음 · 씨앗 케이스 0개 · 지운 플래그 행 없음
-- [ ] "고쳐야 하는 기존 결정"과 "같은 변경에서 고칠 문서"가 같은 PR에 있다
+- [x] `scripts/dev.sh test` 통과
+- [x] 위 검증 시나리오 전부
+- [x] `REMOVED` 항목 실제 삭제 확인 — `examples/seeds/` 없음 · 씨앗 케이스 0개 · 지운 플래그 행 없음
+- [x] "고쳐야 하는 기존 결정"과 "같은 변경에서 고칠 문서"가 같은 PR에 있다
 
 ## 리스크·미결정
 
@@ -181,5 +182,6 @@ API 없음. 바뀌는 접점은 `harness-map.md` 능력 플래그 표(행 9개 �
 
 | 날짜 | 변경 |
 |------|------|
+| 2026-10-29 | 구현 — 지운 씨앗 훅 케이스 수를 실물(10개 — 머리 주석 2줄을 세어 12로 적었다)로 고쳤다. 같은 플래그를 부르던 `.github/CONTRIBUTING.md` 절을 구현 중 찾아 REMOVED에 더했다. always-load 합계 24,918B → 23,777B |
 | 2026-10-29 | 승인 — 리스크 3을 감수로 확정했다 |
 | 2026-10-29 | 초안 — 사용자가 씨앗·lang 팩 제거 방향을 승인했다. 플래그 정리 표 · 참조 바꾸기 표 · 플러그인 배달 스펙에 더할 것 |

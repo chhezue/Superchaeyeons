@@ -13,7 +13,7 @@
 
 - 대상: `{경로·패키지·모듈}`
 - 감사자: 서브에이전트 (`Agent` 툴, 읽기 전용)
-- 기준: `audit-checklist.md` 1~14 · lang 팩 규칙 `{파일}` · `core-guardrails.md` ⛔ STOP
+- 기준: `audit-checklist.md` 1~14 · 프로젝트 관례 `{local-*.md 또는 없음}` · `core-guardrails.md` ⛔ STOP
 
 ## 불변 조건 (G2에서 확정)
 

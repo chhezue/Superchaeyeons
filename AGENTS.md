@@ -13,5 +13,5 @@ Claude Code용 **하네스**(규칙·스킬·에이전트·훅·검사 스크립
 - **구성 요소를 추가·삭제·개명하면 `.claude/rules/README.md`를 같은 턴에** 고친다 — `check-portability.sh`가 실물과 대조한다
 - **훅을 고치거나 우회 경로를 찾으면 `scripts/hook-cases.txt`에 케이스부터** 넣는다 — `deny-*`는 판정 불가(python3 없음 포함)도 막아야 하고, 새 훅은 `settings.json`에 등록해야 통과한다
 - **이 저장소만 "하네스 자기 수정" ☑** — 붙여 쓰는 프로젝트는 `init-harness`가 ❌ + `HARNESS_SELF_EDIT="0"`으로 둔다
-- **씨앗 파일은 `local-*` 이름을 유지**한다 — 접두사가 검사기에 층을 알린다. `examples/`는 참고 자료이고 규칙이 아니다
+- **프로젝트 고유 파일은 `local-*` 이름**을 쓴다 — 접두사가 검사기에 층을 알린다. `examples/`는 참고 자료이고 규칙이 아니다
 - 커밋은 `{Type}: {한글}`, 목적·주제별 최대 5개. **승인 없이 커밋하지 않는다** (`core-workflow.md` G4 · `.github/CONTRIBUTING.md`)

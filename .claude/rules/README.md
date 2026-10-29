@@ -21,11 +21,11 @@ paths:
 
 | 층 | 파일 | 수정 | 이유 |
 |----|------|------|------|
-| **core** | `rules/core-*.md` · `skills/` · `agents/` · `hooks/` · `settings.json` | 금지 — `check-portability.sh`가 고유명사·스택 식별자·경로 리터럴·팩 참조를 막는다. 예외: `init-harness`가 플래그에 따라 `settings.json`에 씨앗 훅 등록을 추가·해제 · 붙여 쓰는 프로젝트(하네스 자기 수정 ❌)에서는 아래 "훅 상수와 짝"의 대입 값과 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`가 프로젝트 값 자리라 검사 밖 | 모든 프로젝트에서 같아야 개선이 함께 전파된다 |
+| **core** | `rules/core-*.md` · `skills/` · `agents/` · `hooks/` · `settings.json` | 금지 — `check-portability.sh`가 고유명사·스택 식별자·경로 리터럴을 막는다. 예외: 붙여 쓰는 프로젝트(하네스 자기 수정 ❌)에서는 아래 "훅 상수와 짝"의 대입 값과 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`가 프로젝트 값 자리라 검사 밖 | 모든 프로젝트에서 같아야 개선이 함께 전파된다 |
 | **map** | `rules/harness-map.md` | `init-harness`가 채운다 | 이 프로젝트의 축·슬롯·플래그 값 |
-| **local** | `.claude/` 안의 `local-*` 전부 | 자유 | 저장소 고유 사실·복사한 lang 팩. 검사기가 접두사로 이 층을 뺀다 |
+| **local** | `.claude/` 안의 `local-*` 전부 | 자유 | 저장소 고유 사실·관례. 검사기가 접두사로 이 층을 뺀다 |
 
-스택 규칙(lang 팩)은 배달물에 없다. `init-harness`가 `examples/seeds/{스택}/`에서 `local-*` 이름 그대로 복사하거나 `_template/`을 채운다.
+스택 규칙은 배달물에 없다. 프로젝트가 따로 적을 관례는 `local-*.md`에 쓴다.
 
 ## 목록
 
@@ -55,7 +55,7 @@ paths:
 │   ├── fix-bug/                      C 트랙 — 재현 → 원인 분리 → 최소 수정
 │   ├── verify-work/                  G2 직후 · G3 · G4 마무리 — 실행 결과만 보고 (G3 절차 · G4 상세 SSOT)
 │   ├── improve-harness/              G4 — 회고 분석이 낸 하네스 개선 후보를 사람과 검토해 장부에 (분석 지시문 references/analyze.md)
-│   └── local-track-issues/           프로젝트 층 트래커 안내 — 이슈 확인·만들기·연결의 수단·키·표기. `{{이슈 연결}}`이 가리킨다 (씨앗 `examples/seeds/tracker-*`·`_template`)
+│   └── local-track-issues/           프로젝트 층 트래커 안내 — 이슈 확인·만들기·연결의 수단·키·표기. `{{이슈 연결}}`이 가리킨다 (골격 `skills/init-harness/references/`)
 ├── agents/                           셋 다 omitClaudeMd — 매번 읽히는 규칙 없이 시작, 슬롯 값은 harness-map.md를 읽는다
 │   ├── researcher.md                 G1 — 외부 문서 조사, 결론·근거만 반환
 │   ├── test-writer.md                test-first 1단계 — 통제 영역 지점의 테스트를 스펙만 보고 작성 (Bash 없음)
@@ -84,7 +84,6 @@ paths:
 - "확인받았으면 통과" 통로는 없다. 승인은 사용자가 `harness-map.md` 값과 짝인 훅 상수를 바꾸는 것이다. 막힐 때 각 `deny-*` 훅의 차단 메시지가 이 안내를 Claude에게 준다
 - 훅은 명령 문자열만 본다. 변수·별도 스크립트 간접 실행과 Bash로 하네스 파일을 고치는 것은 못 보므로 규칙으로만 막는다 (`eval`·`bash -c` 안은 `deny-dangerous-bash.sh`가 다시 검사한다)
 - 판단이 필요한 것은 훅에 넣지 않는다. advisory 훅이 필요하면 `command`-type으로 — `agent`-type 훅이 "막지 마라"는 지시에도 커밋을 막은 사고가 있었다
-- 씨앗 훅(`local-*`)은 플래그가 ☑일 때 `init-harness`가 복사·등록한다. 복사하지 않은 씨앗의 케이스는 `test-hooks.sh`가 건너뛴다
 
 ## harness-map.md 고치기
 
@@ -96,9 +95,8 @@ paths:
 2. `(없음)`인 슬롯을 규칙이 요구하면 멈추고 사용자에게 묻는다 (map 머리에도 있다)
 3. 슬롯·플래그는 `core-*.md`가 실제로 쓸 때만 둔다 — `scripts/check-portability.sh`가 슬롯 정의와 사용을 대조한다
 4. 옵션을 끄려고 규칙 절을 지우지 않는다 — ❌면 `[플래그: X]` 절을 무시한다
-5. `core-*.md`는 손대지 않는다. 고유 사실은 map(값)과 `.claude/` 안의 `local-*`(규칙·복사한 씨앗)에만. 클라이언트 전제·배포 토폴로지처럼 스택이 아닌 고유 사실은 `local-*.md`로 쓴다
+5. `core-*.md`는 손대지 않는다. 고유 사실은 map(값)과 `.claude/` 안의 `local-*`(규칙·스킬)에만. 클라이언트 전제·배포 토폴로지처럼 스택이 아닌 고유 사실은 `local-*.md`로 쓴다
 6. 축은 붙이는 시점에 실측해 적는다. 규칙은 축을 직접 부르지 않는다 — 슬롯·플래그 값을 고르는 근거다. 기존 저장소에 붙일 때 명령·형식 슬롯은 기본값을 물려받지 않고 `init-harness`가 이력에서 실측한다
-7. lang 팩은 `init-harness`가 씨앗(`examples/seeds/{스택}/`)을 `local-*` 이름 그대로 복사하거나 `_template/`을 채운다. lang 팩 목록은 map에 적지 않고 `ls .claude/rules/local-*`로 본다
 
 **훅 상수와 짝:** 훅·git 훅은 map을 읽지 못해 값을 본문에 직접 적는다. 아래 값을 바꾸면 짝을 같은 턴에 고친다.
 
@@ -106,7 +104,7 @@ paths:
 - "하네스 자기 수정" ↔ 같은 훅의 `HARNESS_SELF_EDIT`
 - `{{테스트 명령}}` ↔ `deny-unverified-completion.sh`의 `TEST_CMD`
 - `{{커밋 메시지 형식}}` ↔ `scripts/git-hooks/commit-msg`의 `COMMIT_RE`
-- `{{포맷 명령}}` ↔ `scripts/git-hooks/pre-commit`의 `FORMAT_CMD`·`FORMAT_PATHS`와 씨앗 포맷 훅
+- `{{포맷 명령}}` ↔ `scripts/git-hooks/pre-commit`의 `FORMAT_CMD`·`FORMAT_PATHS`
 - `{{문서 루트}}` ↔ `scripts/analyze-corrections.sh`의 `LEDGER`(장부 경로) · `scripts/polish-with-gemini.sh`의 `DOC_ROOT`
 - 폴더 통째 삭제 막기(map에 없음 — `init-harness` 2단계 질문) ↔ `deny-dangerous-bash.sh`의 `BLOCK_BULK_DELETE`. 나머지 `BLOCK_*` 묶음 상수는 묻지 않고 배달 기본값 `1`(막기)로 둔다
 - "Gemini 다듬기" ↔ 프로젝트 루트 `harness.conf`의 `POLISH_ENABLED=1`(☑일 때만 둔다). `scripts/polish-with-gemini.sh`의 같은 이름 상수는 배달 기본값 `0`이라 고치지 않는다 — 원본의 켜짐이 복사본에 실리지 않게
@@ -115,11 +113,9 @@ paths:
 
 | 플래그 | 할 일 |
 |--------|-------|
-| DB 마이그레이션 금지 | ☑면 씨앗 `local-deny-db-migration.sh` 복사·등록. **운영 DB가 있으면 반드시 ❌** |
-| API 계약 보호 | ☑면 씨앗 `local-warn-breaking-change.sh` 복사·등록 |
 | 하네스 자기 수정 | ❌면 `HARNESS_SELF_EDIT="0"`. **붙여 쓰는 프로젝트는 ❌가 기본** |
 
-**옛 모양 map 정리:** map에 `## 규칙` 절 · 훅 상수 짝 목록 · 플래그 표 "켜거나 끌 때 할 일" 열이 들어 있으면 옛 모양이다. 하네스를 갱신하면 always-load 예산을 넘으니 `init-harness` 재동기화에서 그 셋과 축·명령 슬롯 표 앞의 작성 안내를 지우고, 머리에 `(없음)` 슬롯 문장과 이 절을 가리키는 문장만 남긴다. 값 표는 건드리지 않는다. 2026-10-28 뒤로는 축 표·"스택 팩" 표·플래그 표 아래 설명 문단도 옛 모양이다 — 축은 값 그대로 `**축:**` 한 줄로 옮기고, 나머지 둘은 지운다.
+**옛 모양 map 정리:** map에 `## 규칙` 절 · 훅 상수 짝 목록 · 플래그 표 "켜거나 끌 때 할 일" 열이 들어 있으면 옛 모양이다. 하네스를 갱신하면 always-load 예산을 넘으니 `init-harness` 재동기화에서 그 셋과 축·명령 슬롯 표 앞의 작성 안내를 지우고, 머리에 `(없음)` 슬롯 문장과 이 절을 가리키는 문장만 남긴다. 값 표는 건드리지 않는다. 2026-10-28 뒤로는 축 표·스택별 규칙 파일 표·플래그 표 아래 설명 문단도 옛 모양이다 — 축은 값 그대로 `**축:**` 한 줄로 옮기고, 나머지 둘은 지운다. 2026-10-29 뒤로는 능력 플래그 표의 `DB 마이그레이션 금지`·`에러 코드 카탈로그 동시갱신`·`권한 게이트·활동 기록 동시갱신`·`API 계약 보호`·`스택 함정 메모`·`스택 리뷰어` 행도 옛 모양이라 지운다.
 
 ## 작명
 
@@ -131,7 +127,6 @@ paths:
 | 규칙 | 적용 시점·대상 명사구. 부품은 `core-`, 고유는 `local-` | `core-gates`, `local-release` |
 | 훅 | 동작 접두사 — 차단 `deny-` · 경고 `warn-` · 자동 실행 `auto-` | `deny-dangerous-bash.sh` |
 | 에이전트 | 역할 명사, 20자 이내 | `researcher`, `{스택}-reviewer` |
-| 씨앗에서 복사한 파일 | 파일명 맨 앞에 `local-` (에이전트 `name:`은 접두사 없이) | `local-deny-db-migration.sh` |
 
 새 이름은 저장소에서 그 단어가 몇 번 쓰이는지 먼저 센다 — 흔한 단어면 일괄 치환이 불가능해진다.
 

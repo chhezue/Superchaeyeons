@@ -48,7 +48,7 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 2-1. **트래커 안내** — 실측한 트래커에 맞는 씨앗(`examples/seeds/tracker-*/`)이 있으면 그 README대로 `.claude/skills/local-track-issues/`로 복사하고 "씨앗 대조"를 확인한다. 없으면 `examples/seeds/_template/skills/local-track-issues/`를 복사해 실측값으로 채운다 — 확인하지 못한 항목은 지어내지 않고 "(확인 못 함 — 이유)"로 남긴다. `{{이슈 연결}}`은 "트래커 이름 · 안내 `local-track-issues`"로 채운다
 3. `local-*.md` — 슬롯으로도 플래그로도 안 빠지는 **그 저장소만의 사실**이 있을 때만. `AGENTS.md`와 중복이면 만들지 않는다
 4. `scripts/dev.conf` — 배달본은 `{…}` 빈칸이다. 씨앗에 `dev.conf`가 있으면 그 파일에서 시작하고, 없으면 `examples/seeds/_template/dev.conf`를 복사해 1단계 CI 워크플로의 실제 명령으로 채운다. 실행 엔진 `scripts/dev.sh`는 고치지 않는다. 키를 채운 근거(파일·명령)를 2단계 제안 표에 붙이고, 실측으로 정해지지 않는 것(로컬에서 띄울 의존 서비스·헬스 판정 주소)만 묻는다. 값이 있는 명령 슬롯은 `scripts/dev.sh <동사>`로 적는다
-5. `AGENTS.template.md` → `AGENTS.md` 채움 · `./scripts/install-git-hooks.sh` · 배달본에서 비어 온 `commit-msg` 훅의 `COMMIT_RE`를 `{{커밋 메시지 형식}}`에 맞는 정규식으로 채운다
+5. `AGENTS.template.md` → `AGENTS.md` 채움 · 배달본에서 비어 온 `commit-msg` 훅의 `COMMIT_RE`를 `{{커밋 메시지 형식}}`에 맞는 정규식으로 채운다 · 그다음 `./scripts/install-git-hooks.sh`. 설치는 복사라서, 먼저 설치하고 `scripts/git-hooks/`의 상수(`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`)를 고치면 `.git/hooks/`에는 옛 값이 남는다. 상수를 다시 고치면 설치도 다시 한다
 6. `.gitignore`에 `.claude/corrections/`와 `.claude/polish/`가 없으면 더한다 — 회고 루프가 정정 기억 설명과 대화 원문 일부를, Gemini 다듬기가 문서 기준판을 쓰는 폴더라 커밋되면 안 된다. 하네스를 갱신하는 재동기화에서도 확인한다
 7. "Gemini 다듬기"를 ☑로 정했으면 프로젝트 루트 `harness.conf`에 `POLISH_ENABLED=1`을 적는다. `scripts/polish-with-gemini.sh`의 상수는 고치지 않는다 — 배달 기본값이 꺼짐이어야 이 단계를 건너뛴 복사본이 글을 밖으로 보내지 않는다
 
@@ -68,6 +68,7 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 - [ ] `{{기본 브랜치}}`·`{{머지 방식}}`·`{{이슈 연결}}`이 실측(첫 부모 merge 커밋 수·PR 이력·이슈 키)과 맞는다
 - [ ] `.claude/skills/local-track-issues/SKILL.md`가 있고 `{…}` 자리표시자가 0개다
 - [ ] `commit-msg`의 `COMMIT_RE`를 `{{커밋 메시지 형식}}`에 맞게 채웠다 — 형식이 `(없음)`이면 빈 값 그대로
+- [ ] 설치된 git 훅이 저장소 사본과 같다 — `for h in scripts/git-hooks/*; do diff -q "$h" ".git/hooks/$(basename "$h")"; done`가 아무것도 출력하지 않는다
 - [ ] `git check-ignore -q .claude/corrections/x`가 성공한다 — 빠지면 `scripts/test-hooks.sh`의 기록 폴더 검사도 실패한다
 
 ### 4. 역스펙·초기 백로그 (기존 코드가 있을 때) → **승인 (G2 — Draft 스펙·감사 후보 목록)**

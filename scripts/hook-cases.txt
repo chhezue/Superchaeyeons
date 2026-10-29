@@ -417,12 +417,14 @@ auto-correction-notice.sh	-;STORE=$TMP/auto;INTERVAL_MIN=0;AUTO_ANALYZE=0;ANALYZ
 auto-correction-notice.sh	-;STORE=$TMP/auto;INTERVAL_MIN=0;ANALYZE=$REPO/scripts/hook-fixtures/corrections/fake-analyze.sh	0;out~세션 2개;out~뒤에서 시작;file:$TMP/auto/auto.log~자동 분석 시작 — 세션 2개	{"session_id":"cur","transcript_path":"$TMP/auto-sess/cur.jsonl","source":"startup"}
 # 앞 분석이 아직 돌고 있으면(잠금) 두 번 띄우지 않는다 — 세션 두 개를 함께 열 때
 auto-correction-notice.sh	-;STORE=$TMP/auto;INTERVAL_MIN=0;ANALYZE=$REPO/scripts/hook-fixtures/corrections/fake-analyze.sh	0;out~이미 돌고;out!~뒤에서 시작	{"session_id":"cur","transcript_path":"$TMP/auto-sess/cur.jsonl","source":"startup"}
-# analyze-corrections.sh digest — 요약 추출. 메타 줄·요약 글·시스템 알림·명령 래퍼 제외 · 메시지마다 500B 상한 · 신호 횟수 · 해석 못 한 줄 수.
+# analyze-corrections.sh digest — 요약 추출. 메타 줄·요약 글·시스템 알림·명령 래퍼 제외 · 작업 중 보낸 메시지 포함 · 메시지마다 500B 상한 · 신호 횟수 · 해석 못 한 줄 수.
 # 대화 기록 형식이 바뀌면 이 케이스가 먼저 깨진다
 analyze-corrections.sh digest $REPO/scripts/hook-fixtures/corrections/digest/normal.jsonl	-	0;out~"message_count": 4;out~"text": "첫 요청입니다";out~"text": "두 번째 요청";out!~무시;out!~숨김;out!~요약 글 본문;out!~Caveat;out!~/clear	
 analyze-corrections.sh digest $REPO/scripts/hook-fixtures/corrections/digest/normal.jsonl	-	0;out~"rejected": 1;out~"hook_blocked": 1;out~"stop_hook": 1;out~"interrupted": 1;out~"unparsed_lines": 1;out~"extract_failed": false	
 analyze-corrections.sh digest $REPO/scripts/hook-fixtures/corrections/digest/normal.jsonl	-	0;out~"x{250}x{250} …";out!~x{250}x{251};out~가가 …"	
 # 줄이 있는데 사용자 메시지를 하나도 못 뽑으면 추출 실패(exit 1). 빈 파일은 실패가 아니다
+# 작업 도중 보낸 사용자 메시지는 사용자 줄이 아니라 queued_command 첨부로 남는다 — 요약에 넣는다. 메타(작업 알림)·다른 세션(peer)이 보낸 것은 뺀다 (2026-10-29 하네스 준수 감사 B-4)
+analyze-corrections.sh digest $REPO/scripts/hook-fixtures/corrections/digest/queued.jsonl	-	0;out~"message_count": 3;out~"text": "처음 요청";out~"text": "작업 중에 보낸 정정입니다";out~"text": "블록으로 온 정정";out!~숨김;out!~배경 작업;out!~다른 세션;out~"extract_failed": false	
 analyze-corrections.sh digest $REPO/scripts/hook-fixtures/corrections/digest/no-user.jsonl	-	1;out~"extract_failed": true	
 analyze-corrections.sh digest $REPO/scripts/hook-fixtures/corrections/digest/empty.jsonl	-	0;out~"message_count": 0;out~"extract_failed": false
 # analyze-corrections.sh run — 근거 없는 후보 버리기 · 성공할 때만 시각 옮기기 (test-writer)

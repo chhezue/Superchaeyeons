@@ -87,6 +87,7 @@
 - [ ] 스킬 8개·에이전트 3개·훅 5개(차단 3개 · [회고 루프](harness-retro-loop.md)의 `auto-correction-queue.sh`·`auto-correction-notice.sh`)를 `plugin/` 아래로 옮긴다. 훅 등록은 `plugin/hooks/hooks.json`이 하고 경로는 `${CLAUDE_PLUGIN_ROOT}`로 쓴다. 스킬 이름은 2026-10-28에 바꾼 동사-목적어 이름(`write-spec`·`verify-work` 등)을 쓴다. 플러그인 안에서는 `/superchaeyeons:write-spec`처럼 플러그인 이름이 앞에 붙는다
 - [ ] 도구 상자(`dev.sh`·`verify.sh`·검사기·`init-harness-probe.sh`·회고 분석 `analyze-corrections.sh`·글 다듬기 `polish-with-gemini.sh`)를 `plugin/scripts/`로 옮긴다. 스킬·주입 규칙은 `${CLAUDE_PLUGIN_ROOT}/scripts/…`로 부른다. `bin/`은 쓰지 않는다 — claude.ai·Cowork 설치를 막지 않기 위해서다
 - [ ] git 훅(`pre-commit`·`commit-msg`)과 `install-git-hooks.sh`를 지운다. 같은 검사는 아래 "행동 강제"의 커밋 훅이 맡는다
+- [ ] `pre-commit`이 하던 포맷은 공통 포맷 훅 `auto-format.sh`가 맡는다 — `PostToolUse`(`Write`·`Edit`·`MultiEdit`·`NotebookEdit`)에서 고친 파일이 `FORMAT_PATHS`에 맞으면 `FORMAT_CMD`를 돌린다. 막지 않는다(어떤 입력에도 exit 0). `FORMAT_CMD`가 비어 있으면 아무것도 하지 않는다. 케이스는 `scripts/hook-cases.txt`에 맞는 파일 · 맞지 않는 파일 · 빈 `FORMAT_CMD`로 넣는다
 - [ ] 검사기가 `claude plugin validate plugin --json`을 돌려 `path`가 `version`인 경고만 허용한다. 다른 경고·오류가 있거나 결과를 해석하지 못하면 실패한다. `--strict`는 `version` 경고까지 실패로 쳐서 쓰지 않는다. 판정 케이스는 `version` 경고만 있음(통과) · 다른 경고 있음 · 오류 있음 · 결과를 해석하지 못함(실패)이다
 
 **규칙 주입**
@@ -115,7 +116,7 @@
 
 | 범주 | 창을 띄우는 조건 | 띄우지 않는 경우 |
 |---|---|---|
-| 커밋·원격 반영 | `git commit` · `git push` · `gh pr create` · `gh pr merge`. `git commit`은 먼저 지금 git 훅이 하던 검사(커밋 메시지 형식 `COMMIT_RE` · `verify.sh`)를 돌려 실패하면 이유와 함께 막고(`deny`), 통과하면 창을 띄운다 | `git status`·`diff`·`log`·`add` 같은 읽기와 스테이징 |
+| 커밋·원격 반영 | `git commit` · `git push` · `gh pr create` · `gh pr merge`. `git commit`은 먼저 지금 git 훅이 하던 검사(커밋 메시지 형식 `COMMIT_RE` · `verify.sh`)를 돌려 실패하면 이유와 함께 막고(`deny`), 통과하면 창을 띄운다. 스테이징된 파일이 `CONTRACT_PATHS`에 맞으면 창의 이유에 그 파일을 적는다([lang 팩·씨앗 제거](lang-pack-seed-removal.md)의 API 계약 보호 대체) | `git status`·`diff`·`log`·`add` 같은 읽기와 스테이징 |
 | 삭제 | git이 추적하는 파일을 지우는 `rm`·`git rm`·`mv` 덮어쓰기 | 추적되지 않는 파일(임시 파일·빌드 산출물) · 이미 `deny-dangerous-bash.sh`가 막는 명령 |
 | 의존성 추가 | 설정 파일 `DEPS_FILES`에 적힌 파일(예: 빌드 선언 파일) 수정 · `DEPS_ADD_CMD`에 적힌 설치 명령 | 의존성 조회·빌드·테스트 명령 |
 | 민감한 경로 | 설정 파일 `ASK_PATHS`(glob 목록)에 맞는 파일 쓰기 | 목록이 비어 있으면 아무것도 묻지 않는다 — 기본값은 빈 목록 |
@@ -124,12 +125,12 @@
 - [ ] 창에 보일 이유(`permissionDecisionReason`)는 한 줄로, 사용자가 무엇을 승인하는지 바로 알게 쓴다. 예: "커밋 — 파일 3개 · `Refactor: …`", "삭제 — 추적 중인 `src/a.ts`"
 - [ ] 채팅으로 받던 같은 승인을 없앤다. 커밋은 분할안을 보여 준 뒤 바로 실행하고, 승인 창이 승인이다. 스펙도 채팅에서 "승인해 주세요"를 기다리지 않고, 상태 줄을 `Approved`로 고치는 편집을 시도하면 창이 승인이다. 같은 일을 채팅과 창에서 두 번 승인하게 하지 않는다
 - [ ] 스펙 승인 창의 이유에는 스펙 경로와 남은 `[미정]` 개수를 적는다. 예: "스펙 승인 — `harness-plugin-delivery.md` · [미정] 0개"
-- [ ] `DEPS_FILES`·`DEPS_ADD_CMD`·`ASK_PATHS`는 `init-harness`가 저장소를 확인해 제안한다(빌드 선언 파일 · 인증·결제·마이그레이션 폴더 후보). 승인 전에는 비워 둔다
+- [ ] `DEPS_FILES`·`DEPS_ADD_CMD`·`ASK_PATHS`·`CONTRACT_PATHS`는 `init-harness`가 저장소를 확인해 제안한다(빌드 선언 파일 · 인증·결제·마이그레이션 폴더 후보 · API 계약 파일 후보). 승인 전에는 비워 둔다
 - [ ] 판정 불가(입력 JSON 깨짐·설정 파일 없음)면 `ask`를 낸다. 막지도 그냥 통과시키지도 않고 사람에게 넘긴다
 
 **프로젝트 설정 파일**
 
-- [ ] 프로젝트 값은 `.claude/harness.conf`(`키=값`, `dev.conf`와 같은 형식)에 둔다. 경로 슬롯·형식 슬롯·능력 플래그·승인 창 범주 플래그·지금 훅 상수(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`)와 [Gemini 글 다듬기](gemini-text-polish.md)의 `POLISH_ENABLED`·`DOC_ROOT`가 대상이다. 빌드·실행 명령은 지금처럼 `dev.conf`에 남는다
+- [ ] 프로젝트 값은 `.claude/harness.conf`(`키=값`, `dev.conf`와 같은 형식)에 둔다. 경로 슬롯·형식 슬롯·능력 플래그·승인 창 범주 플래그·지금 훅 상수(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`)·`CONTRACT_PATHS`와 [Gemini 글 다듬기](gemini-text-polish.md)의 `POLISH_ENABLED`·`DOC_ROOT`가 대상이다. 빌드·실행 명령은 지금처럼 `dev.conf`에 남는다
 - [ ] 훅은 상수를 본문에 적지 않고 이 파일을 읽는다. 파일이 없거나 깨졌으면 지금 규약대로 `deny-*`는 차단한다
 - [ ] 설정이 채워진 뒤에는 Claude가 `harness.conf`를 고치려 하면 승인 창이 뜬다. 창의 이유에 바뀌는 키와 값을 적는다. 사용자가 누르면 반영되고, 에이전트가 설정을 바꿔 훅을 몰래 푸는 통로는 닫힌다(`core-gates.md` §3)
 - [ ] `harness-map.md`는 이 파일로 대체하고 지운다. 사람이 읽는 슬롯 설명은 플러그인 쪽 문서(주입 규칙이 가리키는 스킬 또는 참조 문서)로 옮긴다
@@ -148,9 +149,9 @@
 **Gemini 글 다듬기·트래커 안내 옮기기** (2026-10-28 추가 — 두 기능이 이 스펙보다 늦게 들어와 복사 배달 전제로 만들어졌다)
 
 - [ ] 다듬기 스크립트가 기준 글(`doc-writing.md` 3절·`core-reporting.md`·`doc-style-patterns.txt`)을 프로젝트 폴더가 아니라 플러그인 폴더(`plugin/rules/`·`plugin/scripts/`)에서 읽는다. 기준 글을 하나도 못 찾으면 기준 없이 보내지 않고 "다듬기 건너뜀(기준 글 없음)"으로 실패한다 — 지금은 조용히 빈 기준으로 보내 품질만 떨어진다
-- [ ] 스킬 본문(`write-spec`·`refactor-safely`·`verify-work`·`improve-harness`)과 트래커 안내 씨앗이 부르는 `scripts/polish-with-gemini.sh`를 `${CLAUDE_PLUGIN_ROOT}/scripts/polish-with-gemini.sh`로 바꾼다
+- [ ] 스킬 본문(`write-spec`·`refactor-safely`·`verify-work`·`improve-harness`)과 트래커 안내 골격(`init-harness/references/track-issues-skeleton.md`)이 부르는 `scripts/polish-with-gemini.sh`를 `${CLAUDE_PLUGIN_ROOT}/scripts/polish-with-gemini.sh`로 바꾼다
 - [ ] `POLISH_ENABLED`·`DOC_ROOT`를 스크립트 상수 대신 `.claude/harness.conf`에서 읽는다. 이 저장소 루트의 `harness.conf`는 `.claude/harness.conf`로 합치고 지운다(`core-guardrails.md` §2)
-- [ ] 씨앗(`examples/seeds/` — lang 팩과 트래커 안내)을 플러그인에 실을지 정한다 — 리스크 12
+- [x] 씨앗은 싣지 않는다 — 리스크 12. [lang 팩·씨앗 제거](lang-pack-seed-removal.md)로 씨앗과 lang 팩을 지웠다. 트래커 안내·`dev.conf` 골격은 `init-harness` 스킬 폴더(`references/`)에 있어 스킬과 함께 옮겨진다
 
 **같은 변경에서 고칠 문서**
 
@@ -181,6 +182,7 @@
 | 승인 창 — 띄우는 조건 | 테스트 먼저 | 커밋·삭제·의존성은 통제 영역 변경의 마지막 관문이다. 명령 파싱이 바뀌면 깨져야 한다 |
 | 승인 창 — 띄우지 않는 경우 | 테스트 먼저 | 과잉 경보가 이 장치를 무력하게 만든다. 흔한 읽기·스테이징 명령이 창을 띄우기 시작하면 깨져야 한다 |
 | 경로 규칙 훅 — 맞는 파일에만 넣는다 | 테스트 먼저 | 경로 맞춤이 바뀌면 규칙이 조용히 빠지거나 모든 파일에 들어간다. 어느 쪽이든 깨져야 한다 |
+| 공통 포맷 훅 | 아님 | 막지 않는 훅이다. `hook-cases.txt` 케이스 3개가 판정한다 |
 | 플러그인 검사기 — `version` 경고만 허용 | 테스트 먼저 | 다른 경고나 해석 실패를 통과시키면 검사가 조용히 꺼진다. Claude Code가 결과 형식을 바꾸면 깨져야 한다 |
 | init 자동 시작 문구 | 아님 | 문구 출력 한 줄이다. 위 실패 케이스 표에 "설정 파일 없음"으로 함께 판정된다 |
 | 주입 글 길이 검사 | 아님 | 검사기 자체가 판정이다 |
@@ -214,7 +216,7 @@ Superchaeyeons/
 ├── plugin/                           배달물 (모든 프로젝트가 같은 파일)
 │   ├── .claude-plugin/plugin.json
 │   ├── skills/ · agents/
-│   ├── hooks/                        hooks.json · deny-* 3개 · ask-* 1개 · auto-correction-* 2개(회고 기록·알림) · 주입 훅(세션 시작 2 · 서브에이전트 1 · 경로 1)
+│   ├── hooks/                        hooks.json · deny-* 3개 · ask-* 1개 · auto-correction-* 2개(회고 기록·알림) · auto-format 1개 · 주입 훅(세션 시작 2 · 서브에이전트 1 · 경로 1)
 │   ├── rules/                        주입할 core 규칙 · 경로 조건부 규칙 원문
 │   └── scripts/                      dev.sh · verify.sh · 검사기 · init-harness-probe.sh · analyze-corrections.sh · polish-with-gemini.sh
 ├── .claude/                          이 저장소 전용 — harness.conf · settings.json · rules/README.md · local-*
@@ -273,7 +275,7 @@ Superchaeyeons/
 | **9. 승인 창이 뜨지 않는 실행 방식** | 확인 (2026-10-27 실험) | `-p` 비대화형 실행에서는 기본 모드·승인 창 없는 모드·자동 모드 모두 `ask`가 걸린 명령이 거절되고, 훅의 이유가 Claude에게 도구 결과로 간다. 권한 확인을 전부 건너뛰는 모드(`--dangerously-skip-permissions`)에서도 `ask`는 승인 창을 띄웠다. 사용자가 직접 돌렸고, 대화 기록에 승인 출처가 `user_temporary`로 남았다. 문서에는 이 모드에서 `deny`만 막힌다고 적혀 있다. 어느 방식에서도 승인 없이 지나가지 않는다 |
 | **10. 기본 권한 창과 겹침** | [미정] (일부 확인) | 처음 뜨는 창은 하나다(2026-10-27 실험). 훅의 창이 기본 창을 대신하고, 선택지가 "예/아니오" 둘이라 "앞으로 항상 허용"이 없다. 자동 모드(Claude Code 2.1.304부터 기본 권한 모드)에서는 사용자가 "예"를 한 번 누르자 바로 실행됐다. 수동 모드에서 "예"를 누른 뒤 기본 창이 또 뜨는지는 자동 입력이 화면에 먹히지 않아 확인하지 못했다. 사용자가 직접 확인한다 |
 | **11. 플러그인 버전과 검사** | 확정 (2026-10-27 사용자) | `version`은 빼고, 검사기가 `validate --json`에서 `version` 경고만 허용한다. `--strict` 제거(공식 권장)는 오타 같은 경고까지 통과시켜서 버렸다. version을 적고 매번 올리는 방식(Superpowers)은 올리는 걸 잊으면 업데이트가 멈춰서 버렸다. Claude Code가 결과 형식을 바꾸면 검사기가 해석에 실패해 바로 드러난다 |
-| **12. 씨앗을 플러그인에 싣나** | [미정] | 위 폴더 구성에서 `examples/`는 이 저장소 전용이라, 플러그인으로 붙이면 `init-harness`가 lang 팩·트래커 안내 씨앗을 가져올 수 없다. 플러그인에 `seeds/`로 싣거나, `init-harness`가 이 저장소에서 내려받거나, 매번 골격을 실측으로 채우는 길이 있다. 구현 전에 정한다 |
+| **12. 씨앗을 플러그인에 싣나** | 확정 (2026-10-29 사용자) | 싣지 않는다. 씨앗과 lang 팩 개념을 지웠다 — [lang 팩·씨앗 제거](lang-pack-seed-removal.md). 씨앗 훅 3개가 하던 일은 이 스펙의 `ASK_PATHS`(마이그레이션 폴더) · 커밋 승인 창의 `CONTRACT_PATHS` · `auto-format.sh`가 맡는다 |
 
 ## 변경 이력
 
@@ -291,3 +293,4 @@ Superchaeyeons/
 | 2026-10-28 | 사용자 승인 — Gemini 글 다듬기·트래커 안내를 옮길 때 고칠 다섯 가지를 Must Have에 추가(스크립트 경로·기준 글 위치·스킬 경로·`harness.conf` 키 3개·씨앗). 씨앗을 플러그인에 실을지는 리스크 12 [미정] |
 | 2026-10-29 | 스킬 이름 변경 때 함께 바뀐 훅 판정 값을 `ask`로 되돌렸다 — `ask-decisions`는 스킬 이름이고, Claude Code가 받는 판정 값은 `ask`다 |
 | 2026-10-28 | Gemini 다듬기 단순화에 맞춤 — 메시지 훅이 없어져 훅 개수·폴더 구성·옮길 항목에서 뺐다 |
+| 2026-10-29 | 리스크 12 확정 — 씨앗을 싣지 않는다([lang 팩·씨앗 제거](lang-pack-seed-removal.md)). 씨앗 훅 대체로 `CONTRACT_PATHS`(커밋 승인 창)와 공통 포맷 훅 `auto-format.sh`를 Must에 더했다 |

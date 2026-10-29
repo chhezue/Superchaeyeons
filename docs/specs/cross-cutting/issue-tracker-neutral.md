@@ -141,3 +141,4 @@ API 없음 — 외부 클라이언트와의 계약이 없다. 변경되는 구�
 | 2026-10-28 | 초안 작성. 조사 결과 및 [미정] 4개 항목 |
 | 2026-10-28 | 리스크 1~4 확정 — 씨앗은 GitHub 및 골격만 유지, 슬롯은 단일 항목 유지, 트래커 안내는 프로젝트 층 스킬로 구현, MCP 트래커 본문은 안내 스킬에서 다듬기 호출 |
 | 2026-10-28 | 다듬기 단순화에 맞춤 — 메시지 훅과 `TRACKER_COMMANDS`가 없어져서, 이슈 글은 수단과 상관없이 트래커 안내가 만들기 전에 다듬기를 부른다 |
+| 2026-10-29 | 씨앗 폴더를 지웠다([lang 팩·씨앗 제거](lang-pack-seed-removal.md)). 트래커 안내 골격은 `.claude/skills/init-harness/references/track-issues-skeleton.md`, GitHub 안내는 배달하지 않는 채운 예 `examples/tracker-github/`로 옮겼다 |

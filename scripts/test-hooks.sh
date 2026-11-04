@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# 훅 테스트 — .claude/hooks/*.sh 가 훅 공통 규약(정상 통과 · 위반 차단 · 판정 불가 차단)을 지키는지 케이스 파일로 판정하고,
-# 훅이 .claude/settings.json 에 실제로 등록돼 있는지(등록 파일이 실존·실행 가능한지, 쓰기 도구 매처가 빠짐없는지) 대조한다.
+# 훅 테스트 — plugin/hooks/*.sh(배달)·.claude/hooks/local-*.sh(프로젝트 층)가 훅 공통 규약(정상 통과 · 위반 차단 · 판정 불가 차단)을
+# 지키는지 케이스 파일로 판정하고, 훅이 plugin/hooks/hooks.json·.claude/settings.json 에 실제로 등록돼 있는지(등록 파일이 실존·
+# 실행 가능한지, 쓰기 도구 매처가 빠짐없는지) 대조한다.
 #
 # 사용:
 #   scripts/test-hooks.sh                  # scripts/hook-cases.txt 전부 + python3 부재 내장 케이스 + 등록 대조
@@ -9,14 +10,17 @@
 # exit 0 = 전부 통과 · exit 1 = 실패 있음 · exit 2 = 사용법·환경 오류
 # 케이스 형식은 scripts/hook-cases.txt 머리에 있다. 훅을 고치거나 새 우회 경로를 발견하면 케이스를 먼저 추가한다.
 # (부품성 원칙: bash 하나 + 데이터 파일 하나. 훅 본문에 테스트용 분기를 넣지 않는다 — SCOPE·HARNESS_SELF_EDIT·TEST_CMD와 대문자 상수는 임시 복사본에서 치환한다.)
-# 훅과 짝으로 도는 scripts/의 도구(analyze-corrections.sh)도 같은 케이스 파일로 판정한다.
+# 훅과 짝으로 도는 도구(plugin/scripts/analyze-corrections.sh 등 · scripts/check-plugin.sh)도 같은 케이스 파일로 판정한다.
 
 set -u
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 cases_file="scripts/hook-cases.txt"
-hooks_dir=".claude/hooks"
+# 배달 훅은 플러그인(plugin/hooks/ · 등록 hooks.json), 프로젝트 층 local 훅은 .claude/hooks/ · 등록 settings.json
+hooks_dir="plugin/hooks"
+local_hooks_dir=".claude/hooks"
+plugin_registry="plugin/hooks/hooks.json"
 settings_file=".claude/settings.json"
 only="${1:-}"
 [ -f "$cases_file" ] || { echo "FAIL: 케이스 파일이 없습니다 — $cases_file" >&2; exit 2; }
@@ -51,6 +55,8 @@ while IFS=$'\t' read -r spec scope expected stdin; do
 	[ -n "$only" ] && [ "$hook" != "$only" ] && continue
 	n=$((n + 1))
 	src="$hooks_dir/$hook"
+	[ ! -f "$src" ] && [ -f "$local_hooks_dir/$hook" ] && src="$local_hooks_dir/$hook"
+	[ ! -f "$src" ] && [ -f "plugin/scripts/$hook" ] && src="plugin/scripts/$hook"
 	# 훅이 아닌 도구(scripts/)도 같은 형식으로 판정한다 — 회고 루프의 분석 스크립트처럼 훅과 짝으로 도는 것
 	[ ! -f "$src" ] && [ -f "scripts/$hook" ] && src="scripts/$hook"
 	if [ ! -f "$src" ]; then
@@ -117,7 +123,7 @@ fi
 if [ -z "$only" ] || [[ "$only" == *deny-* ]]; then
 	mkdir -p "$tmpdir/nopy"
 	printf '#!/bin/sh\nexit 127\n' >"$tmpdir/nopy/python3"; chmod +x "$tmpdir/nopy/python3"
-	for src in "$hooks_dir"/deny-*.sh "$hooks_dir"/local-deny-*.sh; do
+	for src in "$hooks_dir"/deny-*.sh "$local_hooks_dir"/local-deny-*.sh; do
 		[ -f "$src" ] || continue
 		hook="$(basename "$src")"
 		case "$hook" in deny-unverified-completion.sh) continue ;; esac
@@ -144,7 +150,7 @@ if [ -z "$only" ] || [[ "$only" == *deny-* ]]; then
 	mkdir -p "$tmpdir/hijack"
 	printf '%s\n' 'def load(f):' '    return {"tool_input": {"command": "ls", "file_path": "sub/a.md"}, "stop_hook_active": True}' \
 		'def loads(s):' '    return load(None)' >"$tmpdir/hijack/json.py"
-	for src in "$hooks_dir"/deny-*.sh "$hooks_dir"/local-deny-*.sh; do
+	for src in "$hooks_dir"/deny-*.sh "$local_hooks_dir"/local-deny-*.sh; do
 		[ -f "$src" ] || continue
 		hook="$(basename "$src")"
 		[ -n "$only" ] && [ "$hook" != "$only" ] && continue
@@ -179,21 +185,16 @@ if [ -z "$only" ]; then
 fi
 
 # ---- 내장 케이스: 훅 등록 대조 ---------------------------------------------------
-# 훅은 settings.json에 등록돼야 존재한다. (1) .claude/hooks/*.sh 전부가 등록돼 있고 (2) 등록된 command 경로가 실존·실행 가능해야 한다.
-# 등록만 지운 커밋이 검사기를 통과했던 사고(2026-09-07 감사 실험 B)가 계기다.
+# 훅은 등록돼야 존재한다. 배달 훅은 plugin/hooks/hooks.json(`${CLAUDE_PLUGIN_ROOT}/hooks/…`), local 훅은 .claude/settings.json
+# (`.claude/hooks/…`)이 등록한다. (1) 훅 폴더의 *.sh 전부가 자기 등록 파일에 있고 (2) 등록된 command 경로가 실존·실행 가능해야 한다.
+# 등록만 지운 커밋이 검사기를 통과했던 사고(2026-09-07 감사 실험 B)가 계기다. 플러그인 훅을 settings.json에도 등록하면 두 번 돌아 문제로 본다.
 # (3) 파일 쓰기 도구에 걸린 매처는 Write·Edit·MultiEdit·NotebookEdit를 모두 덮어야 한다 (2026-10-05 감사: MultiEdit·NotebookEdit 우회).
 if [ -z "$only" ]; then
 	n=$((n + 1))
-	registry_out="$(HOOKS_DIR="$hooks_dir" python3 - "$settings_file" <<'PY'
+	registry_out="$(python3 -I - "$plugin_registry" "$hooks_dir" "$settings_file" "$local_hooks_dir" <<'PY'
 import glob, json, os, re, sys
-settings_path = sys.argv[1]
-hooks_dir = os.environ["HOOKS_DIR"]
+plugin_registry, plugin_dir, settings_path, local_dir = sys.argv[1:5]
 problems = []
-try:
-    cfg = json.load(open(settings_path, encoding="utf-8"))
-except Exception as e:
-    print(f"settings.json 을 읽지 못함: {e}"); sys.exit(1)
-registered = set()
 # 파일 쓰기 도구 매처는 쓰기 도구 네 개를 모두 덮어야 한다. 매처가 글자·숫자·`|`·`,`·공백뿐이면 정확한 이름 목록,
 # 그 밖이면 정규식(부분 일치)으로 해석된다(Claude Code 훅 문서). `Write|Edit`만 두면 MultiEdit·NotebookEdit가 훅을 건너뛴다.
 WRITE_TOOLS = ("Write", "Edit", "MultiEdit", "NotebookEdit")
@@ -209,38 +210,52 @@ def matches(matcher, tool):
         if msg not in problems:
             problems.append(msg)
         return True                            # 해석 불가는 위에서 문제로 남기고, 누락 판정은 하지 않는다
-for event, entries in (cfg.get("hooks") or {}).items():
-    for entry in entries or []:
-        matcher = entry.get("matcher") or ""
-        if event in ("PreToolUse", "PostToolUse") and any(matches(matcher, t) for t in WRITE_TOOLS):
-            missing = [t for t in WRITE_TOOLS if not matches(matcher, t)]
-            if missing:
-                problems.append(f"{event}: 매처 '{matcher}'가 쓰기 도구 {', '.join(missing)}를 덮지 않음")
-        for h in entry.get("hooks") or []:
-            cmd = h.get("command") or ""
-            m = re.search(r"\.claude/hooks/([^\s\"']+)", cmd)
-            if not m:
-                continue
-            name = m.group(1)
-            registered.add(name)
-            p = os.path.join(hooks_dir, name)
-            if not os.path.isfile(p):
-                problems.append(f"{event}: 등록된 훅 파일이 없음 — {p}")
-            elif not os.access(p, os.X_OK):
-                problems.append(f"{event}: 등록된 훅에 실행 권한이 없음 — {p}")
-for p in sorted(glob.glob(os.path.join(hooks_dir, "*.sh"))):
-    name = os.path.basename(p)
-    if name not in registered:
-        problems.append(f"훅 파일이 settings.json 에 등록돼 있지 않음 — {p}")
+def check(registry, hooks_dir, ref, required):
+    label = os.path.basename(registry)
+    if not os.path.isfile(registry):
+        if required:
+            problems.append(f"{registry} 이 없음")
+        return set()
+    try:
+        cfg = json.load(open(registry, encoding="utf-8"))
+    except Exception as e:
+        problems.append(f"{registry} 을 읽지 못함: {e}"); return set()
+    registered = set()
+    for event, entries in (cfg.get("hooks") or {}).items():
+        for entry in entries or []:
+            matcher = entry.get("matcher") or ""
+            if event in ("PreToolUse", "PostToolUse") and any(matches(matcher, t) for t in WRITE_TOOLS):
+                missing = [t for t in WRITE_TOOLS if not matches(matcher, t)]
+                if missing:
+                    problems.append(f"{label} {event}: 매처 '{matcher}'가 쓰기 도구 {', '.join(missing)}를 덮지 않음")
+            for h in entry.get("hooks") or []:
+                cmd = h.get("command") or ""
+                if label == "settings.json" and "CLAUDE_PLUGIN_ROOT" in cmd:
+                    problems.append(f"settings.json {event}: 플러그인 훅을 프로젝트 설정에도 등록함 — 두 번 돈다 ({cmd})")
+                m = re.search(ref, cmd)
+                if not m:
+                    continue
+                name = m.group(1)
+                registered.add(name)
+                p = os.path.join(hooks_dir, name)
+                if not os.path.isfile(p):
+                    problems.append(f"{label} {event}: 등록된 훅 파일이 없음 — {p}")
+                elif not os.access(p, os.X_OK):
+                    problems.append(f"{label} {event}: 등록된 훅에 실행 권한이 없음 — {p}")
+    for p in sorted(glob.glob(os.path.join(hooks_dir, "*.sh"))):
+        if os.path.basename(p) not in registered:
+            problems.append(f"훅 파일이 {label} 에 등록돼 있지 않음 — {p}")
+check(plugin_registry, plugin_dir, r"\$\{CLAUDE_PLUGIN_ROOT\}/hooks/([^\s\"']+)", True)
+check(settings_path, local_dir, r"\.claude/hooks/([^\s\"']+)", False)
 for line in problems:
     print(line)
 sys.exit(1 if problems else 0)
 PY
 )"
 	if [ $? -eq 0 ]; then
-		pass=$((pass + 1)); printf '  ok    %-28s scope=-        exit=0  (settings.json 등록 = 훅 파일)\n' "(등록 대조)"
+		pass=$((pass + 1)); printf '  ok    %-28s scope=-        exit=0  (hooks.json·settings.json 등록 = 훅 파일)\n' "(등록 대조)"
 	else
-		fail=$((fail + 1)); printf '  FAIL  %-28s scope=-        (settings.json 등록과 훅 파일이 어긋남)\n' "(등록 대조)"
+		fail=$((fail + 1)); printf '  FAIL  %-28s scope=-        (hooks.json·settings.json 등록과 훅 파일이 어긋남)\n' "(등록 대조)"
 		printf '%s\n' "$registry_out" | sed 's/^/          /'
 	fi
 fi

@@ -1,6 +1,6 @@
 # 회고 분석 지시문
 
-`scripts/analyze-corrections.sh`가 이 파일 전문 뒤에 입력 JSON을 붙여 `claude -p`로 넘긴다. 분석 세션은 읽기 도구만 쓰고, 결과는 스크립트가 받아 근거를 검사한 뒤 후보 파일에 쓴다. 사람은 `improve-harness` 스킬로 후보를 하나씩 검토한다.
+`${CLAUDE_PLUGIN_ROOT}/scripts/analyze-corrections.sh`가 이 파일 전문 뒤에 입력 JSON을 붙여 `claude -p`로 넘긴다. 분석 세션은 읽기 도구만 쓰고, 결과는 스크립트가 받아 근거를 검사한 뒤 후보 파일에 쓴다. 사람은 `improve-harness` 스킬로 후보를 하나씩 검토한다.
 
 ## 할 일
 

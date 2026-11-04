@@ -35,5 +35,5 @@ GitHub CLI(명령줄 도구) `gh`를 쓴다. 인증 상태는 `gh auth status`�
 
 "Gemini 다듬기" 플래그가 ☑이면 적용된다(`harness-map.md`).
 
-- 이슈·PR 제목과 본문, 댓글은 만들기 전에 `scripts/polish-with-gemini.sh message`로 다듬는다. 원문과 대조해 틀린 곳만 고친 뒤 그 글로 만든다
+- 이슈·PR 제목과 본문, 댓글은 만들기 전에 `plugin/scripts/polish-with-gemini.sh message`로 다듬는다. 원문과 대조해 틀린 곳만 고친 뒤 그 글로 만든다
 - 입력은 `{"kind": "issue" 또는 "pr", "fields": {"title": …, "body": …}}` JSON이고, 출력의 `fields`가 다듬은 글이다. 실패하면 원문으로 만든다

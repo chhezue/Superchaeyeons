@@ -1,6 +1,6 @@
 #!/bin/bash
 # Blocks ending the turn with a "done/passed" claim when code was edited but the test command never ran (or failed).
-# Registered in .claude/settings.json (Stop). core-workflow.md G3 "실행 없이 통과했을 것이라고 보고 금지"를
+# Registered in plugin/hooks/hooks.json (Stop). core-workflow.md G3 "실행 없이 통과했을 것이라고 보고 금지"를
 # 결정론적으로 강제한다.
 #
 # TEST_CMD는 하네스 공통 값이다 — 프로젝트마다 다른 실제 테스트 명령은 scripts/dev.conf가 갖고, 이 줄은 어느 프로젝트에서나 같다.
@@ -15,7 +15,7 @@ TEST_CMD="scripts/dev.sh test"
 #       리다이렉션으로 오판되던 사각(2026-10-23 실세션). 따옴표 안·주석의 `>`도 같은 이유로 보지 않는다(2026-10-26 실세션).
 #       `sed -i`는 식이 아니라 파일 피연산자만 보고, 저장소 밖 절대 경로(스크래치·/tmp·홈) 쓰기는 편집으로 치지 않는다 —
 #       식 안의 `com.a.b`와 스크래치 임시 파일을 코드 편집으로 세던 오판(2026-10-26 붙여 쓴 저장소 실세션),
-#   (b) 그 **마지막 편집 이후에** TEST_CMD를 — 한 명령 안에서도 편집보다 뒤에 있어야 한다 — 명령으로 실행한 기록이 없거나(`cat scripts/dev.sh`처럼 문자열로 언급한 것은 실행이
+#   (b) 그 **마지막 편집 이후에** TEST_CMD를 — 한 명령 안에서도 편집보다 뒤에 있어야 한다 — 명령으로 실행한 기록이 없거나(`cat plugin/scripts/dev.sh`처럼 문자열로 언급한 것은 실행이
 #       아니다. TEST_CMD의 모든 단어가 그대로 나와야 하고, 뒤에 인자가 더 붙은 `… test --tests X`나 다른 동사는 전체 테스트가
 #       아니라 실행으로 치지 않는다), 실행했지만 그 tool_result가 실패(is_error 또는 러너 요약 줄 "실패 있음·FAIL·N failed")였고,
 #   (c) 마지막 어시스턴트 텍스트에 완료 단정("완료·통과·끝났·마쳤·성공·정상 동작·구현했·적용했·반영했·수정했·done·passed·fixed·
@@ -312,12 +312,17 @@ else:
     print("OK")
 ' <<< "$input")
 
+# 안내할 명령 — TEST_CMD가 플러그인 도구(plugin/scripts/dev.sh)면 플러그인 경로를 붙인다. Bash 도구에는 CLAUDE_PLUGIN_ROOT가 없어
+# Claude가 경로를 알 수 없다. 판정은 TEST_CMD 그대로 한다 — 첫 단어는 파일 이름만 맞춰 보므로 경로가 붙어도 실행으로 인정된다
+show_cmd="$TEST_CMD"
+case "$TEST_CMD" in scripts/dev.sh*) [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && show_cmd="$CLAUDE_PLUGIN_ROOT/$TEST_CMD" ;; esac
+
 case "$verdict" in
   BLOCK_NOT_RUN)
-    echo "[하네스 · G3] 이 턴에 코드 파일을 고쳤는데(도구 편집 또는 Bash의 sed -i·리다이렉션·tee) 그 뒤 \`$TEST_CMD\`를 실행한 기록이 없는 채로 완료·통과를 선언했습니다. 지금 \`$TEST_CMD\`를 실제로 돌리고 결과를 보고하세요. 돌릴 수 없는 환경이면 완료 선언 대신 \"검증하지 못한 것\"으로 남기세요 (core-workflow.md G3). Blocked by .claude/hooks/deny-unverified-completion.sh." >&2
+    echo "[하네스 · G3] 이 턴에 코드 파일을 고쳤는데(도구 편집 또는 Bash의 sed -i·리다이렉션·tee) 그 뒤 \`$show_cmd\`를 실행한 기록이 없는 채로 완료·통과를 선언했습니다. 지금 \`$show_cmd\`를 실제로 돌리고 결과를 보고하세요. 돌릴 수 없는 환경이면 완료 선언 대신 \"검증하지 못한 것\"으로 남기세요 (core-workflow.md G3). Blocked by superchaeyeons 플러그인 hooks/deny-unverified-completion.sh." >&2
     exit 2 ;;
   BLOCK_FAILED)
-    echo "[하네스 · G3] \`$TEST_CMD\`를 돌렸지만 결과가 실패였는데 완료·통과를 선언했습니다. 실패 원인을 고치고 다시 돌리거나, 완료 선언 대신 실패 내용을 그대로 보고하세요 (verify-work 스킬 사후 모드 1단계). Blocked by .claude/hooks/deny-unverified-completion.sh." >&2
+    echo "[하네스 · G3] \`$show_cmd\`를 돌렸지만 결과가 실패였는데 완료·통과를 선언했습니다. 실패 원인을 고치고 다시 돌리거나, 완료 선언 대신 실패 내용을 그대로 보고하세요 (verify-work 스킬 사후 모드 1단계). Blocked by superchaeyeons 플러그인 hooks/deny-unverified-completion.sh." >&2
     exit 2 ;;
 esac
 exit 0

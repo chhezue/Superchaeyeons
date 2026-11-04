@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # 회고 루프의 "분석" 단계 — 마지막 분석 뒤 바뀐 이 프로젝트의 대화 기록을 세션마다 요약하고, 정정 대기열·장부와 묶어
 # `claude -p`로 하네스 개선 후보를 뽑는다. 근거 없는 후보는 버리고, 분석이 성공했을 때만 "마지막 분석" 시각을 옮긴다.
-# 스펙: docs/specs/cross-cutting/harness-retro-loop.md · 분석 지시문: .claude/skills/improve-harness/references/analyze.md
+# 스펙: docs/specs/cross-cutting/harness-retro-loop.md · 분석 지시문: plugin/skills/improve-harness/references/analyze.md
 #
 # 사용:
-#   scripts/analyze-corrections.sh [run] [--model M] [--budget USD]   # 정기 실행 — 마지막 분석 뒤 바뀐 세션 전부
-#   scripts/analyze-corrections.sh run --model M --session ID [--session ID]...
+#   plugin/scripts/analyze-corrections.sh [run] [--model M] [--budget USD]   # 정기 실행 — 마지막 분석 뒤 바뀐 세션 전부
+#   plugin/scripts/analyze-corrections.sh run --model M --session ID [--session ID]...
 #                                 # 시험 실행 — 고른 세션만. 결과는 trials/에 쓰고 마지막 분석 시각은 건드리지 않는다
 #                                 # (모델 비교처럼 같은 입력을 여러 번 돌릴 때)
-#   scripts/analyze-corrections.sh digest <대화 기록.jsonl>          # 요약 하나만 출력 (추출 실패면 exit 1)
+#   plugin/scripts/analyze-corrections.sh digest <대화 기록.jsonl>          # 요약 하나만 출력 (추출 실패면 exit 1)
 #
 # exit 0 = 성공 또는 새 세션 없음(모델을 부르지 않음) · exit 1 = 분석 실패·비용 상한·추출 실패 · exit 2 = 사용법 오류
 #
@@ -29,7 +29,10 @@
 #   BUDGET — 첫 실행 2달러, 그 뒤 runs.tsv의 실제 비용의 2배. 응답 하나가 끝난 뒤 확인해 조금 넘을 수 있다 — 2026-10-28 첫 실행 실측 $0.43(세션 1개). 첫 정기 분석이 쌓인 세션을 한꺼번에 보므로 2배($0.86)를 올려 1달러
 # LEDGER는 {{문서 루트}}/audits/harness-retro.md다 — 문서 루트가 다르면 이 줄을 고친다.
 set -u
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# 프로젝트 루트 — 이 파일은 플러그인 폴더에 있다. 훅이 부를 때는 CLAUDE_PROJECT_DIR, 사람이 부를 때는 git 최상위(없으면 현재 폴더)
+ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
+# 분석 지시문은 플러그인 폴더에 있다 — 훅이 부를 때는 CLAUDE_PLUGIN_ROOT, 사람이 부를 때는 이 파일의 상위 폴더
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 STORE="$ROOT/.claude/corrections"
 TRANSCRIPTS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/$(printf '%s' "$ROOT" | sed 's/[^A-Za-z0-9]/-/g')"
 LEDGER="$ROOT/docs/audits/harness-retro.md"
@@ -39,13 +42,13 @@ BUDGET="1"
 
 command -v python3 >/dev/null 2>&1 || { echo "python3가 필요합니다" >&2; exit 2; }
 
-export ROOT STORE TRANSCRIPTS LEDGER CLAUDE_BIN MODEL BUDGET
+export ROOT PLUGIN_ROOT STORE TRANSCRIPTS LEDGER CLAUDE_BIN MODEL BUDGET
 python3 - "$@" <<'PY'
 import datetime, json, os, re, subprocess, sys, time
 
 ENV = os.environ
 ROOT, STORE, TRANSCRIPTS, LEDGER = ENV["ROOT"], ENV["STORE"], ENV["TRANSCRIPTS"], ENV["LEDGER"]
-PROMPT = os.path.join(ROOT, ".claude/skills/improve-harness/references/analyze.md")
+PROMPT = os.path.join(ENV["PLUGIN_ROOT"], "skills/improve-harness/references/analyze.md")
 CAP = 500  # 메시지마다 바이트 상한 — 긴 붙여넣기 하나가 입력을 다 먹지 않게 (스펙 실험: 상한이 없으면 세션 10개에 166KB)
 
 # ---- 요약 추출 ---------------------------------------------------------------------

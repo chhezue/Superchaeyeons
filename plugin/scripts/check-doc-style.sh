@@ -2,14 +2,14 @@
 # 문서 스타일 검사기 — `doc-writing.md`에서 패턴으로 잡히는 것만 exit code로 판정한다.
 #
 # 사용:
-#   scripts/check-doc-style.sh <file.md> [...]      # 지정한 마크다운 파일 검사
-#   scripts/check-doc-style.sh --all                # docs/ · .claude/ · 루트 *.md 전부
-#   scripts/check-doc-style.sh --staged             # git stage에 있는 *.md만 (pre-commit이 쓴다)
+#   plugin/scripts/check-doc-style.sh <file.md> [...]      # 지정한 마크다운 파일 검사
+#   plugin/scripts/check-doc-style.sh --all                # docs/ · .claude/ · 루트 *.md 전부
+#   plugin/scripts/check-doc-style.sh --staged             # git stage에 있는 *.md만 (pre-commit이 쓴다)
 #
 # 판정 (E = exit 1 · W = 경고만):
 #   E  H4(####) 이상 제목 — 문서를 나눌 신호            (doc-writing "한 문서는 하나의 주제")
 #   E  H1 바로 아래 개요 없음 — 곧바로 다음 제목이 옴     (doc-writing "H1 바로 아래에 개요")
-#   E/W 문장 패턴 — scripts/doc-style-patterns.txt      (메타 담화·번역투·한자어·명사형)
+#   E/W 문장 패턴 — plugin/scripts/doc-style-patterns.txt      (메타 담화·번역투·한자어·명사형)
 #   W  제목 30자 초과                                   (doc-writing "제목은 검색 가능하게")
 #   W  약어 첫 등장에 풀어쓰기 없음 (허용 목록 제외)     (doc-writing "용어를 일관되게")
 #   W  상대 링크가 가리키는 파일이 없음                  (doc-reviewer "근거·출처 없는 참조")
@@ -22,10 +22,12 @@
 # JSON 훅들과 같은 이유로 python3에 의존한다 (BSD awk는 한글 글자 수를 세지 못한다).
 
 set -u
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# 패턴은 플러그인 폴더, 검사할 문서는 프로젝트 — Bash 도구에는 CLAUDE_PROJECT_DIR가 없어 git 최상위(없으면 현재 폴더)로 잡는다
+plugin_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$repo_root"
 
-patterns_file="scripts/doc-style-patterns.txt"
+patterns_file="$plugin_root/scripts/doc-style-patterns.txt"
 [ -f "$patterns_file" ] || { echo "FAIL: 패턴 파일이 없습니다 — $patterns_file" >&2; exit 2; }
 
 files=""

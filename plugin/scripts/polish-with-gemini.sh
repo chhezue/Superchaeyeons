@@ -3,10 +3,10 @@
 # 스펙: docs/specs/cross-cutting/gemini-text-polish.md (종료 코드·출력·상수 표가 계약이다)
 #
 # 사용:
-#   scripts/polish-with-gemini.sh enabled                 # 켜짐 0 · 꺼짐 2
-#   scripts/polish-with-gemini.sh docs <파일…>            # 기준판과 비교해 바뀐 문단만 다듬어 반영하고 차이를 출력 (새 문서는 전체)
-#   scripts/polish-with-gemini.sh done <파일…>            # 검수를 마친 지금 판을 기준판으로 기록 — 이후 그 판의 문단은 다시 다듬지 않는다
-#   scripts/polish-with-gemini.sh message                 # 표준 입력 {"kind","fields"} → 표준 출력 {"fields"} · 성공 0 · 실패 1(원인 한 줄) · 꺼짐 2
+#   plugin/scripts/polish-with-gemini.sh enabled                 # 켜짐 0 · 꺼짐 2
+#   plugin/scripts/polish-with-gemini.sh docs <파일…>            # 기준판과 비교해 바뀐 문단만 다듬어 반영하고 차이를 출력 (새 문서는 전체)
+#   plugin/scripts/polish-with-gemini.sh done <파일…>            # 검수를 마친 지금 판을 기준판으로 기록 — 이후 그 판의 문단은 다시 다듬지 않는다
+#   plugin/scripts/polish-with-gemini.sh message                 # 표준 입력 {"kind","fields"} → 표준 출력 {"fields"} · 성공 0 · 실패 1(원인 한 줄) · 꺼짐 2
 #
 # docs·done은 항상 exit 0이다(사용법 오류만 2). 꺼져 있으면 출력이 없고, 실패하면 `다듬기 건너뜀(<원인>)` 한 줄을 내고 파일을 바꾸지 않는다.
 # 기준판은 STATE_DIR/base/<경로>에 두고, 없으면 마지막 커밋의 판, 그것도 없으면 새 문서로 보고 전체를 보낸다.
@@ -207,7 +207,7 @@ def guide():
     parts = [
         section(os.path.join(ROOT, ".claude/rules/doc-writing.md"), "3."),
         section(os.path.join(ROOT, ".claude/rules/core-reporting.md")),
-        section(os.path.join(ROOT, "scripts/doc-style-patterns.txt")),
+        section(os.path.join(E["P_TOOL_DIR"], "doc-style-patterns.txt")),
     ]
     return "\n\n".join(p for p in parts if p.strip())
 
@@ -377,7 +377,7 @@ def docs():
         print(f"차이가 길어 파일에 두었다: {p}")
     else:
         print(diff)
-    print("검수: 원문과 대조해 틀린 곳만 최소로 고친 뒤 `scripts/polish-with-gemini.sh done <파일…>`로 확정한다")
+    print("검수: 원문과 대조해 틀린 곳만 최소로 고친 뒤 `plugin/scripts/polish-with-gemini.sh done <파일…>`로 확정한다")
 
 
 def done():
@@ -418,7 +418,7 @@ except BaseException:
     sys.exit(1 if cmd == "message" else 0)
 PY
 
-P_ROOT="$ROOT" P_DOC_ROOT="$DOC_ROOT" P_STATE_DIR="$STATE_DIR" P_KEY="$key" P_DEFAULT_MODEL="$DEFAULT_MODEL" P_FALLBACK_MODEL="$FALLBACK_MODEL" \
+P_TOOL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" P_ROOT="$ROOT" P_DOC_ROOT="$DOC_ROOT" P_STATE_DIR="$STATE_DIR" P_KEY="$key" P_DEFAULT_MODEL="$DEFAULT_MODEL" P_FALLBACK_MODEL="$FALLBACK_MODEL" \
 	P_ENDPOINT="$GEMINI_ENDPOINT" P_TIMEOUT_DOCS="$TIMEOUT_DOCS" P_TIMEOUT_MESSAGE="$TIMEOUT_MESSAGE" \
 	python3 -c "$PY" "$@"
 rc=$?

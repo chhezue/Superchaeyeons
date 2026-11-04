@@ -1,5 +1,5 @@
 #!/bin/bash
-# Blocks destructive shell commands. Registered in .claude/settings.json (PreToolUse/Bash, onFailure: block).
+# Blocks destructive shell commands. Registered in plugin/hooks/hooks.json (PreToolUse/Bash, onFailure: block).
 # Hook input: JSON with "tool_input.command" field on stdin (Claude Code PreToolUse schema).
 # 실제로 실행되는 부분만 검사한다 — 따옴표·heredoc·주석 안의 글자는 데이터로 보고, 그 글자가 실행되는 자리
 # (bash/sh -c 인자 · eval · ssh 뒤 · SQL 클라이언트 인자 · $(…)·백틱 · 셸·SQL·런타임이 받는 heredoc·파이프 · 런타임 코드의 셸 호출 줄)는 다시 검사한다.
@@ -652,11 +652,11 @@ ok)
 block$'\t'*)
   rest="${verdict#block$'\t'}"
   const="${rest%%$'\t'*}"; label="${rest#*$'\t'}"
-  echo "위험한 명령이 차단되었습니다 — 묶음: ${label} (훅 상수 ${const}). 훅은 구두 승인을 모릅니다 — 변수·eval·별도 스크립트로 감싸 다시 실행하지 말고, 더 안전한 방법을 쓰거나 사용자에게 직접 실행을 요청하세요. 이 묶음을 풀지는 사용자가 정하고 훅 상수를 직접 바꿉니다. 따옴표·heredoc 안의 글자는 검사하지 않으니, 실행할 뜻이 없는 문자열이 bash -c·eval·ssh·셸 파이프에 들어가지 않았는지 보세요. Blocked by .claude/hooks/deny-dangerous-bash.sh." >&2
+  echo "위험한 명령이 차단되었습니다 — 묶음: ${label} (훅 상수 ${const}). 훅은 구두 승인을 모릅니다 — 변수·eval·별도 스크립트로 감싸 다시 실행하지 말고, 더 안전한 방법을 쓰거나 사용자에게 직접 실행을 요청하세요. 이 묶음을 풀지는 사용자가 정하고 훅 상수를 직접 바꿉니다. 따옴표·heredoc 안의 글자는 검사하지 않으니, 실행할 뜻이 없는 문자열이 bash -c·eval·ssh·셸 파이프에 들어가지 않았는지 보세요. Blocked by superchaeyeons 플러그인 hooks/deny-dangerous-bash.sh." >&2
   exit 2
   ;;
 *)
-  echo "실행할 명령을 판정할 수 없어 차단합니다 (입력 JSON 또는 command 없음, 또는 python3 없음). 훅 공통 규약: 판정 불가(빈 입력·python3 없음 포함) = 차단. Blocked by .claude/hooks/deny-dangerous-bash.sh." >&2
+  echo "실행할 명령을 판정할 수 없어 차단합니다 (입력 JSON 또는 command 없음, 또는 python3 없음). 훅 공통 규약: 판정 불가(빈 입력·python3 없음 포함) = 차단. Blocked by superchaeyeons 플러그인 hooks/deny-dangerous-bash.sh." >&2
   exit 2
   ;;
 esac

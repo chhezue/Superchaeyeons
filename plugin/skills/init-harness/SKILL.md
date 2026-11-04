@@ -7,7 +7,7 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 
 **이 스킬이 기본 동작과 다른 단 하나:** 축·슬롯·형식 값을 **물려받지 않고 저장소에서 실측한다.** 하네스 배달본은 프로젝트 값을 비워 두고 온다 — 기존 저장소는 실측으로, 그린필드는 질문으로 채운다.
 
-**이 스킬은 `core-workflow.md` 사이클의 D 트랙이다.** 실측이 진입, 제안이 **G2 승인**, 채움 뒤 `scripts/check-portability.sh`와 아래 산출물 체크리스트가 **G3 검증**이다. Invariant(작업 내내 참이어야 하는 것): **애플리케이션 코드를 한 줄도 바꾸지 않는다** — 산출물은 `harness-map.md` 값·`local-*.md`·`AGENTS.md`뿐이다.
+**이 스킬은 `core-workflow.md` 사이클의 D 트랙이다.** 실측이 진입, 제안이 **G2 승인**, 채움 뒤 `${CLAUDE_PLUGIN_ROOT}/scripts/check-portability.sh`와 아래 산출물 체크리스트가 **G3 검증**이다. Invariant(작업 내내 참이어야 하는 것): **애플리케이션 코드를 한 줄도 바꾸지 않는다** — 산출물은 `harness-map.md` 값·`local-*.md`·`AGENTS.md`뿐이다.
 
 ## When to Use
 
@@ -20,7 +20,7 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 
 ### 1. 실측 — 사람을 기다리지 않는다
 
-`{{작업 범위}}`(기본 `.`) 안에서 아래를 코드·이력으로 확인한다. `scripts/init-harness-probe.sh [저장소] [범위]`가 이 표의 대부분을 한 번에 뽑아 준다 — 출력을 그대로 2단계 제안의 근거로 붙이고, 사람이 확인해야 할 항목(운영 데이터 보존·Git 컨벤션 파일을 둘 권한·외부 클라이언트 계획)만 질문으로 남긴다. 각 항목은 **사실 + 근거(명령 또는 파일)** 로 표에 적는다. 사람에게 물을 것은 이 단계에서 나오지 않는다 — 환경이 답할 수 있는 것은 직접 본다.
+`{{작업 범위}}`(기본 `.`) 안에서 아래를 코드·이력으로 확인한다. `${CLAUDE_PLUGIN_ROOT}/scripts/init-harness-probe.sh [저장소] [범위]`가 이 표의 대부분을 한 번에 뽑아 준다 — 출력을 그대로 2단계 제안의 근거로 붙이고, 사람이 확인해야 할 항목(운영 데이터 보존·Git 컨벤션 파일을 둘 권한·외부 클라이언트 계획)만 질문으로 남긴다. 각 항목은 **사실 + 근거(명령 또는 파일)** 로 표에 적는다. 사람에게 물을 것은 이 단계에서 나오지 않는다 — 환경이 답할 수 있는 것은 직접 본다.
 
 | 축 | 확인할 것 | 근거를 얻는 방법 (예) |
 |----|-----------|----------------------|
@@ -46,21 +46,21 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 1. `harness-map.md` — 축·슬롯·플래그 값. 플래그가 ❌여도 규칙 절은 지우지 않는다. `.claude/rules/README.md` "훅 상수와 짝" 목록(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`·`DOC_ROOT`·`BLOCK_BULK_DELETE`)을 값과 같은 턴에 고친다. `BLOCK_BULK_DELETE`는 map에 적지 않고 2단계 답대로 훅 상수만 바꾼다. 맡기기(`0`)면 `settings.json` `permissions.deny`에 `Bash(rm -rf:*)`가 없어야 효과가 나고, 막기(`1`)면 그 줄을 둬도 된다. `HARNESS_SELF_EDIT="0"`이면 `check-portability.sh`는 이 대입 줄의 값과 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`를 프로젝트 값 자리로 보고 검사하지 않는다
 2. **트래커 안내** — 이 스킬 폴더의 `references/track-issues-skeleton.md`를 `.claude/skills/local-track-issues/SKILL.md`로 복사해 실측값으로 채운다 — 확인하지 못한 항목은 지어내지 않고 "(확인 못 함 — 이유)"로 남긴다. `{{이슈 연결}}`은 "트래커 이름 · 안내 `local-track-issues`"로 채운다
 3. `local-*.md` — 슬롯으로도 플래그로도 안 빠지는 **그 저장소만의 사실**이 있을 때만. 기존 코드만 봐서는 알 수 없는 관례(표기·테스트 도구)도 여기에 적을 수 있다. 스택 규칙을 지어 쓰지는 않는다. `AGENTS.md`와 중복이면 만들지 않는다
-4. `scripts/dev.conf` — 배달본은 `{…}` 빈칸이다. 이 스킬 폴더의 `references/dev.conf`(골격)를 복사해 1단계 CI 워크플로의 실제 명령으로 채운다. 실행 엔진 `scripts/dev.sh`는 고치지 않는다. 키를 채운 근거(파일·명령)를 2단계 제안 표에 붙이고, 실측으로 정해지지 않는 것(로컬에서 띄울 의존 서비스·헬스 판정 주소)만 묻는다. 값이 있는 명령 슬롯은 `scripts/dev.sh <동사>`로 적는다
+4. `scripts/dev.conf` — 배달본은 `{…}` 빈칸이다. 이 스킬 폴더의 `references/dev.conf`(골격)를 복사해 1단계 CI 워크플로의 실제 명령으로 채운다. 실행 엔진 `${CLAUDE_PLUGIN_ROOT}/scripts/dev.sh`는 고치지 않는다. 키를 채운 근거(파일·명령)를 2단계 제안 표에 붙이고, 실측으로 정해지지 않는 것(로컬에서 띄울 의존 서비스·헬스 판정 주소)만 묻는다. 값이 있는 명령 슬롯은 `${CLAUDE_PLUGIN_ROOT}/scripts/dev.sh <동사>`로 적는다
 5. `AGENTS.template.md` → `AGENTS.md` 채움 · 배달본에서 비어 온 `commit-msg` 훅의 `COMMIT_RE`를 `{{커밋 메시지 형식}}`에 맞는 정규식으로 채운다 · 그다음 `./scripts/install-git-hooks.sh`. 설치는 복사라서, 먼저 설치하고 `scripts/git-hooks/`의 상수(`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`)를 고치면 `.git/hooks/`에는 옛 값이 남는다. 상수를 다시 고치면 설치도 다시 한다
 6. `.gitignore`에 `.claude/corrections/`와 `.claude/polish/`가 없으면 더한다 — 회고 루프가 정정 기억 설명과 대화 원문 일부를, Gemini 다듬기가 문서 기준판을 쓰는 폴더라 커밋되면 안 된다. 하네스를 갱신하는 재동기화에서도 확인한다
-7. "Gemini 다듬기"를 ☑로 정했으면 프로젝트 루트 `harness.conf`에 `POLISH_ENABLED=1`을 적는다. `scripts/polish-with-gemini.sh`의 상수는 고치지 않는다 — 배달 기본값이 꺼짐이어야 이 단계를 건너뛴 복사본이 글을 밖으로 보내지 않는다
+7. "Gemini 다듬기"를 ☑로 정했으면 프로젝트 루트 `harness.conf`에 `POLISH_ENABLED=1`을 적는다. `${CLAUDE_PLUGIN_ROOT}/scripts/polish-with-gemini.sh`의 상수는 고치지 않는다 — 배달 기본값이 꺼짐이어야 이 단계를 건너뛴 복사본이 글을 밖으로 보내지 않는다
 
 **산출물 체크리스트** — 전부 통과해야 완료다. `pack.md` 계약 대신 이 목록이 생성물 품질을 지킨다.
 
-- [ ] `scripts/check-portability.sh` exit 0 (core가 순수한 채로 남았다)
+- [ ] `${CLAUDE_PLUGIN_ROOT}/scripts/check-portability.sh` exit 0 (core가 순수한 채로 남았다)
 - [ ] `harness-map.md`에 ⬜와 이유 없는 `(없음)`이 0개 — `grep -cE '\| ⬜ \||\| \(없음\) \|' .claude/rules/harness-map.md`가 `0`
 - [ ] `{{문서 루트}}/templates/README.md` 산출물 등록부의 "프로젝트 문서" 행이 이 저장소 값으로 채워졌다
 - [ ] `deny-dangerous-bash.sh`의 `BLOCK_BULK_DELETE`가 2단계 답과 같다
 - [ ] `AGENTS.md`에 `{…}` 자리표시자가 0개
 - [ ] `{{커밋 메시지 형식}}`이 최근 커밋 20개와 일치한다 (`git log -20 --format=%s`)
 - [ ] 저장소 루트에 `dev.conf`가 없다 — 있으면 `dev.sh`가 `scripts/dev.conf`보다 먼저 읽는다
-- [ ] `scripts/dev.sh test`·`build`를 한 번씩 실행해 종료 코드가 0 또는 1이다 — 2(환경 없음)면 `dev.conf` 값이나 실행 환경을 고친다. 앱이 있으면 `start`→`stop`도 한 번
+- [ ] `${CLAUDE_PLUGIN_ROOT}/scripts/dev.sh test`·`build`를 한 번씩 실행해 종료 코드가 0 또는 1이다 — 2(환경 없음)면 `dev.conf` 값이나 실행 환경을 고친다. 앱이 있으면 `start`→`stop`도 한 번
 - [ ] `{{기본 브랜치}}`·`{{머지 방식}}`·`{{이슈 연결}}`이 실측(첫 부모 merge 커밋 수·PR 이력·이슈 키)과 맞는다
 - [ ] `.claude/skills/local-track-issues/SKILL.md`가 있고 `{…}` 자리표시자가 0개다
 - [ ] `commit-msg`의 `COMMIT_RE`를 `{{커밋 메시지 형식}}`에 맞게 채웠다 — 형식이 `(없음)`이면 빈 값 그대로
@@ -87,6 +87,6 @@ description: 하네스를 프로젝트에 붙이거나(최초 1회) 프로젝트
 
 ## It's working if
 
-- `harness-map.md`를 열지 않아도 `scripts/check-portability.sh`가 exit 0이고 pre-commit이 통과한다
+- `harness-map.md`를 열지 않아도 `${CLAUDE_PLUGIN_ROOT}/scripts/check-portability.sh`가 exit 0이고 pre-commit이 통과한다
 - 새 세션에서 에이전트가 `{{테스트 명령}}`을 물어보지 않고 바로 실행한다
 - 커밋 메시지가 저장소의 기존 관례와 같은 모양으로 나온다

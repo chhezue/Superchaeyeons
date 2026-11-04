@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# 기계 검증 5개를 순서대로 돌리고 하나라도 실패하면 exit 1. 이 저장소의 {{테스트 명령}}(`scripts/dev.sh test`)이 dev.conf의 TEST_CMD로 이 파일을 부른다(루트 dev.conf — scripts/dev.conf는 배달본이라 빈칸).
-#   1. scripts/check-portability.sh   배달물 부품 계약 · 슬롯·구성 요소 목록 대조 · always-load 예산
+# 기계 검증 5개를 순서대로 돌리고 하나라도 실패하면 exit 1. 이 저장소의 {{테스트 명령}}(`plugin/scripts/dev.sh test`)이 루트 dev.conf의 TEST_CMD로 이 파일을 부른다.
+#   1. plugin/scripts/check-portability.sh   배달물 부품 계약 · 슬롯·구성 요소 목록 대조 · always-load 예산
 #   2. scripts/test-hooks.sh          훅 공통 규약 (케이스 파일 + python3 부재 fail-closed + 등록·매처 대조)
-#   3. scripts/check-doc-style.sh     문서 스타일 (추적·미추적 .md 전부, 오류만 판정)
-#   4. scripts/test-dev.sh            dev.sh 엔진 (가짜 명령으로 동사·종료 코드·출력 형식)
+#   3. plugin/scripts/check-doc-style.sh     문서 스타일 (추적·미추적 .md 전부, 오류만 판정)
+#   4. scripts/test-dev.sh            dev.sh 엔진(plugin/scripts/dev.sh) (가짜 명령으로 동사·종료 코드·출력 형식)
 #   5. scripts/check-plugin.sh        플러그인 매니페스트 (claude plugin validate — version 경고만 허용)
 #
 # 출력: 통과한 단계는 마지막 요약 줄만, 실패한 단계는 전체 출력을 보인다. 이 명령은 코드 편집 뒤마다 돌기 때문에
@@ -12,7 +12,7 @@ set -u
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 verbose="${VERIFY_VERBOSE:-0}"
 status=0
-for step in "scripts/check-portability.sh" "scripts/test-hooks.sh" "scripts/check-doc-style.sh --all" "scripts/test-dev.sh" "scripts/check-plugin.sh"; do
+for step in "plugin/scripts/check-portability.sh" "scripts/test-hooks.sh" "plugin/scripts/check-doc-style.sh --all" "scripts/test-dev.sh" "scripts/check-plugin.sh"; do
 	# shellcheck disable=SC2086
 	out="$($step 2>&1)"
 	rc=$?

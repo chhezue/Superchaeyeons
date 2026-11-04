@@ -1,13 +1,13 @@
 #!/bin/bash
 # At session start, shows one line — sessions since the last retro analysis · correction memories queued · candidates to review —
 # and starts the weekly analysis in the background when it is due.
-# Registered in .claude/settings.json (SessionStart). 회고 루프가 사람의 기억에 기대지 않게 하는 알림이다.
+# Registered in plugin/hooks/hooks.json (SessionStart). 회고 루프가 사람의 기억에 기대지 않게 하는 알림이다.
 #
 # 한 줄을 사용자 화면(systemMessage)과 Claude(additionalContext)에 함께 낸다. 세 값이 모두 0이면 아무것도 내지 않는다 — 매 세션 토큰이 들지 않게.
 #   세션 = 이 프로젝트 대화 기록 폴더(입력 transcript_path가 있는 폴더)에서 last-analysis보다 늦게 바뀐 *.jsonl 수, 지금 세션 제외
 #   정정 기억 = 정정 대기열(queue.tsv) 줄 수 · 후보 = 후보 파일(candidates.md)에서 `### `로 시작하는 줄 수
 # 대화 기록은 수정 시각만 보고 내용은 읽지 않는다. last-analysis가 없으면 분석을 한 번도 돌리지 않은 것이라 첫 실행 안내를 낸다.
-# 상태 파일 형식은 scripts/analyze-corrections.sh 머리가 SSOT다.
+# 상태 파일 형식은 plugin/scripts/analyze-corrections.sh 머리가 SSOT다.
 #
 # 주간 자동 분석 — OS마다 다른 예약 기능 대신 이 훅이 띄워서, 하네스를 복사한 어느 환경에서나 같게 돈다.
 #   조건: last-analysis가 있고(첫 정기 분석은 사람이 직접 — 붙여 쓴 프로젝트가 모르게 돈을 쓰지 않게) INTERVAL_MIN보다 오래됐고
@@ -18,9 +18,9 @@
 #
 # 훅 공통 규약의 예외: 알림용 훅이라 어떤 경우에도 exit 0. bash 3.2 내장 기능과 macOS 기본 명령만 쓴다.
 # Hook input: JSON with "transcript_path" on stdin.
-ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
+ROOT="${CLAUDE_PROJECT_DIR:-$PWD}"
 STORE="$ROOT/.claude/corrections"
-ANALYZE="$ROOT/scripts/analyze-corrections.sh"
+ANALYZE="${CLAUDE_PLUGIN_ROOT:-${0%/*}/..}/scripts/analyze-corrections.sh"
 AUTO_ANALYZE="1"
 INTERVAL_MIN="10080"
 
@@ -78,7 +78,7 @@ elif [ "$candidates" != 0 ]; then
 	line="$line — improve-harness 스킬로 검토"
 	hint="검토할 후보가 있으니 사용자에게 improve-harness 스킬을 제안한다."
 else
-	line="$line — scripts/analyze-corrections.sh로 분석"
+	line="$line — ${ANALYZE}로 분석"
 	hint="분석은 사용자가 따로 돌린다. 이 세션에서 돌리지 않는다."
 fi
 printf '{"systemMessage":"%s","hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s %s"}}\n' "$line" "$line" "$hint"

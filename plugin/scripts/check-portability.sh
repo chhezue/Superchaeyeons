@@ -2,11 +2,11 @@
 # 부품 계약 검사기 — core 규칙에 프로젝트 고유 사실이 없는지, always-load 규칙이 토큰 예산 안인지 판정한다.
 #
 # 사용:
-#   scripts/check-portability.sh                 # 배달물 전체(.claude/ 규칙·스킬·에이전트·훅·settings, git 훅, dev.sh 엔진, 견본) 검사 + 예산 판정 (기본)
-#   scripts/check-portability.sh --scope core    # core-*.md 만 (P0~P5 시절의 좁은 범위)
-#   scripts/check-portability.sh --skip C3       # 특정 분류 제외 (콤마 구분, 이행 중에만 사용)
-#   scripts/check-portability.sh --budget 30000  # always-load 상한(바이트) 변경
-#   PORTABILITY_BUDGET_STRICT=0 scripts/check-portability.sh   # 예산 초과를 경고로만 (기본은 차단)
+#   plugin/scripts/check-portability.sh                 # 배달물 전체(.claude/ 규칙·스킬·에이전트·훅·settings, git 훅, dev.sh 엔진, 견본) 검사 + 예산 판정 (기본)
+#   plugin/scripts/check-portability.sh --scope core    # core-*.md 만 (P0~P5 시절의 좁은 범위)
+#   plugin/scripts/check-portability.sh --skip C3       # 특정 분류 제외 (콤마 구분, 이행 중에만 사용)
+#   plugin/scripts/check-portability.sh --budget 30000  # always-load 상한(바이트) 변경
+#   PORTABILITY_BUDGET_STRICT=0 plugin/scripts/check-portability.sh   # 예산 초과를 경고로만 (기본은 차단)
 #
 # 대조 검사 2개 (산문 규칙을 결정적 검사로 옮긴 것):
 #   S  슬롯 — 배달물이 쓰는 {{슬롯}} = harness-map.md가 정의한 슬롯 (정의 안 된 슬롯 사용 · 아무도 안 쓰는 슬롯 정의)
@@ -14,16 +14,18 @@
 #      core-*.md · 훅 *.sh · `이름` 스킬/에이전트가 실제로 있는가 (지운 구성 요소로 안내하는 문장 차단)
 #
 # exit 0 = 통과 · exit 1 = 위반 있음 · exit 2 = 사용법·환경 오류
-# 패턴은 scripts/portability-patterns.txt 한 파일에 데이터로 둔다 (부품성 원칙: bash 하나 + 데이터 파일 하나).
+# 패턴은 plugin/scripts/portability-patterns.txt 한 파일에 데이터로 둔다 (부품성 원칙: bash 하나 + 데이터 파일 하나).
 # 계약 원문: docs/specs/cross-cutting/harness-slot-system-v2.md "부품 계약" · "비즈니스 규칙" C1~C3
 
 set -u
 export LC_ALL=C
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# 도구(이 파일·패턴·훅)는 플러그인 폴더, 검사 대상은 프로젝트 — Bash 도구에는 CLAUDE_PROJECT_DIR가 없어 git 최상위(없으면 현재 폴더)로 잡는다
+plugin_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$repo_root"
 
-patterns_file="scripts/portability-patterns.txt"
+patterns_file="$plugin_root/scripts/portability-patterns.txt"
 scope="all"
 # 이행 중 특정 분류를 잠시 빼야 할 때: PORTABILITY_SKIP=C3 (pre-commit도 이 변수를 그대로 물려받는다)
 skip="${PORTABILITY_SKIP:-}"
@@ -78,25 +80,23 @@ fi
 #   훅 상수 대입 줄의 값 — .claude/rules/README.md "훅 상수와 짝". 원본 저장소에서는 기본값도 견본이라 검사한다 (아래 awk)
 # 2026-10-16 TripFit 사본에 붙였을 때 이 둘이 위반 21건(CONTRIBUTING 17 · 상수 4)으로 잡혀 verify.sh가 처음부터 실패했다.
 # 값을 읽지 못하면 원본 저장소로 보고 더 많이 검사한다 — 놓치는 쪽보다 오탐이 보이는 쪽이 낫다.
-self_edit="$(sed -n -E "s/^[[:space:]]*(export[[:space:]]+)?HARNESS_SELF_EDIT=[\"']?([01])[\"']?[[:space:]]*(#.*)?$/\2/p" .claude/hooks/deny-out-of-scope-write.sh 2>/dev/null | head -n 1)"
+self_edit="$(sed -n -E "s/^[[:space:]]*(export[[:space:]]+)?HARNESS_SELF_EDIT=[\"']?([01])[\"']?[[:space:]]*(#.*)?$/\2/p" "$plugin_root/hooks/deny-out-of-scope-write.sh" 2>/dev/null | head -n 1)"
 adopted=0
 if [ "$self_edit" = "0" ]; then
 	adopted=1
 elif [ -z "$self_edit" ]; then
-	echo "경고: .claude/hooks/deny-out-of-scope-write.sh에서 HARNESS_SELF_EDIT를 읽지 못해 원본 저장소로 보고 CONTRIBUTING·훅 상수까지 검사합니다" >&2
+	echo "경고: 플러그인 hooks/deny-out-of-scope-write.sh에서 HARNESS_SELF_EDIT를 읽지 못해 원본 저장소로 보고 CONTRIBUTING·훅 상수까지 검사합니다" >&2
 fi
 targets=""
 for f in .claude/rules/core-*.md; do
 	[ -f "$f" ] && targets="$targets $f"
 done
 if [ "$scope" = "all" ]; then
-	for f in .claude/rules/*.md .claude/skills/*/SKILL.md .claude/skills/*/references/*.md .claude/agents/*.md .claude/hooks/*.sh .claude/settings.json scripts/git-hooks/* scripts/dev.sh scripts/dev.conf AGENTS.template.md .github/CONTRIBUTING.md; do
+	for f in .claude/rules/*.md plugin/skills/*/SKILL.md plugin/skills/*/references/*.md plugin/skills/*/references/*.conf plugin/agents/*.md plugin/hooks/*.sh plugin/hooks/hooks.json .claude/settings.json scripts/git-hooks/* plugin/scripts/dev.sh AGENTS.template.md .github/CONTRIBUTING.md; do
 		[ -f "$f" ] || continue
 		case "$f" in
 		.claude/rules/core-*.md | .claude/rules/harness-map.md | .claude/*/local-*) continue ;;
 		.github/CONTRIBUTING.md) [ "$adopted" = 1 ] && continue ;;
-		# 배달본 scripts/dev.conf는 빈칸이어야 한다 — 붙여 쓰는 프로젝트에서는 그 프로젝트의 값 자리라 보지 않는다
-		scripts/dev.conf) [ "$adopted" = 1 ] && continue ;;
 		esac
 		targets="$targets $f"
 	done
@@ -131,9 +131,9 @@ violations="$(
 		{
 			if (index($0, "채운 예") > 0 || index($0, "다스택 예시") > 0) next
 			# Stop 훅의 TEST_CMD는 하네스 공통 값(dev.sh 호출)만 허용한다 — 프로젝트 명령은 dev.conf가 갖는다
-			if (FILENAME == ".claude/hooks/deny-unverified-completion.sh" && $0 ~ /^TEST_CMD="scripts\/dev\.sh test"[ \t]*$/) next
-			if (adopted == 1 && ((FILENAME == ".claude/hooks/deny-out-of-scope-write.sh" && $0 ~ /^(SCOPE|HARNESS_SELF_EDIT)=/) ||
-			    (FILENAME == ".claude/hooks/deny-unverified-completion.sh" && $0 ~ /^TEST_CMD=/) ||
+			if (FILENAME == "plugin/hooks/deny-unverified-completion.sh" && $0 ~ /^TEST_CMD="scripts\/dev\.sh test"[ \t]*$/) next
+			if (adopted == 1 && ((FILENAME == "plugin/hooks/deny-out-of-scope-write.sh" && $0 ~ /^(SCOPE|HARNESS_SELF_EDIT)=/) ||
+			    (FILENAME == "plugin/hooks/deny-unverified-completion.sh" && $0 ~ /^TEST_CMD=/) ||
 			    (FILENAME == "scripts/git-hooks/pre-commit" && $0 ~ /^FORMAT_(CMD|PATHS)=/) ||
 			    (FILENAME == "scripts/git-hooks/commit-msg" && $0 ~ /^COMMIT_RE=/)))
 				sub(/^[A-Z_]+=("[^"]*"|\047[^\047]*\047|[^ \t]*)/, "")
@@ -179,7 +179,7 @@ done
 # 스킬·에이전트 설명 줄(description·when_to_use)도 세션마다 목록으로 읽힌다. local-*(프로젝트 층)는 규칙처럼 빼고,
 # disable-model-invocation 스킬은 목록에 실리지 않아 뺀다. 한 줄로 쓴 값만 센다 — 여러 줄 YAML이면 적게 잡힌다.
 desc_bytes=0; desc_n=0
-for f in .claude/skills/*/SKILL.md .claude/agents/*.md; do
+for f in plugin/skills/*/SKILL.md plugin/agents/*.md .claude/skills/*/SKILL.md .claude/agents/*.md; do
 	[ -f "$f" ] || continue
 	case "$f" in .claude/skills/local-*|.claude/agents/local-*) continue ;; esac
 	b=$(awk 'NR==1 && $0!="---" {exit} NR>1 && $0=="---" {exit} /^disable-model-invocation:[ \t]*true/ {off=1}
@@ -211,8 +211,8 @@ def files(patterns):
     return seen
 def is_local(f):
     return os.path.basename(f).startswith("local-")
-harness_files = [f for f in files([".claude/rules/*.md", ".claude/skills/*/SKILL.md", ".claude/skills/*/references/*.md",
-                                   ".claude/agents/*.md", ".claude/hooks/*.sh", "scripts/git-hooks/*", "AGENTS.template.md",
+harness_files = [f for f in files([".claude/rules/*.md", "plugin/skills/*/SKILL.md", "plugin/skills/*/references/*.md",
+                                   "plugin/agents/*.md", "plugin/hooks/*.sh", "scripts/git-hooks/*", "AGENTS.template.md",
                                    "docs/templates/*.md"])
                  if not (f.startswith(".claude/") and is_local(f))]
 project_files = files(["AGENTS.md", "CLAUDE.md", "README.md", ".github/CONTRIBUTING.md", "docs/README.md", "docs/harness/README.md"])
@@ -231,12 +231,13 @@ for slot in sorted(defined - set(used)):
     out.append(f"S\t.claude/rules/harness-map.md\t{slot}\t배달물 어디에서도 쓰지 않는 슬롯 — 지운다 (.claude/rules/README.md map 규칙 3)")
 # --- I: 구성 요소 목록 ---
 readme = open(".claude/rules/README.md", encoding="utf-8").read()
-skills = {os.path.basename(os.path.dirname(p)) for p in glob.glob(".claude/skills/*/SKILL.md")}
-agents_all = {os.path.basename(p)[:-3] for p in glob.glob(".claude/agents/*.md")}
-hooks_all = {os.path.basename(p) for p in glob.glob(".claude/hooks/*.sh")}
+# 배달 구성 요소는 plugin/, 프로젝트 층(local-*)은 .claude/에 있다
+skills = {os.path.basename(os.path.dirname(p)) for d in ("plugin", ".claude") for p in glob.glob(d + "/skills/*/SKILL.md")}
+agents_all = {os.path.basename(p)[:-3] for d in ("plugin", ".claude") for p in glob.glob(d + "/agents/*.md")}
+hooks_all = {os.path.basename(p) for d in ("plugin", ".claude") for p in glob.glob(d + "/hooks/*.sh")}
 rules_all = {os.path.basename(p) for p in glob.glob(".claude/rules/*.md")}
 # 목록 SSOT에는 배달물(local-* 제외)이 전부 있어야 한다
-hooks_here = {os.path.basename(p) for p in glob.glob(".claude/hooks/*.sh")}
+hooks_here = hooks_all
 for name in sorted(skills | {a for a in agents_all if not a.startswith("local-")}
                    | {h for h in hooks_here if not h.startswith("local-")}
                    | {r for r in rules_all if r != "README.md" and not r.startswith("local-")}):
@@ -249,8 +250,8 @@ try:
         log = subprocess.run(["git", "log", "--diff-filter=D", "--name-only", "--format=", "--", pattern],
                              capture_output=True, text=True).stdout.split("\n")
         return {take(p) for p in log if p}
-    gone_skills = deleted(".claude/skills/*/SKILL.md", lambda p: p.split("/")[2]) - skills
-    gone_agents = deleted(".claude/agents/*.md", lambda p: os.path.basename(p)[:-3]) - agents_all
+    gone_skills = (deleted(".claude/skills/*/SKILL.md", lambda p: p.split("/")[2]) | deleted("plugin/skills/*/SKILL.md", lambda p: p.split("/")[2])) - skills
+    gone_agents = (deleted(".claude/agents/*.md", lambda p: os.path.basename(p)[:-3]) | deleted("plugin/agents/*.md", lambda p: os.path.basename(p)[:-3])) - agents_all
 except Exception:
     tracked, gone_skills, gone_agents = set(), set(), set()
 RULE_ANY = re.compile(r"(?<![\w-])core-[a-z]+(?:-[a-z]+)*(?:\.md)?")

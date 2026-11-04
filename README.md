@@ -91,10 +91,8 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 | 경로 | 내용 | 배달 여부 |
 |------|------|:---------:|
 | `.claude/rules/` | 행동 규칙 (`core-*`, `harness-map.md`, `doc-writing.md`) — 목록은 [`.claude/rules/README.md`](.claude/rules/README.md) | 배달 |
-| `.claude/skills/` | 표준 워크플로 스킬 (`init-harness`, `ask-decisions`, `write-spec`, `test-first`, `verify-work` 등) | 배달 |
-| `.claude/agents/` | 보조 에이전트 (`researcher`, `test-writer`, `doc-reviewer`) | 배달 |
-| `.claude/hooks/` | 결정적 차단 훅 (`deny-*`) | 배달 |
-| `scripts/` | 이식성·문서·훅 검사 스크립트(`verify.sh`가 묶음), git 훅 설치기, 빌드·실행 엔진 `dev.sh`(프로젝트 값은 `dev.conf`), `init-harness-probe.sh`, 회고 분석 `analyze-corrections.sh`, 글 다듬기 `polish-with-gemini.sh` | 배달 |
+| `.claude-plugin/marketplace.json` · `plugin/` | 플러그인 `superchaeyeons` — 스킬(`plugin/skills/`) · 에이전트(`plugin/agents/`) · 훅(`plugin/hooks/`, 등록 `hooks.json`) · 도구(`plugin/scripts/`: 빌드·실행 엔진 `dev.sh`, 이식성·문서 검사기, `init-harness-probe.sh`, 회고 분석 `analyze-corrections.sh`, 글 다듬기 `polish-with-gemini.sh`) | 배달 (플러그인) |
+| `scripts/` | 이 저장소 전용 — `verify.sh`(검사 묶음) · 훅 케이스 `test-hooks.sh` · 엔진 테스트 `test-dev.sh` · 플러그인 검사기 `check-plugin.sh` · git 훅과 설치기 | 저장소 전용 |
 | `docs/templates/` | 산출물 등록부 및 문서 템플릿 | 배달 |
 | `examples/` | 채운 예 — `harness-map.md`(`baro/`)·GitHub 트래커 안내(`tracker-github/`) | 참고 자료 |
 | `AGENTS.template.md` · `.github/CONTRIBUTING.md` | 새 프로젝트 `AGENTS.md` 견본 · Git 컨벤션 견본 | 견본 |
@@ -106,7 +104,7 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 이 저장소 자체의 부품 계약, 훅 규약, 문서 스타일을 한 번에 검증하는 명령입니다.
 
 ```bash
-./scripts/dev.sh test   # scripts/verify.sh를 부른다
+./plugin/scripts/dev.sh test   # scripts/verify.sh를 부른다
 ```
 
 ## 더 읽어보기

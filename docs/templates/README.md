@@ -18,8 +18,8 @@
 
 | 산출물 | 만드는 것 | 저장 경로 | 유형 | 템플릿 |
 |--------|-----------|-----------|------|--------|
-| 기능 스펙 | `write-spec` 스킬 (범위를 미룰 때의 Draft 포함) | `{{스펙 저장소}}/{unit}/{kebab-case}.md` | 참조 | 골격은 [`spec-template.md`](../../.claude/skills/write-spec/references/spec-template.md) (참조 유형의 작업 산출물 판) |
-| 아키텍처 감사 | `refactor-safely` 스킬 (Audit 단계) | `{{감사 로그}}/{unit}/{NNN}-{kebab-topic}.md` (작업 단위 안에서 001부터 증가) | 문제 해결 | 골격은 [`audit-template.md`](../../.claude/skills/refactor-safely/references/audit-template.md) (문제 해결 유형의 작업 산출물 판) |
+| 기능 스펙 | `write-spec` 스킬 (범위를 미룰 때의 Draft 포함) | `{{스펙 저장소}}/{unit}/{kebab-case}.md` | 참조 | 골격은 하네스 플러그인의 `skills/write-spec/references/spec-template.md` (참조 유형의 작업 산출물 판) |
+| 아키텍처 감사 | `refactor-safely` 스킬 (Audit 단계) | `{{감사 로그}}/{unit}/{NNN}-{kebab-topic}.md` (작업 단위 안에서 001부터 증가) | 문제 해결 | 골격은 하네스 플러그인의 `skills/refactor-safely/references/audit-template.md` (문제 해결 유형의 작업 산출물 판) |
 | 리팩터 반영 이력 | `refactor-safely` 스킬 (G4 Report) | `{{감사 로그}}/{unit}/refactor-log.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 하네스 회고 백로그 | `improve-harness` 스킬 | `{{문서 루트}}/audits/harness-retro.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 아키텍처 결정 (ADR) | 사용자 승인 후 수동 작성 | `{{결정 기록}}/{번호}-{kebab-case}.md` | 설명 | [`explanation-doc.md`](explanation-doc.md) "작업 산출물로 쓸 때" |
@@ -35,7 +35,7 @@
 | 클라이언트 전제 | 사용자 승인 후 수동 작성 | `{{클라이언트 전제}}` — 이 저장소: (없음) | 설명 | [`explanation-doc.md`](explanation-doc.md) |
 | 현재동작 요약 | 보안·아키텍처 변경과 같은 턴 | `{{현재동작 요약}}` — 이 저장소: `docs/harness/README.md` | 설명 | [`explanation-doc.md`](explanation-doc.md) |
 
-**마크다운을 만들지 않는 것들.** 훅은 stderr 메시지만 내보내고 파일을 쓰지 않는다. 글 다듬기(`scripts/polish-with-gemini.sh`)는 이미 있는 문서의 문장만 고치고, 기준판과 차이는 git이 무시하는 `.claude/polish/`에만 둔다. `verify-work`·`fix-bug` 스킬과 `doc-reviewer`·`researcher`·프로젝트 리뷰어 에이전트는 결과를 채팅으로만 보고한다. 이들의 결과를 문서로 남겨야 한다고 판단되면 위 등록부에 행을 추가하는 것이 먼저다 — 임의 경로에 파일을 만들지 않는다.
+**마크다운을 만들지 않는 것들.** 훅은 stderr 메시지만 내보내고 파일을 쓰지 않는다. 글 다듬기(하네스 플러그인의 `scripts/polish-with-gemini.sh`)는 이미 있는 문서의 문장만 고치고, 기준판과 차이는 git이 무시하는 `.claude/polish/`에만 둔다. `verify-work`·`fix-bug` 스킬과 `doc-reviewer`·`researcher`·프로젝트 리뷰어 에이전트는 결과를 채팅으로만 보고한다. 이들의 결과를 문서로 남겨야 한다고 판단되면 위 등록부에 행을 추가하는 것이 먼저다 — 임의 경로에 파일을 만들지 않는다.
 
 ## 유형별 템플릿
 
@@ -55,11 +55,11 @@ toss의 [테크니컬 라이팅 가이드](https://github.com/toss/technical-wri
 1. `doc-writing.md`의 판정 순서로 유형을 정한다.
 2. 위 등록부에 이미 있는 산출물이면 해당 템플릿의 **"작업 산출물로 쓸 때"** 절이나 스킬의 골격을 복사한다. 없으면 **"골격"** 절을 복사한다.
 3. 대괄호 `[...]` 안내문을 실제 내용으로 바꾼다 — 안내문이 남아 있으면 미완성이다.
-4. `scripts/check-doc-style.sh <파일>`로 구조·문장 검사를 통과한다 (pre-commit도 같은 검사를 한다).
+4. 하네스 플러그인의 `scripts/check-doc-style.sh <파일>`로 구조·문장 검사를 통과한다 (pre-commit도 같은 검사를 한다).
 5. 새 문서이므로 **G3 문서 품질 게이트** 대상이다 — `doc-reviewer`로 확인한다.
 
 ## 관련 문서
 
 - [`.claude/rules/doc-writing.md`](../../.claude/rules/doc-writing.md) — 유형 판정·정보 구조·문장 기준
 - [`.claude/rules/harness-map.md`](../../.claude/rules/harness-map.md) — `{{문서 루트}}` 등 경로 슬롯
-- [`.claude/agents/doc-reviewer.md`](../../.claude/agents/doc-reviewer.md) — 문서 품질 리뷰 기준
+- 하네스 플러그인의 `agents/doc-reviewer.md` — 문서 품질 리뷰 기준

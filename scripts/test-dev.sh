@@ -6,12 +6,12 @@
 #   scripts/test-dev.sh
 #
 # exit 0 = 전부 통과 · exit 1 = 실패 있음 · exit 2 = 환경 오류(python3 없음)
-# 계약 원문: scripts/dev.sh 머리. 스펙: docs/specs/cross-cutting/dev-script.md
+# 계약 원문: plugin/scripts/dev.sh 머리. 스펙: docs/specs/cross-cutting/dev-script.md
 
 set -u
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
-dev="$repo_root/scripts/dev.sh"
+dev="$repo_root/plugin/scripts/dev.sh"
 command -v python3 >/dev/null 2>&1 || { echo "FAIL: python3 없음" >&2; exit 2; }
 
 tmp="$(mktemp -d "${TMPDIR:-/tmp}/dev-test.XXXXXX")"
@@ -70,20 +70,21 @@ run "$(conf verb)" deploy
 [ "$rc" = 2 ] && ok "모르는 동사 → exit 2" || ng "모르는 동사 → exit 2 (실제 $rc)" "$out"
 
 # ---- 설정 파일 찾는 순서: DEV_CONF → 루트 dev.conf → scripts/dev.conf ----
-# 엔진은 자기 위치의 상위 폴더를 저장소 루트로 보므로, 엔진과 차단 훅을 임시 저장소에 복사해 돌린다.
-lk="$tmp/lookup"; mkdir -p "$lk/scripts" "$lk/.claude/hooks"
-cp "$dev" "$lk/scripts/dev.sh"; cp "$repo_root/.claude/hooks/deny-dangerous-bash.sh" "$lk/.claude/hooks/"
-cp "$(conf lk-root "BUILD_CMD=true" "LOG_DIR=$lk/from-root")" "$lk/dev.conf"
-cp "$(conf lk-scripts "BUILD_CMD=true" "LOG_DIR=$lk/from-scripts")" "$lk/scripts/dev.conf"
+# 엔진은 플러그인 폴더에 있고 프로젝트는 현재 폴더의 git 최상위(없으면 현재 폴더)다. 엔진·차단 훅을 플러그인 모양(plug/)으로,
+# 설정 파일을 프로젝트(proj/)에 두고 프로젝트 폴더에서 부른다 — 임시 폴더는 git 저장소 밖이라 현재 폴더가 프로젝트가 된다.
+lk="$tmp/lookup"; mkdir -p "$lk/plug/scripts" "$lk/plug/hooks" "$lk/proj/scripts"
+cp "$dev" "$lk/plug/scripts/dev.sh"; cp "$repo_root/plugin/hooks/deny-dangerous-bash.sh" "$lk/plug/hooks/"
+cp "$(conf lk-root "BUILD_CMD=true" "LOG_DIR=$lk/from-root")" "$lk/proj/dev.conf"
+cp "$(conf lk-scripts "BUILD_CMD=true" "LOG_DIR=$lk/from-scripts")" "$lk/proj/scripts/dev.conf"
 cp "$(conf lk-env "BUILD_CMD=true" "LOG_DIR=$lk/from-env")" "$lk/env.conf"
-out="$(env -u DEV_CONF "$lk/scripts/dev.sh" build 2>&1)"; rc=$?
+out="$(cd "$lk/proj" && env -u DEV_CONF "$lk/plug/scripts/dev.sh" build 2>&1)"; rc=$?
 [ "$rc" = 0 ] && [ -f "$lk/from-root/build.log" ] && [ ! -e "$lk/from-scripts/build.log" ] \
 	&& ok "루트 dev.conf가 있으면 scripts/dev.conf보다 먼저 읽는다" || ng "루트 dev.conf가 있으면 scripts/dev.conf보다 먼저 읽는다 (실제 $rc)" "$out"
-out="$(DEV_CONF="$lk/env.conf" "$lk/scripts/dev.sh" build 2>&1)"; rc=$?
+out="$(cd "$lk/proj" && DEV_CONF="$lk/env.conf" "$lk/plug/scripts/dev.sh" build 2>&1)"; rc=$?
 [ "$rc" = 0 ] && [ -f "$lk/from-env/build.log" ] \
 	&& ok "DEV_CONF가 루트 dev.conf보다 앞선다" || ng "DEV_CONF가 루트 dev.conf보다 앞선다 (실제 $rc)" "$out"
-rm "$lk/dev.conf"
-out="$(env -u DEV_CONF "$lk/scripts/dev.sh" build 2>&1)"; rc=$?
+rm "$lk/proj/dev.conf"
+out="$(cd "$lk/proj" && env -u DEV_CONF "$lk/plug/scripts/dev.sh" build 2>&1)"; rc=$?
 [ "$rc" = 0 ] && [ -f "$lk/from-scripts/build.log" ] \
 	&& ok "루트 dev.conf가 없으면 scripts/dev.conf를 읽는다" || ng "루트 dev.conf가 없으면 scripts/dev.conf를 읽는다 (실제 $rc)" "$out"
 

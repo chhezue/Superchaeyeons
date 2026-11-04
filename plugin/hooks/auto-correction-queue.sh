@@ -1,9 +1,9 @@
 #!/bin/bash
 # Appends a line to the correction queue when the agent saves a correction memory (an agent memory whose header says `type: feedback`).
-# Registered in .claude/settings.json (PostToolUse Write|Edit|MultiEdit|NotebookEdit). 회고 루프의 "기록" 단계 — 모델에 아무것도 넣지 않는다(비용 0).
+# Registered in plugin/hooks/hooks.json (PostToolUse Write|Edit|MultiEdit|NotebookEdit). 회고 루프의 "기록" 단계 — 모델에 아무것도 넣지 않는다(비용 0).
 #
 # 대기열 한 줄: 날짜<TAB>세션 ID<TAB>기억 파일 이름<TAB>그 파일의 description<TAB>횟수.
-# 같은 파일이 다시 쓰이면 새 줄을 더하지 않고 횟수만 올린다. scripts/analyze-corrections.sh가 이 파일을 읽고, 정기 분석이 성공하면 분석한 줄을 지운다.
+# 같은 파일이 다시 쓰이면 새 줄을 더하지 않고 횟수만 올린다. plugin/scripts/analyze-corrections.sh가 이 파일을 읽고, 정기 분석이 성공하면 분석한 줄을 지운다.
 # 기억 폴더는 경로 모양(`…/.claude/projects/<프로젝트>/memory/*.md`)과 파일 머리로 판정한다 — 사용자 표현에 기대지 않는다.
 #
 # 훅 공통 규약의 예외: 기록용 훅이라 어떤 경우에도 작업을 막지 않는다(exit 0). 대신 입력을 읽지 못하거나 대기열에 쓰지 못하면
@@ -11,7 +11,7 @@
 # bash 3.2 내장 기능과 macOS 기본 명령만 쓴다(python3 없는 컴퓨터에서도 기록이 빠지지 않게).
 # STORE는 .gitignore 대상이다(정정 기억 설명이 들어간다).
 # Hook input: JSON with "session_id", "tool_input.file_path" on stdin.
-STORE="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}/.claude/corrections"
+STORE="${CLAUDE_PROJECT_DIR:-$PWD}/.claude/corrections"
 
 warn() {
 	printf '{"systemMessage":"[회고 기록] 정정 대기열에 쓰지 못했다 — %s"}\n' "$1"

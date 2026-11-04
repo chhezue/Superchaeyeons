@@ -2,7 +2,7 @@
 # init-harness 1단계(실측) — 저장소에서 축 4개의 값과 슬롯 후보를 읽어 표로 출력한다. 읽기 전용이다.
 #
 # 사용:
-#   scripts/init-harness-probe.sh [저장소 경로] [작업 범위]     # 기본: 현재 저장소 · 범위 "."
+#   plugin/scripts/init-harness-probe.sh [저장소 경로] [작업 범위]     # 기본: 현재 저장소 · 범위 "."
 #
 # 출력은 마크다운이다 — init-harness 2단계(제안)의 입력으로 그대로 붙인다. (sed 규칙은 각각 `t`로 끝나 앞 규칙의 결과를 뒤 규칙이 덮어쓰지 않는다.) 판단은 하지 않는다: 값이 있으면 값을, 없으면 "없음"을
 # 근거 명령과 함께 적는다. 어느 스택에도 묶이지 않도록 흔한 흔적을 여러 개 나열한다 (다스택 예시).
@@ -20,7 +20,7 @@ count_ext() { git ls-files -- "${scope}" 2>/dev/null | sed -n 's/.*\.\([A-Za-z0-
 
 echo "# init-harness 실측표 — $(basename "$root") (범위 \`$scope\`)"
 echo
-echo "생성: $(date +%Y-%m-%d) · \`scripts/init-harness-probe.sh\`. 값은 관례를 물려받지 않고 여기서 읽은 것만 적는다."
+echo "생성: $(date +%Y-%m-%d) · \`plugin/scripts/init-harness-probe.sh\`. 값은 관례를 물려받지 않고 여기서 읽은 것만 적는다."
 echo
 echo "## lang"
 echo

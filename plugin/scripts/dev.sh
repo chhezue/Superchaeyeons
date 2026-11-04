@@ -4,11 +4,11 @@
 # 스펙: {{스펙 저장소}}의 cross-cutting/dev-script.md (이 머리가 동사·종료 코드·출력·설정 키의 SSOT)
 #
 # 사용:
-#   scripts/dev.sh build | test [인자…] | fmt | deps | start | stop | status | logs [N]
-#   DEV_CONF=<경로> scripts/dev.sh …      # 다른 설정 파일 (scripts/test-dev.sh가 쓴다)
+#   plugin/scripts/dev.sh build | test [인자…] | fmt | deps | start | stop | status | logs [N]
+#   DEV_CONF=<경로> plugin/scripts/dev.sh …      # 다른 설정 파일 (scripts/test-dev.sh가 쓴다)
 #
-# 설정 파일은 DEV_CONF → 저장소 루트 dev.conf → scripts/dev.conf 순으로 찾는다. scripts/는 배달되므로 scripts/dev.conf는 배달본에서
-# 빈칸이고 붙여 쓰는 프로젝트가 채운다. 하네스 원본처럼 배달하지 않을 자기 값이 있는 저장소만 루트 dev.conf를 둔다.
+# 설정 파일은 프로젝트에서 DEV_CONF → 저장소 루트 dev.conf → scripts/dev.conf 순으로 찾는다. scripts/dev.conf는 init-harness가
+# 골격(skills/init-harness/references/dev.conf)을 복사해 채운다. 하네스 원본처럼 루트에 둘 이유가 있는 저장소만 루트 dev.conf를 둔다.
 #
 # 종료 코드: 0 성공(값이 "없음"인 동사 포함) · 1 실패 · 2 환경 없음(설정 파일·키 · 컨테이너 런타임 · 포트 점유 · 위험 명령 차단)
 #
@@ -31,15 +31,17 @@
 #   LOG_DIR                           전체 로그와 app.pid를 둘 곳(저장소 루트 기준, 버전 관리에서 제외된 폴더)
 #
 # 안전: dev.conf의 명령은 이 스크립트 안에서 실행되어 PreToolUse 훅이 보지 못한다. 그래서 실행 전에 명령 문자열마다
-# .claude/hooks/deny-dangerous-bash.sh에 넣어 판정을 받고, 막히거나 훅이 없으면 실행하지 않는다(exit 2).
+# 같은 플러그인의 hooks/deny-dangerous-bash.sh에 넣어 판정을 받고, 막히거나 훅이 없으면 실행하지 않는다(exit 2).
 # 종료: start는 앱을 새 프로세스 그룹으로 띄워 그 번호를 app.pid에 적고, stop은 그 그룹에만 신호를 보낸다 — 이름 패턴으로 끄지 않는다.
 # start가 실패하면 그 start가 띄운 앱과 서비스를 모두 정지한다. junit 결과 파일이 이번 실행에서 하나도 쓰이지 않았으면 통과가 아니라 실패다.
 
 set -u
-root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# 엔진은 플러그인 폴더에 있고 설정·명령은 프로젝트 것이다. Bash 도구에는 CLAUDE_PROJECT_DIR가 없어 git 최상위(없으면 현재 폴더)를 프로젝트로 본다
+plugin_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 cd "$root"
 if [ -n "${DEV_CONF:-}" ]; then conf="$DEV_CONF"; elif [ -f dev.conf ]; then conf="dev.conf"; else conf="scripts/dev.conf"; fi
-guard="$root/.claude/hooks/deny-dangerous-bash.sh"
+guard="$plugin_root/hooks/deny-dangerous-bash.sh"
 KEYS="BUILD_CMD TEST_CMD TEST_REPORT FMT_CMD DEPS_CMD RUN_ENV SERVICES EXTRA_CONTAINERS WAIT_SERVICES START_CMD APP_PORT HEALTH_URL WAIT_HEALTH LOG_DIR"
 verb="${1:-}"; [ $# -gt 0 ] && shift
 
@@ -48,7 +50,7 @@ command -v python3 >/dev/null 2>&1 || env_missing "python3 없음"
 
 case "$verb" in
 build | test | fmt | deps | start | stop | status | logs) ;;
-*) echo "사용: scripts/dev.sh build | test [인자…] | fmt | deps | start | stop | status | logs [N]"; exit 2 ;;
+*) echo "사용: plugin/scripts/dev.sh build | test [인자…] | fmt | deps | start | stop | status | logs [N]"; exit 2 ;;
 esac
 
 # ---- 설정 읽기 ----

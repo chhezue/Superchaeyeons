@@ -37,5 +37,5 @@ description: 이 프로젝트의 이슈 트래커({트래커 이름})를 다룰 
 
 "Gemini 다듬기" 플래그가 ☑이면 적용된다(`harness-map.md`).
 
-- 이슈·PR 제목과 본문, 댓글은 만들기 전에 `scripts/polish-with-gemini.sh message`로 다듬는다. 원문과 대조해 틀린 곳만 고친 뒤 그 글로 만든다
+- 이슈·PR 제목과 본문, 댓글은 만들기 전에 `${CLAUDE_PLUGIN_ROOT}/scripts/polish-with-gemini.sh message`로 다듬는다. 원문과 대조해 틀린 곳만 고친 뒤 그 글로 만든다
 - 입력은 `{"kind": "issue" 또는 "pr", "fields": {"title": …, "body": …}}` JSON이고, 출력의 `fields`가 다듬은 글이다. 실패하면 원문으로 만든다

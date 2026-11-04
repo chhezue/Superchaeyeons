@@ -10,7 +10,7 @@ description: 회고 분석이 낸 하네스 개선 후보를 사용자와 하나
 | 단계 | 누가 | 결과 |
 |---|---|---|
 | 기록 | 훅 `auto-correction-queue.sh` — 정정 기억이 저장될 때마다, 모델 비용 0 | `.claude/corrections/queue.tsv` |
-| 분석 | `scripts/analyze-corrections.sh` — 첫 정기 분석은 사용자가 직접, 그 뒤 세션 시작 훅이 7일마다 따로 띄운다 | `.claude/corrections/candidates.md` |
+| 분석 | `${CLAUDE_PLUGIN_ROOT}/scripts/analyze-corrections.sh` — 첫 정기 분석은 사용자가 직접, 그 뒤 세션 시작 훅이 7일마다 따로 띄운다 | `.claude/corrections/candidates.md` |
 | 검토 | **이 스킬** — 세션 안에서 사용자와 | 장부(`{{문서 루트}}/audits/harness-retro.md`) |
 
 세션 시작 알림(`auto-correction-notice.sh`)이 "검토할 후보 K건"을 띄우면 이 스킬을 쓸 때다. 이 스킬은 대화 이력을 다시 읽어 후보를 찾지 않는다 — 분석은 이미 별도 실행에서 세션별 사용자 메시지 요약을 보고 근거(세션 ID·메시지 번호)를 검사했다.
@@ -30,7 +30,7 @@ description: 회고 분석이 낸 하네스 개선 후보를 사용자와 하나
 - 세션 시작 알림에 검토할 후보가 있을 때
 - 사용자가 "회고", "이번에 배운 거 정리" 등을 요청할 때
 
-**생략:** 후보 파일에 `### ` 후보가 없을 때. 억지로 후보를 만들지 않는다 — 사용자가 회고를 요청했는데 후보가 없으면 마지막 분석 시각(`.claude/corrections/last-analysis`)과 분석 명령 `scripts/analyze-corrections.sh`를 알려 주고 멈춘다. 분석은 비용이 드는 별도 실행이라 사용자가 돌린다.
+**생략:** 후보 파일에 `### ` 후보가 없을 때. 억지로 후보를 만들지 않는다 — 사용자가 회고를 요청했는데 후보가 없으면 마지막 분석 시각(`.claude/corrections/last-analysis`)과 분석 명령 `${CLAUDE_PLUGIN_ROOT}/scripts/analyze-corrections.sh`를 알려 주고 멈춘다. 분석은 비용이 드는 별도 실행이라 사용자가 돌린다.
 
 ## Steps
 
@@ -52,10 +52,10 @@ description: 회고 분석이 낸 하네스 개선 후보를 사용자와 하나
    |----|------|-----|
    | 규칙(`.claude/rules/`) | 맥락 판단이 필요함 | STOP 절 추가·기존 절 보강 |
    | 스킬·에이전트 | 절차가 여러 단계임 | 새 게이트 절차 |
-   | 훅(`.claude/hooks/`) | **exit code로 판정 가능함** | 금지 패턴 차단 |
+   | 훅(플러그인 `hooks/`) | **exit code로 판정 가능함** | 금지 패턴 차단 |
    | 문서 SSOT | 값·계약이 어긋남 | 스펙·ERD amend |
 
-   판정 불가능한 것을 훅으로 만들지 않는다 — 계약 변경 경고 훅을 LLM 판단(agent-type)에 맡겼다가 실패한 이력이 있다(`.claude/rules/README.md` "훅 공통 규약"). 항상 실리는 규칙에 더하는 후보는 예산(`scripts/check-portability.sh`)과 바이트를 함께 보인다.
+   판정 불가능한 것을 훅으로 만들지 않는다 — 계약 변경 경고 훅을 LLM 판단(agent-type)에 맡겼다가 실패한 이력이 있다(`.claude/rules/README.md` "훅 공통 규약"). 항상 실리는 규칙에 더하는 후보는 예산(`${CLAUDE_PLUGIN_ROOT}/scripts/check-portability.sh`)과 바이트를 함께 보인다.
 
 4. **⛔ 하나씩 묻기** — 후보를 **한 메시지에 하나씩** 사용자에게 보이고 답을 받는다. 파일에 쓰기 전에 멈춘다.
    - 각 후보: **무엇이 문제였나 → 어느 층으로 → 근거(어느 세션의 어떤 말) → 토큰 비용**

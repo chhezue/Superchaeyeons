@@ -8,7 +8,7 @@ Claude Code용 **하네스**(규칙·스킬·에이전트·훅·검사 스크립
 
 ## 이 저장소에서 작업할 때
 
-- **완료·통과를 말하기 전에 항상 `scripts/dev.sh test`** — 이 저장소의 `{{테스트 명령}}`이고 `scripts/verify.sh`를 부른다. 문서도 검사 대상이라 문서만 고친 작업도 돌린다 (`verify-work`의 "문서 전용은 생략 가능"보다 이 줄이 우선)
+- **완료·통과를 말하기 전에 항상 `plugin/scripts/dev.sh test`** — 이 저장소의 `{{테스트 명령}}`이고 `scripts/verify.sh`를 부른다. 문서도 검사 대상이라 문서만 고친 작업도 돌린다 (`verify-work`의 "문서 전용은 생략 가능"보다 이 줄이 우선)
 - **`core-*.md`에 프로젝트 고유 사실을 넣지 않는다** — 경로면 슬롯, 정책이면 플래그, 둘 다 아니면 `local-*.md`. 슬롯·플래그는 core가 실제로 쓸 때만 늘린다
 - **구성 요소를 추가·삭제·개명하면 `.claude/rules/README.md`를 같은 턴에** 고친다 — `check-portability.sh`가 실물과 대조한다
 - **훅을 고치거나 우회 경로를 찾으면 `scripts/hook-cases.txt`에 케이스부터** 넣는다 — `deny-*`는 판정 불가(python3 없음 포함)도 막아야 하고, 새 훅은 `settings.json`에 등록해야 통과한다

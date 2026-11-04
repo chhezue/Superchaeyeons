@@ -117,7 +117,7 @@ core에 프로젝트 사실이 새면 `scripts/check-portability.sh`가 커밋�
 2026-10-29 기준이다. 정확한 목록은 [`.claude/rules/README.md`](../.claude/rules/README.md)가 SSOT다.
 
 - 규칙: always-load 5개 · path-scoped 4개 · always-load 합계 23,777B / 상한 25,000B
-- 스킬 8개 · 서브에이전트 3개 · 배달 훅 5개 · 검사기 4개(+ `verify.sh` 래퍼) · 실행 엔진 `dev.sh` · git 훅 2개
+- 스킬 8개 · 서브에이전트 3개 · 배달 훅 5개 · 검사기 5개(+ `verify.sh` 래퍼) · 실행 엔진 `dev.sh` · git 훅 2개
 - `harness-map.md`: 축 4 · 슬롯 25 · 능력 플래그 3
 - 훅 규약 케이스 394개
 

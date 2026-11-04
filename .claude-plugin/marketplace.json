@@ -1,0 +1,12 @@
+{
+  "name": "superchaeyeons",
+  "owner": { "name": "chhezue" },
+  "description": "Claude Code 하네스(규칙·스킬·에이전트·훅)를 플러그인 하나로 배달하는 마켓플레이스",
+  "plugins": [
+    {
+      "name": "superchaeyeons",
+      "source": "./plugin",
+      "description": "Claude Code 하네스 — 규칙 주입·승인 창·검사 스크립트와 스킬·에이전트"
+    }
+  ]
+}

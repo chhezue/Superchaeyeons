@@ -546,3 +546,19 @@ polish-with-gemini.sh docs $TMP/pf2/docs/specs/sample.md	-;POLISH_ENABLED=1;KEYC
 # disable-model-invocation 스킬은 뺀다 (always-load-reduce 5단계). 견본: s1 "가나다"+"abc" 12B · a1 "xyz" 3B = 15B
 hook-fixtures/portability/run.sh $TMP/port 25000	-	0;out~설명 줄 2개;out~[[:space:]]15[[:space:]]+스킬·에이전트 설명 줄;out~→ OK
 hook-fixtures/portability/run.sh $TMP/port2 30	-	0;out~FAIL: 상한 초과
+
+# ---- check-plugin.sh (harness-plugin-delivery 스펙 — 플러그인 검사기) ----
+# `claude plugin validate --json` 결과에서 매니페스트의 `version` 경고만 허용한다(리스크 11). 마켓플레이스 검사는 같은 경고가
+# `plugins[N] plugin.json → version`으로 나온다. 그 밖의 경고·오류(매니페스트·contents 어디든) · success:false · 해석 불가는 실패.
+# --stdin은 claude를 부르지 않고 넣은 결과만 판정한다. 결과 형식은 Claude Code 2.1.304 실측 (2026-11-04)
+check-plugin.sh --stdin	-	0;out~통과	{"success":true,"manifest":{"errors":[],"warnings":[{"path":"version","message":"No version specified"}]},"contents":[]}
+check-plugin.sh --stdin	-	0;out~통과	{"success":true,"manifest":{"errors":[],"warnings":[{"path":"plugins[0] plugin.json → version","message":"No version specified"}]},"contents":[]}
+check-plugin.sh --stdin	-	1;err~author	{"success":true,"manifest":{"errors":[],"warnings":[{"path":"version","message":"No version specified"},{"path":"author","message":"No author information provided"}]},"contents":[]}
+check-plugin.sh --stdin	-	1;err~json	{"success":false,"manifest":{"errors":[{"path":"json","message":"Invalid JSON syntax"}],"warnings":[]},"contents":[]}
+check-plugin.sh --stdin	-	1;err~description	{"success":true,"manifest":{"errors":[],"warnings":[]},"contents":[{"file":"skills/x/SKILL.md","errors":[],"warnings":[{"path":"description","message":"No description in frontmatter"}]}]}
+# contents 쪽 `version` 경고는 매니페스트 경고가 아니라 허용하지 않는다
+check-plugin.sh --stdin	-	1;err~version	{"success":true,"manifest":{"errors":[],"warnings":[]},"contents":[{"file":"skills/x/SKILL.md","errors":[],"warnings":[{"path":"version","message":"x"}]}]}
+check-plugin.sh --stdin	-	1;err~success	{"success":false,"manifest":{"errors":[],"warnings":[]},"contents":[]}
+check-plugin.sh --stdin	-	1;err~해석	not json
+check-plugin.sh --stdin	-	1;err~해석
+check-plugin.sh --stdin	-	1;err~해석	{"success":true}

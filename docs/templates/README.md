@@ -2,7 +2,7 @@
 
 이 저장소의 **모든 마크다운 문서가 어디에 쌓이고 어떤 형식을 따르는지**를 한 곳에 모은 표다. 스킬이 자동으로 만드는 산출물뿐 아니라 사람이 직접 쓰는 문서도 전부 포함한다 — 어느 쪽이든 `{{문서 루트}}` 밖에 두거나 등록부에 없는 형식으로 쓰지 않는다. 새 문서를 쓸 때는 여기서 유형을 찾아 해당 템플릿을 복사하고, 새 산출물을 만드는 스킬을 추가할 때는 여기에 행을 먼저 추가한다.
 
-문서 루트는 `harness-map.md`의 `{{문서 루트}}` 슬롯 하나다(기본 `docs/`). 모노레포처럼 저장소 루트 `docs/`를 하네스가 소유하지 않는 프로젝트는 슬롯을 하위 경로로 바꾸고, 그 밖으로의 쓰기는 `deny-out-of-scope-write.sh` 훅이 막는다.
+문서 루트는 `.claude/harness.conf`의 `{{문서 루트}}` 슬롯 하나다(기본 `docs/`). 모노레포처럼 저장소 루트 `docs/`를 하네스가 소유하지 않는 프로젝트는 슬롯을 하위 경로로 바꾸고, 그 밖으로의 쓰기는 `deny-out-of-scope-write.sh` 훅이 막는다.
 
 유형 판정 순서와 문장·구조 작성 기준은 하네스 플러그인의 `rules/doc-writing.md`가 SSOT다.
 
@@ -14,7 +14,7 @@
 
 ## 산출물 등록부
 
-위쪽은 하네스가 배달하는 산출물이라 **경로 패턴이 모든 프로젝트에 같다** — `{{슬롯}}`만 `harness-map.md` 값으로 읽으면 된다. 아래쪽 "프로젝트 문서" 행은 **값 자체가 저장소마다 다르다** — `init-harness`가 채우며, 여기엔 이 저장소(하네스 템플릿 자체)의 `harness-map.md` 값을 그대로 옮겨 적었다.
+위쪽은 하네스가 배달하는 산출물이라 **경로 패턴이 모든 프로젝트에 같다** — `{{슬롯}}`만 `.claude/harness.conf` 값으로 읽으면 된다. 아래쪽 "프로젝트 문서" 행은 **값 자체가 저장소마다 다르다** — `init-harness`가 채우며, 여기엔 이 저장소(하네스 템플릿 자체)의 `.claude/harness.conf` 값을 그대로 옮겨 적었다.
 
 | 산출물 | 만드는 것 | 저장 경로 | 유형 | 템플릿 |
 |--------|-----------|-----------|------|--------|
@@ -23,7 +23,7 @@
 | 리팩터 반영 이력 | `refactor-safely` 스킬 (G4 Report) | `{{감사 로그}}/{unit}/refactor-log.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 하네스 회고 백로그 | `improve-harness` 스킬 | `{{문서 루트}}/audits/harness-retro.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 아키텍처 결정 (ADR) | 사용자 승인 후 수동 작성 | `{{결정 기록}}/{번호}-{kebab-case}.md` | 설명 | [`explanation-doc.md`](explanation-doc.md) "작업 산출물로 쓸 때" |
-| 하네스 슬롯 값 | `init-harness` 스킬 | `.claude/rules/harness-map.md` | 참조 | 파일 자체가 골격 |
+| 하네스 슬롯 값 | `init-harness` 스킬 | `.claude/harness.conf` | 참조 | 키 목록은 하네스 플러그인의 `scripts/harness-keys.txt` |
 | 작업 보고서 (`report.md`) | G4 — L 규모(3파일 이상·API·DB) 작업 끝에 | `{{문서 루트}}/reports/{YYYY-MM-DD}-{kebab-topic}.md` | 참조 | [`reference-doc.md`](reference-doc.md) "작업 보고서" |
 | 안 하기로 한 것 | 검토 후 기각 결정이 날 때 (G4·`improve-harness`) | `{{문서 루트}}/out-of-scope/README.md` — 이 저장소 이력, 배달 안 함 | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 하네스 설계 배경 | 사용자 승인 후 수동 작성 | `{{문서 루트}}/harness/README.md` · `harness-engineering.md` — 이 저장소 이력, 배달 안 함 | 설명 | [`explanation-doc.md`](explanation-doc.md) |
@@ -61,5 +61,5 @@ toss의 [테크니컬 라이팅 가이드](https://github.com/toss/technical-wri
 ## 관련 문서
 
 - 하네스 플러그인의 `rules/doc-writing.md` — 유형 판정·정보 구조·문장 기준
-- [`.claude/rules/harness-map.md`](../../.claude/rules/harness-map.md) — `{{문서 루트}}` 등 경로 슬롯
+- [`.claude/harness.conf`](../../.claude/harness.conf) — `{{문서 루트}}` 등 경로 슬롯
 - 하네스 플러그인의 `agents/doc-reviewer.md` — 문서 품질 리뷰 기준

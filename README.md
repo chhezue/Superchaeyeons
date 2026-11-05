@@ -34,7 +34,7 @@ cp -R .claude docs/templates scripts <새-프로젝트>/
 /init-harness
 ```
 
-저장소를 자동으로 실측해 언어·스택·테스트 명령을 파악하고, [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md)의 설정값(축·슬롯·능력 플래그)을 제안합니다. 승인하면 프로젝트 맞춤 설정이 끝납니다.
+저장소를 자동으로 실측해 언어·스택·테스트 명령을 파악하고, [`.claude/harness.conf`](.claude/harness.conf)의 설정값(축·슬롯·능력 플래그)을 제안합니다. 승인하면 프로젝트 맞춤 설정이 끝납니다.
 
 ### 3단계: Git 훅 설치
 
@@ -78,7 +78,7 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 ```text
 [ 수정 권한 3층 구조 ]
 - Core (부품) : core-*.md, 공통 훅, 공통 스킬 (수정 금지, 100% 이식성 보장)
-- Map (연결)  : harness-map.md (init-harness 스킬이 프로젝트 실측값으로 채움)
+- 설정 (연결) : .claude/harness.conf (init-harness 스킬이 프로젝트 실측값으로 채움)
 - Local (고유): local-*.md (각 프로젝트 고유의 도메인·기술 스택 규칙)
 ```
 
@@ -90,11 +90,12 @@ Superchaeyeons를 장착한 에이전트는 프롬프트 한마디에 바로 코
 
 | 경로 | 내용 | 배달 여부 |
 |------|------|:---------:|
-| `.claude/rules/` | 행동 규칙 (`core-*`, `harness-map.md`, `doc-writing.md`) — 목록은 [`.claude/rules/README.md`](.claude/rules/README.md) | 배달 |
-| `.claude-plugin/marketplace.json` · `plugin/` | 플러그인 `superchaeyeons` — 스킬(`plugin/skills/`) · 에이전트(`plugin/agents/`) · 훅(`plugin/hooks/`, 등록 `hooks.json`) · 도구(`plugin/scripts/`: 빌드·실행 엔진 `dev.sh`, 이식성·문서 검사기, `init-harness-probe.sh`, 회고 분석 `analyze-corrections.sh`, 글 다듬기 `polish-with-gemini.sh`) | 배달 (플러그인) |
+| `.claude/harness.conf` | 프로젝트 설정 — 슬롯·플래그·훅 판정 값. 붙이는 프로젝트는 `init-harness`가 채운다 | 프로젝트 값 |
+| `.claude/rules/README.md` | 구성 요소 목록 SSOT — 이 저장소 전용 | 저장소 전용 |
+| `.claude-plugin/marketplace.json` · `plugin/` | 플러그인 `superchaeyeons` — 규칙(`plugin/rules/`, 훅이 주입) · 스킬(`plugin/skills/`) · 에이전트(`plugin/agents/`) · 훅(`plugin/hooks/`, 등록 `hooks.json`) · 도구(`plugin/scripts/`: 빌드·실행 엔진 `dev.sh`, 이식성·문서 검사기, `init-harness-probe.sh`, 회고 분석 `analyze-corrections.sh`, 글 다듬기 `polish-with-gemini.sh`) | 배달 (플러그인) |
 | `scripts/` | 이 저장소 전용 — `verify.sh`(검사 묶음) · 훅 케이스 `test-hooks.sh` · 엔진 테스트 `test-dev.sh` · 플러그인 검사기 `check-plugin.sh` · git 훅과 설치기 | 저장소 전용 |
 | `docs/templates/` | 산출물 등록부 및 문서 템플릿 | 배달 |
-| `examples/` | 채운 예 — `harness-map.md`(`baro/`)·GitHub 트래커 안내(`tracker-github/`) | 참고 자료 |
+| `examples/` | 채운 예 — 옛 복사 배달 형식 `harness-map.md`(`baro/`)·GitHub 트래커 안내(`tracker-github/`) | 참고 자료 |
 | `AGENTS.template.md` · `.github/CONTRIBUTING.md` | 새 프로젝트 `AGENTS.md` 견본 · Git 컨벤션 견본 | 견본 |
 | `docs/harness/` | 4개 레이어 설명과 현재 동작 요약 | 저장소 전용 |
 | `docs/` 나머지 | 이 저장소의 스펙·보고서·설계 기록·안 하기로 한 것 | 저장소 전용 |

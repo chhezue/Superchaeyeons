@@ -7,13 +7,13 @@ paths:
   - ".claude/hooks/**"
   - ".claude/settings*.json"
   - ".claude/rules/README.md"
-  - ".claude/rules/harness-map.md"
+  - ".claude/harness.conf"
   - "scripts/git-hooks/**"
 ---
 
 # `.claude/` — 하네스 구성 요소 목록
 
-하네스 구성 요소(규칙·스킬·에이전트·훅)의 **목록 SSOT**이자 `harness-map.md`를 고치는 규칙이다. 매 작업에 필요한 행동 규칙이 아니라서 플러그인(`plugin/`)·`.claude/`의 구성 요소·`harness-map.md`·git 훅을 열 때만 로드된다.
+하네스 구성 요소(규칙·스킬·에이전트·훅)의 **목록 SSOT**다. 매 작업에 필요한 행동 규칙이 아니라서 플러그인(`plugin/`)·`.claude/`의 구성 요소·설정 파일·git 훅을 열 때만 로드된다.
 
 구성 요소를 추가·삭제·개명하면 이 파일을 같은 턴에 고친다 — `plugin/scripts/check-portability.sh`가 실제 파일과 이 목록을 대조하고, 살아 있는 문서가 없는 규칙·훅·스킬·에이전트를 가리키면 실패한다. 각 구성 요소의 상세 동작은 그 파일 머리가 SSOT다.
 
@@ -24,7 +24,7 @@ paths:
 | 층 | 파일 | 수정 | 이유 |
 |----|------|------|------|
 | **core** | `plugin/` 전부(규칙·스킬·에이전트·훅·도구) | 금지 — `check-portability.sh`가 고유명사·스택 식별자·경로 리터럴을 막는다. 예외: 붙여 쓰는 프로젝트(하네스 자기 수정 ❌)에서는 아래 "훅 상수와 짝"의 대입 값과 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`가 프로젝트 값 자리라 검사 밖 | 모든 프로젝트에서 같아야 개선이 함께 전파된다 |
-| **map** | `rules/harness-map.md` | `init-harness`가 채운다 | 이 프로젝트의 축·슬롯·플래그 값 |
+| **설정** | `.claude/harness.conf` | `init-harness`가 채운다 | 이 프로젝트의 축·슬롯·플래그·훅 판정 값 |
 | **local** | `.claude/` 안의 `local-*` 전부 | 자유 | 저장소 고유 사실·관례. 검사기가 접두사로 이 층을 뺀다 |
 
 스택 규칙은 배달물에 없다. 프로젝트가 따로 적을 관례는 `local-*.md`에 쓴다.
@@ -54,7 +54,7 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 │   ├── fix-bug/                      C 트랙 — 재현 → 원인 분리 → 최소 수정
 │   ├── verify-work/                  G2 직후 · G3 · G4 마무리 — 실행 결과만 보고 (G3 절차 · G4 상세 SSOT)
 │   └── improve-harness/              G4 — 회고 분석이 낸 하네스 개선 후보를 사람과 검토해 장부에 (분석 지시문 references/analyze.md)
-├── agents/                           셋 다 omitClaudeMd — 매번 읽히는 규칙 없이 시작, 슬롯 값은 harness-map.md를 읽는다
+├── agents/                           셋 다 omitClaudeMd — 주입 규칙 없이 시작, 슬롯 값은 .claude/harness.conf를 읽는다
 │   ├── researcher.md                 G1 — 외부 문서 조사, 결론·근거만 반환
 │   ├── test-writer.md                test-first 1단계 — 통제 영역 지점의 테스트를 스펙만 보고 작성 (Bash 없음)
 │   └── doc-reviewer.md               G3 — 문서 유형·구조·문장 리뷰 (advisory)
@@ -64,6 +64,7 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 │   ├── deny-out-of-scope-write.sh    PreToolUse Write|Edit|MultiEdit|NotebookEdit — 범위 밖 쓰기 · (자기 수정 ❌) 플러그인 폴더·local 훅·settings 쓰기 차단
 │   ├── deny-unverified-completion.sh Stop — 코드 편집 뒤 TEST_CMD 미실행·실패인데 완료 선언이면 한 번 되돌림
 │   ├── auto-inject-rules.sh          SessionStart(startup|clear|compact)·SubagentStart — core 규칙 4개 주입 · 못 읽으면 경고 (omitClaudeMd 에이전트는 뺌)
+│   ├── auto-inject-config.sh         SessionStart(startup|clear|compact)·SubagentStart — .claude/harness.conf의 slot·flag 값 표 주입 · 없거나 빈칸이면 init-harness 제안
 │   ├── auto-inject-path-rules.sh     PostToolUse Read|Write|Edit|MultiEdit|NotebookEdit — 다룬 파일이 paths: glob에 맞으면 그 규칙을 세션당 한 번 주입
 │   ├── auto-correction-queue.sh      PostToolUse Write|Edit|MultiEdit|NotebookEdit — 정정 기억(type: feedback) 저장을 정정 대기열에 기록
 │   └── auto-correction-notice.sh     SessionStart — 마지막 회고 분석 뒤 세션·정정 기억·검토할 후보 수를 한 줄로 (셋 다 0이면 출력 없음) · 7일 지나면 분석을 뒤에서 띄움
@@ -71,15 +72,16 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
     ├── dev.sh                        빌드·테스트·실행 엔진 (프로젝트 값은 dev.conf)
     ├── check-portability.sh          부품 계약 · 슬롯·구성 요소 목록 대조 · always-load 예산 (패턴 portability-patterns.txt)
     ├── check-doc-style.sh            문서 스타일 (패턴 doc-style-patterns.txt)
+    ├── harness-keys.txt              설정 파일 키 목록 — 키 · 종류(slot·flag·hook·info) · 이름 · 뜻 (SSOT. 값 규칙은 skills/init-harness/references/harness-conf.md)
     ├── init-harness-probe.sh         init-harness 1단계 실측
     ├── analyze-corrections.sh        회고 분석 (별도 실행)
     └── polish-with-gemini.sh         글 다듬기 (스킬 단계에서 부름)
 .claude/                              이 저장소 전용·프로젝트 층
+├── harness.conf                      프로젝트 설정 — 슬롯·플래그·훅 판정 값(키=값). 훅이 읽고 세션 시작에 표로 들어온다
 ├── settings.json                     마켓플레이스 등록(extraKnownMarketplaces)·플러그인 켜기(enabledPlugins) + permissions.deny(.env 읽기·쓰기 · force push · hard reset · --no-verify — 훅이 막는 묶음과 이중)
 ├── settings.local.json               개인 allowlist — 커밋 안 함
 ├── rules/
-│   ├── harness-map.md                항상 — 축·슬롯·플래그 값
-│   ├── README.md                     플러그인·.claude/ 구성 요소·harness-map·git 훅을 열 때 — 이 파일 (목록 · map 고치기)
+│   ├── README.md                     플러그인·.claude/ 구성 요소·설정 파일·git 훅을 열 때 — 이 파일 (목록)
 │   └── local-*.md                    저장소 고유 (있을 때만)
 └── skills/
     └── local-track-issues/           프로젝트 층 트래커 안내 — 이슈 확인·만들기·연결의 수단·키·표기. `{{이슈 연결}}`이 가리킨다 (골격 plugin/skills/init-harness/references/)
@@ -98,41 +100,13 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 - `Stop` 훅만 판정 불가와 재진입(`stop_hook_active`)이면 통과한다 — 대화가 끝나지 못하는 피해가 더 크다
 - `auto-*`(기록·알림)는 막지 않는다 — 어떤 입력에도 exit 0이고, 기록하지 못하면 `systemMessage`로 알린다. 세션마다 도니 bash 3.2 내장 기능과 macOS 기본 명령만 쓴다(python3 없음). 출력과 남긴 파일은 케이스의 `out~`·`file:` 검사로 판정한다
 - 배달 훅은 `"${CLAUDE_PLUGIN_ROOT}/hooks/…"`로 등록하고 `plugin/hooks/*.sh`는 전부 `plugin/hooks/hooks.json`에 등록돼야 한다. 프로젝트 층 local 훅은 `$CLAUDE_PROJECT_DIR` 기준 `.claude/hooks/`에 두고 `settings.json`에 등록한다(플러그인 훅을 `settings.json`에도 적으면 두 번 돈다). 프로젝트 루트는 훅이면 `CLAUDE_PROJECT_DIR`, Bash로 부르는 도구면 git 최상위로 잡는다 — Bash 도구에는 두 변수가 모두 없다. 쓰기 도구 매처는 `Write`·`Edit`·`MultiEdit`·`NotebookEdit`를 모두 덮어야 한다 — 매처는 정확한 이름 목록이라 `Write|Edit`만 두면 나머지 둘이 훅을 건너뛴다
-- "확인받았으면 통과" 통로는 없다. 승인은 사용자가 `harness-map.md` 값과 짝인 훅 상수를 바꾸는 것이다. 막힐 때 각 `deny-*` 훅의 차단 메시지가 이 안내를 Claude에게 준다
+- "확인받았으면 통과" 통로는 없다. 승인은 사용자가 `.claude/harness.conf`의 값을 바꾸는 것이다. 막힐 때 각 `deny-*` 훅의 차단 메시지가 이 안내를 Claude에게 준다
 - 훅은 명령 문자열만 본다. 변수·별도 스크립트 간접 실행과 Bash로 하네스 파일을 고치는 것은 못 보므로 규칙으로만 막는다 (`eval`·`bash -c` 안은 `deny-dangerous-bash.sh`가 다시 검사한다)
 - 판단이 필요한 것은 훅에 넣지 않는다. advisory 훅이 필요하면 `command`-type으로 — `agent`-type 훅이 "막지 마라"는 지시에도 커밋을 막은 사고가 있었다
 
-## harness-map.md 고치기
+## 프로젝트 설정 `.claude/harness.conf`
 
-`harness-map.md`는 값만 담고, 값을 고칠 때의 규칙은 여기 둔다. map은 프로젝트가 소유해 하네스를 갱신해도 바뀌지 않으므로, 모든 프로젝트에 같이 적용돼야 하는 설명은 이 파일(core)에 있어야 함께 전파된다.
-
-**map 규칙**
-
-1. 빈 슬롯은 `(없음) — 이유`로 적는다 — "안 정했다"와 "이 프로젝트엔 없다"를 가르기 위해
-2. `(없음)`인 슬롯을 규칙이 요구하면 멈추고 사용자에게 묻는다 (map 머리에도 있다)
-3. 슬롯·플래그는 `core-*.md`가 실제로 쓸 때만 둔다 — `plugin/scripts/check-portability.sh`가 슬롯 정의와 사용을 대조한다
-4. 옵션을 끄려고 규칙 절을 지우지 않는다 — ❌면 `[플래그: X]` 절을 무시한다
-5. `core-*.md`는 손대지 않는다. 고유 사실은 map(값)과 `.claude/` 안의 `local-*`(규칙·스킬)에만. 클라이언트 전제·배포 토폴로지처럼 스택이 아닌 고유 사실은 `local-*.md`로 쓴다
-6. 축은 붙이는 시점에 실측해 적는다. 규칙은 축을 직접 부르지 않는다 — 슬롯·플래그 값을 고르는 근거다. 기존 저장소에 붙일 때 명령·형식 슬롯은 기본값을 물려받지 않고 `init-harness`가 이력에서 실측한다
-
-**훅 상수와 짝:** 훅·git 훅은 map을 읽지 못해 값을 본문에 직접 적는다. 아래 값을 바꾸면 짝을 같은 턴에 고친다.
-
-- `{{작업 범위}}` ↔ `deny-out-of-scope-write.sh`의 `SCOPE`
-- "하네스 자기 수정" ↔ 같은 훅의 `HARNESS_SELF_EDIT`
-- `{{테스트 명령}}` ↔ `deny-unverified-completion.sh`의 `TEST_CMD`
-- `{{커밋 메시지 형식}}` ↔ `scripts/git-hooks/commit-msg`의 `COMMIT_RE`
-- `{{포맷 명령}}` ↔ `scripts/git-hooks/pre-commit`의 `FORMAT_CMD`·`FORMAT_PATHS`
-- `{{문서 루트}}` ↔ `plugin/scripts/analyze-corrections.sh`의 `LEDGER`(장부 경로) · `plugin/scripts/polish-with-gemini.sh`의 `DOC_ROOT`
-- 폴더 통째 삭제 막기(map에 없음 — `init-harness` 2단계 질문) ↔ `deny-dangerous-bash.sh`의 `BLOCK_BULK_DELETE`. 나머지 `BLOCK_*` 묶음 상수는 묻지 않고 배달 기본값 `1`(막기)로 둔다
-- "Gemini 다듬기" ↔ 프로젝트 루트 `harness.conf`의 `POLISH_ENABLED=1`(☑일 때만 둔다). `plugin/scripts/polish-with-gemini.sh`의 같은 이름 상수는 배달 기본값 `0`이라 고치지 않는다 — 원본의 켜짐이 복사본에 실리지 않게
-
-**플래그를 켜거나 끌 때 할 일** — 표에 없는 플래그는 값만 바꾼다.
-
-| 플래그 | 할 일 |
-|--------|-------|
-| 하네스 자기 수정 | ❌면 `HARNESS_SELF_EDIT="0"`. **붙여 쓰는 프로젝트는 ❌가 기본** |
-
-**옛 모양 map 정리:** map에 `## 규칙` 절 · 훅 상수 짝 목록 · 플래그 표 "켜거나 끌 때 할 일" 열이 들어 있으면 옛 모양이다. 하네스를 갱신하면 always-load 예산을 넘으니 `init-harness` 재동기화에서 그 셋과 축·명령 슬롯 표 앞의 작성 안내를 지우고, 머리에 `(없음)` 슬롯 문장과 이 절을 가리키는 문장만 남긴다. 값 표는 건드리지 않는다. 2026-10-28 뒤로는 축 표·스택별 규칙 파일 표·플래그 표 아래 설명 문단도 옛 모양이다 — 축은 값 그대로 `**축:**` 한 줄로 옮기고, 나머지 둘은 지운다. 2026-10-29 뒤로는 능력 플래그 표의 `DB 마이그레이션 금지`·`에러 코드 카탈로그 동시갱신`·`권한 게이트·활동 기록 동시갱신`·`API 계약 보호`·`스택 함정 메모`·`스택 리뷰어` 행도 옛 모양이라 지운다.
+훅은 값을 본문에 적지 않고 프로젝트의 `.claude/harness.conf`를 읽는다 — 플러그인은 모든 프로젝트가 같은 훅 파일을 쓰기 때문이다. 키 목록은 `plugin/scripts/harness-keys.txt`, 값을 적고 고칠 때의 규칙(빈칸·`(없음)`·파일이 없거나 깨졌을 때)은 `plugin/skills/init-harness/references/harness-conf.md`가 SSOT다. 새 키를 더하면 `harness-keys.txt`에 행을 더하고, 그 키를 읽는 훅의 케이스를 `scripts/hook-cases.txt`에 먼저 넣는다.
 
 ## 작명
 

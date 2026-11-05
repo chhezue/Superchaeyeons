@@ -628,3 +628,35 @@ auto-inject-rules.sh	-;env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"systemMessage"
 auto-inject-rules.sh	-;env:CLAUDE_PLUGIN_ROOT=	0;out~하네스 규칙을 싣지 못했다	{"session_id":"s1","hook_event_name":"SessionStart","source":"startup"}
 auto-inject-rules.sh	-;env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"SubagentStart";out~Core .{1,8} 멈추는 근거	{"session_id":"s1","hook_event_name":"SubagentStart","agent_id":"a3","agent_type":"superchaeyeons:no-such-agent"}
 auto-inject-rules.sh	-;env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"SubagentStart";out~Core .{1,8} 멈추는 근거	{"session_id":"s1","hook_event_name":"SubagentStart","agent_id":"a4"}
+
+# ---- 설정 파일 (.claude/harness.conf) — harness-plugin-delivery 스펙 "프로젝트 설정 파일"·"실패하면 사용자에게 알린다" (사용자 승인 해석 2026-11-05) ----
+# 설정 파일 없음(init-harness 전) = deny-*는 막지 않고 가장 엄격한 기본값(SCOPE=. · HARNESS_SELF_EDIT=0 · BLOCK_* 전부 1)으로 판정한다.
+# 단 out-of-scope는 init이 설정을 만들 수 있게 .claude/harness.conf·.claude/settings.json 쓰기만 열어 둔다. 깨짐 = 키=값이 아닌 줄 · 쓰는 키의 빈칸({…})·허용 밖 값 → exit 2 + stderr에 harness.conf
+# 훅이 쓰는 키가 파일에 없으면 깨짐이 아니라 기본값. Stop 훅은 공통 규약의 예외라 설정이 없거나 깨져도 exit 0
+deny-out-of-scope-write.sh	-;conf:none	0	{"tool_input":{"file_path":"docs/a.md"}}
+deny-out-of-scope-write.sh	-;conf:none	0	{"tool_input":{"file_path":".claude/harness.conf"}}
+deny-out-of-scope-write.sh	-;conf:none	0	{"tool_input":{"file_path":".claude/settings.json"}}
+deny-out-of-scope-write.sh	-;conf:none;env:CLAUDE_PLUGIN_ROOT=$TMP/plug	2	{"tool_input":{"file_path":"$TMP/plug/hooks/deny-dangerous-bash.sh"}}
+deny-out-of-scope-write.sh	-;conf:none	2	{"tool_input":{"file_path":".claude/hooks/deny-dangerous-bash.sh"}}
+deny-out-of-scope-write.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/broken-line.conf	2;err~harness\.conf	{"tool_input":{"file_path":"docs/a.md"}}
+deny-out-of-scope-write.sh	.;self=2	2;err~harness\.conf	{"tool_input":{"file_path":"docs/a.md"}}
+deny-out-of-scope-write.sh	{작업 범위}	2;err~harness\.conf	{"tool_input":{"file_path":"docs/a.md"}}
+deny-out-of-scope-write.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/no-scope.conf	0	{"tool_input":{"file_path":"other/a.md"}}
+deny-dangerous-bash.sh	-;conf:none	2	{"tool_input":{"command":"rm -rf build"}}
+deny-dangerous-bash.sh	-;conf:none	2	{"tool_input":{"command":"git reset --hard"}}
+deny-dangerous-bash.sh	-;conf:none	0	{"tool_input":{"command":"git status"}}
+deny-dangerous-bash.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/broken-line.conf	2;err~harness\.conf	{"tool_input":{"command":"git status"}}
+deny-dangerous-bash.sh	-;BLOCK_BULK_DELETE=yes	2;err~harness\.conf	{"tool_input":{"command":"git status"}}
+deny-unverified-completion.sh	-;conf:none	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/broken-line.conf	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}
+
+# ---- auto-inject-config.sh (설정 값 주입 — 정상이면 slot·flag 표, 설정 없음·빈칸이면 규칙 대신 init-harness 제안. 막지 않는다) ----
+auto-inject-config.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/full.conf;env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"hookEventName"[[:space:]]*:[[:space:]]*"SessionStart";out~"additionalContext";out~\{\{테스트 명령\}\}[^\\]*make verify-all;out~하네스 자기 수정[^\\]*0;out!~설정이 비어 있다	{"session_id":"s1","hook_event_name":"SessionStart","source":"startup"}
+auto-inject-config.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/full.conf;env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"hookEventName"[[:space:]]*:[[:space:]]*"SubagentStart";out~"additionalContext";out~\{\{테스트 명령\}\}[^\\]*make verify-all;out!~설정이 비어 있다	{"session_id":"s1","hook_event_name":"SubagentStart","agent_id":"a1","agent_type":"Explore"}
+auto-inject-config.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/full.conf;env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out=	{"session_id":"s1","hook_event_name":"SubagentStart","agent_id":"a2","agent_type":"superchaeyeons:doc-reviewer"}
+auto-inject-config.sh	-;conf:none;env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"systemMessage"[[:space:]]*:[[:space:]]*"[^"]*하네스 설정이 비어 있다;out~"additionalContext"[[:space:]]*:[[:space:]]*"[^"]*하네스 설정이 비어 있다;out~init-harness;out!~\{\{테스트 명령\}\}	{"session_id":"s1","hook_event_name":"SessionStart","source":"startup"}
+auto-inject-config.sh	-;conf:none;env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"hookEventName"[[:space:]]*:[[:space:]]*"SubagentStart";out~"systemMessage"[^}]*하네스 설정이 비어 있다;out~"additionalContext"[^}]*init-harness	{"session_id":"s1","hook_event_name":"SubagentStart","agent_id":"a1","agent_type":"Explore"}
+auto-inject-config.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/full.conf;TEST_CMD={전체 테스트 명령};env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"systemMessage"[[:space:]]*:[[:space:]]*"[^"]*하네스 설정이 비어 있다;out~"additionalContext"[^}]*TEST_CMD;out~init-harness;out!~docs-root-xyz	{"session_id":"s1","hook_event_name":"SessionStart","source":"startup"}
+auto-inject-config.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/full.conf;BRANCH_FORMAT={type}/{issue};env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"additionalContext";out~\{type\}/\{issue\};out!~설정이 비어 있다	{"session_id":"s1","hook_event_name":"SessionStart","source":"startup"}
+auto-inject-config.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/full.conf;FORMAT_CMD=(없음) — 이유;env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"additionalContext";out!~설정이 비어 있다	{"session_id":"s1","hook_event_name":"SessionStart","source":"startup"}
+auto-inject-config.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/full.conf;env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"systemMessage";out!~additionalContext	not json

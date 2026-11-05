@@ -130,8 +130,8 @@
 
 **프로젝트 설정 파일**
 
-- [ ] 프로젝트 값은 `.claude/harness.conf`(`키=값`, `dev.conf`와 같은 형식)에 둔다. 경로 슬롯·형식 슬롯·능력 플래그·승인 창 범주 플래그·지금 훅 상수(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`)·`CONTRACT_PATHS`와 [Gemini 글 다듬기](gemini-text-polish.md)의 `POLISH_ENABLED`·`DOC_ROOT`가 대상이다. 빌드·실행 명령은 지금처럼 `dev.conf`에 남는다
-- [ ] 훅은 상수를 본문에 적지 않고 이 파일을 읽는다. 파일이 없거나 깨졌으면 지금 규약대로 `deny-*`는 차단한다
+- [ ] 프로젝트 값은 `.claude/harness.conf`(`키=값`, `dev.conf`와 같은 형식)에 둔다. 경로 슬롯·형식 슬롯·능력 플래그·승인 창 범주 플래그·지금 훅 상수(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`)·`CONTRACT_PATHS`와 [Gemini 글 다듬기](gemini-text-polish.md)의 `POLISH_ENABLED`·`DOC_ROOT`가 대상이다. 플러그인은 모든 프로젝트가 같은 훅 파일을 쓰므로, 프로젝트마다 고르던 다른 훅 상수(`deny-dangerous-bash.sh`의 `BLOCK_*` 6개 · 회고 알림의 `AUTO_ANALYZE`)도 옮긴다. 키 목록·종류·뜻은 플러그인 `scripts/harness-keys.txt`가 SSOT다 (2026-11-05 사용자 결정) 빌드·실행 명령은 지금처럼 `dev.conf`에 남는다
+- [ ] 훅은 상수를 본문에 적지 않고 이 파일을 읽는다. 파일이 없거나 깨졌으면 지금 규약대로 `deny-*`는 차단한다. 단 파일이 **없을 때**(init 전)는 모두 막지 않고 가장 엄격한 기본값(`SCOPE=.`·`HARNESS_SELF_EDIT=0`·`BLOCK_*`=1)으로 판정하고, `.claude/harness.conf`·`.claude/settings.json` 쓰기는 허용한다 — 문자 그대로 막으면 `init-harness`가 설정을 쓸 수 없어 아래 "init 자동 시작"과 충돌한다. 쓰는 키가 없으면 그 키만 기본값, 깨짐(`키=값`이 아닌 줄·쓰는 키가 빈칸·허용 밖 값)은 차단. 빈칸은 값 전체가 중괄호 한 쌍(`{…}`)인 것이다 (2026-11-05 사용자 결정)
 - [ ] 설정이 채워진 뒤에는 Claude가 `harness.conf`를 고치려 하면 승인 창이 뜬다. 창의 이유에 바뀌는 키와 값을 적는다. 사용자가 누르면 반영되고, 에이전트가 설정을 바꿔 훅을 몰래 푸는 통로는 닫힌다(`core-gates.md` §3)
 - [ ] `harness-map.md`는 이 파일로 대체하고 지운다. 사람이 읽는 슬롯 설명은 플러그인 쪽 문서(주입 규칙이 가리키는 스킬 또는 참조 문서)로 옮긴다
 
@@ -293,5 +293,6 @@ Superchaeyeons/
 | 2026-10-28 | 사용자 승인 — Gemini 글 다듬기·트래커 안내를 옮길 때 고칠 다섯 가지를 Must Have에 추가(스크립트 경로·기준 글 위치·스킬 경로·`harness.conf` 키 3개·씨앗). 씨앗을 플러그인에 실을지는 리스크 12 [미정] |
 | 2026-10-29 | 스킬 이름 변경 때 함께 바뀐 훅 판정 값을 `ask`로 되돌렸다 — `ask-decisions`는 스킬 이름이고, Claude Code가 받는 판정 값은 `ask`다 |
 | 2026-10-28 | Gemini 다듬기 단순화에 맞춤 — 메시지 훅이 없어져 훅 개수·폴더 구성·옮길 항목에서 뺐다 |
+| 2026-11-05 | 설정 파일 구현 중 사용자 결정 반영 — 파일이 없을 때 엄격한 기본값과 init용 쓰기 허용, 빈칸 정의, `BLOCK_*`·`AUTO_ANALYZE`도 설정 키로, 키 목록 SSOT `harness-keys.txt` |
 | 2026-11-05 | 구현 중 사용자 결정 반영 — 세션 시작 matcher(`startup|clear|compact`)·머리 줄, 서브에이전트 주입에서 `omitClaudeMd` 에이전트 빼기, 경로 규칙 세션당 한 번, 실패 경고가 덮는 경우(입력 깨짐·폴더 없음·일부만 읽힘), always-load 래칫은 남은 것만. 규칙 문장 줄이기("훅이 승인 창을 띄운다")는 승인 창 훅과 같은 단계에서 한다 |
 | 2026-10-29 | 리스크 12 확정 — 씨앗을 싣지 않는다([lang 팩·씨앗 제거](lang-pack-seed-removal.md)). 씨앗 훅 대체로 `CONTRACT_PATHS`(커밋 승인 창)와 공통 포맷 훅 `auto-format.sh`를 Must에 더했다 |

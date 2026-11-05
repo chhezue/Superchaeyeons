@@ -5,6 +5,6 @@
 d="$1"; here="$(cd "$(dirname "$0")" && pwd)"; src="$(cd "$here/../../.." && pwd)"
 mkdir -p "$d/plugin/scripts"
 cp -R "$here/root/." "$d/"
-cp "$src/plugin/scripts/check-portability.sh" "$src/plugin/scripts/portability-patterns.txt" "$d/plugin/scripts/"
+cp "$src/plugin/scripts/check-portability.sh" "$src/plugin/scripts/portability-patterns.txt" "$src/plugin/scripts/harness-keys.txt" "$d/plugin/scripts/"
 (cd "$d" && "$d/plugin/scripts/check-portability.sh" --budget "${2:-25000}" 2>&1) | sed -n '/always-load 예산/,$p'
 exit 0

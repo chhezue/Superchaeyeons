@@ -7,14 +7,48 @@
 
 # 훅 공통 규약: 판정 불가(JSON 깨짐·command 키 없음·빈 입력·python3 없음) = 차단. scripts/test-hooks.sh가 케이스 파일로 판정한다.
 
-# 묶음별 처리 — 1: 이 훅이 막는다 · 0: 이 훅은 보지 않고 Claude Code 권한 체계(permissions.deny · 권한 확인 · auto mode 판정기)에 맡긴다.
-# 0으로 바꾸면 .claude/settings.json permissions.deny의 같은 묶음 줄도 빼야 실제로 풀린다. 값은 사용자가 정한다.
-BLOCK_FORCE_PUSH="1"    # 원격 이력 덮어쓰기 — force push
-BLOCK_BULK_DELETE="0"   # 파일 대량 삭제 — rm -rf · find -delete · find -exec rm (0이어도 루트·홈·현재 폴더 통째 삭제는 막는다)
-BLOCK_GIT_DISCARD="1"   # 로컬 git 이력·작업 트리 버리기 — reset --hard · clean -f · branch -D · stash drop/clear · filter-branch · update-ref -d/--stdin
-BLOCK_CHECK_BYPASS="1"  # 검사 우회·시크릿 커밋 — commit --no-verify · .env add/commit
-BLOCK_DATA_DELETE="1"   # 데이터 저장소 삭제 — SQL DROP · compose down -v · 볼륨 삭제
-BLOCK_SYSTEM="1"        # 시스템 위험 — curl|sh · chmod -R 777 · dd of=/dev/
+# 묶음별 처리 — 설정 키 BLOCK_*(.claude/harness.conf) 1: 이 훅이 막는다 · 0: 이 훅은 보지 않고 Claude Code 권한 체계
+# (permissions.deny · 권한 확인 · auto mode 판정기)에 맡긴다. 0으로 바꾸면 .claude/settings.json permissions.deny의 같은 묶음 줄도 빼야
+# 실제로 풀린다. 값은 사용자가 정한다. 설정 파일이 없거나 키가 없으면 1(막기), 깨졌으면 판정 불가로 막는다.
+#   BLOCK_FORCE_PUSH   # 원격 이력 덮어쓰기 — force push
+#   BLOCK_BULK_DELETE  # 파일 대량 삭제 — rm -rf · find -delete · find -exec rm (0이어도 루트·홈·현재 폴더 통째 삭제는 막는다)
+#   BLOCK_GIT_DISCARD  # 로컬 git 이력·작업 트리 버리기 — reset --hard · clean -f · branch -D · stash drop/clear · filter-branch · update-ref -d/--stdin
+#   BLOCK_CHECK_BYPASS # 검사 우회·시크릿 커밋 — commit --no-verify · .env add/commit
+#   BLOCK_DATA_DELETE  # 데이터 저장소 삭제 — SQL DROP · compose down -v · 볼륨 삭제
+#   BLOCK_SYSTEM       # 시스템 위험 — curl|sh · chmod -R 777 · dd of=/dev/
+
+# ---- 프로젝트 설정 .claude/harness.conf -------------------------------------------
+# 값은 훅 본문이 아니라 프로젝트 설정 파일에 있다 — 플러그인은 모든 프로젝트가 같은 훅 파일을 쓴다. 키·뜻은 플러그인
+# scripts/harness-keys.txt, 값 규칙은 skills/init-harness/references/harness-conf.md. 파일이 없으면(init 전) 가장 엄격한
+# 기본값, 쓰는 키가 없으면 그 키만 기본값, 깨졌으면(키=값이 아닌 줄 · 쓰는 키가 빈칸 {…}이거나 허용 밖 값) conf_bad에 이유를 둔다.
+conf_path="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || printf '%s' "$PWD")}/.claude/harness.conf"
+conf_keys=" "; conf_bad=""; conf_found=0
+if [ -f "$conf_path" ]; then
+	conf_found=1
+	while IFS= read -r line || [ -n "$line" ]; do
+		line="${line%$'\r'}"
+		case "$line" in '' | '#'*) continue ;; esac
+		if [[ $line =~ ^([A-Z][A-Z0-9_]*)=(.*)$ ]]; then
+			printf -v "conf_${BASH_REMATCH[1]}" '%s' "${BASH_REMATCH[2]}"; conf_keys="$conf_keys${BASH_REMATCH[1]} "
+		else
+			conf_bad="키=값이 아닌 줄 (${line:0:40})"
+		fi
+	done <"$conf_path"
+fi
+# conf_use <키> <기본값> <허용 정규식> — 키 값을 같은 이름의 변수에 둔다. 빈칸이거나 허용 밖이면 conf_bad
+conf_use() {
+	local name="conf_$1" v="$2"
+	case "$conf_keys" in *" $1 "*) v="${!name}" ;; esac
+	if [[ $v =~ ^\{[^{}]*\}$ ]] || ! [[ $v =~ $3 ]]; then conf_bad="$1 값이 빈칸이거나 허용되지 않는다 ($v)"; fi
+	printf -v "$1" '%s' "$v"
+}
+for k in BLOCK_FORCE_PUSH BLOCK_BULK_DELETE BLOCK_GIT_DISCARD BLOCK_CHECK_BYPASS BLOCK_DATA_DELETE BLOCK_SYSTEM; do
+  conf_use "$k" 1 '^[01]$'
+done
+if [ -n "$conf_bad" ]; then
+  echo "하네스 설정(.claude/harness.conf)을 해석하지 못해 명령을 막습니다 — $conf_bad. 훅 공통 규약: 판정 불가 = 차단. 다른 도구로 우회하지 말고, 사용자에게 그 파일을 고치거나 init-harness로 다시 채우도록 보고하고 멈추세요. Blocked by superchaeyeons 플러그인 hooks/deny-dangerous-bash.sh." >&2
+  exit 2
+fi
 
 input=$(cat)
 
@@ -652,7 +686,7 @@ ok)
 block$'\t'*)
   rest="${verdict#block$'\t'}"
   const="${rest%%$'\t'*}"; label="${rest#*$'\t'}"
-  echo "위험한 명령이 차단되었습니다 — 묶음: ${label} (훅 상수 ${const}). 훅은 구두 승인을 모릅니다 — 변수·eval·별도 스크립트로 감싸 다시 실행하지 말고, 더 안전한 방법을 쓰거나 사용자에게 직접 실행을 요청하세요. 이 묶음을 풀지는 사용자가 정하고 훅 상수를 직접 바꿉니다. 따옴표·heredoc 안의 글자는 검사하지 않으니, 실행할 뜻이 없는 문자열이 bash -c·eval·ssh·셸 파이프에 들어가지 않았는지 보세요. Blocked by superchaeyeons 플러그인 hooks/deny-dangerous-bash.sh." >&2
+  echo "위험한 명령이 차단되었습니다 — 묶음: ${label} (설정 ${const}, .claude/harness.conf). 훅은 구두 승인을 모릅니다 — 변수·eval·별도 스크립트로 감싸 다시 실행하지 말고, 더 안전한 방법을 쓰거나 사용자에게 직접 실행을 요청하세요. 이 묶음을 풀지는 사용자가 정하고 훅 상수를 직접 바꿉니다. 따옴표·heredoc 안의 글자는 검사하지 않으니, 실행할 뜻이 없는 문자열이 bash -c·eval·ssh·셸 파이프에 들어가지 않았는지 보세요. Blocked by superchaeyeons 플러그인 hooks/deny-dangerous-bash.sh." >&2
   exit 2
   ;;
 *)

@@ -3,10 +3,35 @@
 # Registered in plugin/hooks/hooks.json (Stop). core-workflow.md G3 "실행 없이 통과했을 것이라고 보고 금지"를
 # 결정론적으로 강제한다.
 #
-# TEST_CMD는 하네스 공통 값이다 — 프로젝트마다 다른 실제 테스트 명령은 scripts/dev.conf가 갖고, 이 줄은 어느 프로젝트에서나 같다.
-# harness-map.md의 {{테스트 명령}}과 같은 값이어야 한다 — 훅은 슬롯을 읽지 못하므로 여기 직접 적는다.
-# 슬롯을 바꾸면 이 줄도 함께 고칠 것. "(없음)"이나 빈 값이면 아무것도 막지 않는다 (테스트 없는 저장소를 영구히 막지 않기 위해).
-TEST_CMD="scripts/dev.sh test"
+# TEST_CMD는 설정 키 TEST_CMD({{테스트 명령}}, .claude/harness.conf)다. 하네스 기본은 플러그인 scripts/dev.sh test이고, 프로젝트마다
+# 다른 실제 테스트 명령은 dev.conf가 갖는다. 설정이 없거나 깨졌거나 값이 "(없음)"·빈 값이면 아무것도 막지 않는다(Stop 훅은 판정 불가 = 통과).
+# ---- 프로젝트 설정 .claude/harness.conf -------------------------------------------
+# 값은 훅 본문이 아니라 프로젝트 설정 파일에 있다 — 플러그인은 모든 프로젝트가 같은 훅 파일을 쓴다. 키·뜻은 플러그인
+# scripts/harness-keys.txt, 값 규칙은 skills/init-harness/references/harness-conf.md. 파일이 없으면(init 전) 가장 엄격한
+# 기본값, 쓰는 키가 없으면 그 키만 기본값, 깨졌으면(키=값이 아닌 줄 · 쓰는 키가 빈칸 {…}이거나 허용 밖 값) conf_bad에 이유를 둔다.
+conf_path="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || printf '%s' "$PWD")}/.claude/harness.conf"
+conf_keys=" "; conf_bad=""; conf_found=0
+if [ -f "$conf_path" ]; then
+	conf_found=1
+	while IFS= read -r line || [ -n "$line" ]; do
+		line="${line%$'\r'}"
+		case "$line" in '' | '#'*) continue ;; esac
+		if [[ $line =~ ^([A-Z][A-Z0-9_]*)=(.*)$ ]]; then
+			printf -v "conf_${BASH_REMATCH[1]}" '%s' "${BASH_REMATCH[2]}"; conf_keys="$conf_keys${BASH_REMATCH[1]} "
+		else
+			conf_bad="키=값이 아닌 줄 (${line:0:40})"
+		fi
+	done <"$conf_path"
+fi
+# conf_use <키> <기본값> <허용 정규식> — 키 값을 같은 이름의 변수에 둔다. 빈칸이거나 허용 밖이면 conf_bad
+conf_use() {
+	local name="conf_$1" v="$2"
+	case "$conf_keys" in *" $1 "*) v="${!name}" ;; esac
+	if [[ $v =~ ^\{[^{}]*\}$ ]] || ! [[ $v =~ $3 ]]; then conf_bad="$1 값이 빈칸이거나 허용되지 않는다 ($v)"; fi
+	printf -v "$1" '%s' "$v"
+}
+conf_use TEST_CMD "" '.*'
+[ -n "$conf_bad" ] && exit 0
 #
 # 판정: 마지막 사용자 메시지 이후에
 #   (a) 문서(.md/.txt/.rst)가 아닌 파일을 고쳤고 — Write/Edit/MultiEdit/NotebookEdit 도구뿐 아니라 Bash의 `sed -i`·`tee`·
@@ -28,7 +53,7 @@ TEST_CMD="scripts/dev.sh test"
 # transcript 형식은 Claude Code 내부 형식이라 버전마다 바뀔 수 있다 — 바뀌면 판정 불가로 떨어져 통과한다(fail-open이 이 훅의 설계).
 # Hook input: JSON with "transcript_path", "stop_hook_active" on stdin.
 
-case "$TEST_CMD" in ''|'(없음)') exit 0 ;; esac
+case "$TEST_CMD" in '' | '(없음)'*) exit 0 ;; esac
 
 input=$(cat)
 verdict=$(TEST_CMD="$TEST_CMD" python3 -I -c '

@@ -22,9 +22,9 @@ AI 코딩 에이전트는 매 세션 기억 없이 시작한다. 지시만으로
 
 그래서 하네스를 **부품**으로 다시 짰다(2026-09-05~06, [v2 스펙](specs/cross-cutting/harness-slot-system-v2.md)).
 
-- **3층 구조** — core(`core-*.md`·스킬·에이전트·훅)는 고치지 않는다. map(`harness-map.md`)은 `init-harness` 스킬이 채운다. local(`local-*` 파일)은 자유롭게 고친다.
-- **슬롯** — core 규칙은 경로·명령을 `{{스펙 저장소}}`·`{{테스트 명령}}` 같은 역할 이름으로만 부른다. 실제 값은 `harness-map.md`의 슬롯이 갖는다.
-- **능력 플래그** — "DB 마이그레이션 금지"처럼 프로젝트 상황을 전제한 정책은 `[플래그: X]` 배지를 단 절로 두고, ☑/❌는 `harness-map.md` 플래그 표가 정한다. 끄려고 절을 지우지 않는다 — 지우면 부품이 갈라진다.
+- **3층 구조** — core(`core-*.md`·스킬·에이전트·훅)는 고치지 않는다. map(`.claude/harness.conf`)은 `init-harness` 스킬이 채운다. local(`local-*` 파일)은 자유롭게 고친다.
+- **슬롯** — core 규칙은 경로·명령을 `{{스펙 저장소}}`·`{{테스트 명령}}` 같은 역할 이름으로만 부른다. 실제 값은 `.claude/harness.conf`의 슬롯이 갖는다.
+- **능력 플래그** — "DB 마이그레이션 금지"처럼 프로젝트 상황을 전제한 정책은 `[플래그: X]` 배지를 단 절로 두고, 1/0은 `.claude/harness.conf`의 flag 키가 정한다. 끄려고 절을 지우지 않는다 — 지우면 부품이 갈라진다.
 - **축** — 붙일 때 실측하는 네 가지(lang·shape·deploy·stage). `init-harness`가 무엇을 물을지 정하는 질문 목록이다.
 - **스택 규칙 없음** — 언어·프레임워크 규칙은 배달하지 않는다. 처음에는 검증된 스택 규칙을 씨앗(`examples/seeds/`)으로 두고 복사했지만, 다른 프로젝트의 전제가 따라와 대조 비용이 들고 복사한 뒤에는 갱신되지 않아 2026-10-29에 지웠다([스펙](specs/cross-cutting/lang-pack-seed-removal.md)). 관례는 기존 코드를 따르고, 따로 적을 것은 프로젝트가 `local-*.md`에 쓴다.
 
@@ -47,9 +47,9 @@ core에 프로젝트 사실이 새면 `plugin/scripts/check-portability.sh`가 �
 
 ## 4. 규칙 — 싣는 시점과 예산
 
-`paths:` frontmatter가 없는 규칙은 매 세션 실리고, 있는 규칙은 맞는 파일을 열 때만 실린다. 지금은 always-load 5개(`core-*` 4개 + `harness-map.md`)와 path-scoped 4개(`core-code-comments.md`·`core-testing.md`·`doc-writing.md`·`README.md`)다.
+core 규칙 4개는 세션 시작·요약 뒤 훅이 주입하고, `paths:`가 있는 규칙 3개(`core-code-comments.md`·`core-testing.md`·`doc-writing.md`)는 맞는 파일을 다룰 때 훅이 세션당 한 번 넣는다. 설정 값(`.claude/harness.conf`)도 세션 시작에 표로 들어온다. Claude Code가 직접 싣는 것은 `CLAUDE.md`·`AGENTS.md`·스킬·에이전트 설명 줄과, 이 저장소 전용 목록 `README.md`(구성 요소를 열 때)다.
 
-매 세션 무조건 지불하는 always-load 합계에는 **예산**을 걸었다. `check-portability.sh`가 상한과 대조하고, 상한은 줄일 수만 있는 래칫이다. 2026-09-06에 합계를 64,600B에서 약 20% 줄이며 상한을 65,000B에서 52,000B로 내렸고, 2026-10-05에 다른 규칙과 겹치던 규칙 3개를 합치고 유지보수용 열·설계 이력을 빼서 51,384B를 27,341B로 줄이며 상한을 28,000B로 내렸다([경량화 감사](reports/2026-10-05-harness-slimming-audit.md)). 2026-10-27에는 커밋·보고할 때만 필요한 G4 상세를 `verify-work` 스킬로, `harness-map.md`의 값 아닌 설명을 path-scoped `.claude/rules/README.md`로 옮기고 `core-guardrails.md` 예시를 줄여 27,960B를 24,460B로 줄이며 상한을 25,000B로 내렸다([보고서](reports/2026-10-27-slim-always-load.md)).
+매 세션 무조건 지불하는 always-load 합계에는 **예산**을 걸었다. `check-portability.sh`가 상한과 대조하고, 상한은 줄일 수만 있는 래칫이다. 2026-09-06에 합계를 64,600B에서 약 20% 줄이며 상한을 65,000B에서 52,000B로 내렸고, 2026-10-05에 다른 규칙과 겹치던 규칙 3개를 합치고 유지보수용 열·설계 이력을 빼서 51,384B를 27,341B로 줄이며 상한을 28,000B로 내렸다([경량화 감사](reports/2026-10-05-harness-slimming-audit.md)). 2026-10-27에는 커밋·보고할 때만 필요한 G4 상세를 `verify-work` 스킬로, `.claude/harness.conf`의 값 아닌 설명을 path-scoped `.claude/rules/README.md`로 옮기고 `core-guardrails.md` 예시를 줄여 27,960B를 24,460B로 줄이며 상한을 25,000B로 내렸다([보고서](reports/2026-10-27-slim-always-load.md)).
 
 규칙이 멈춰 세우는 근거는 둘로 나뉜다. `core-guardrails.md`는 "문서와 어긋나면 멈춘다", `core-gates.md`는 "변경이 통제 영역(도메인 규칙·인증·과금·계약·스키마)에 닿으면 멈춘다"를 맡는다. 멈추는 이유가 표현의 모호함이 아니라 변경의 성격이어야 판정이 재현되고, 위임 영역에서는 덜 묻게 된다.
 
@@ -118,7 +118,7 @@ core에 프로젝트 사실이 새면 `plugin/scripts/check-portability.sh`가 �
 
 - 규칙: always-load 5개 · path-scoped 4개 · always-load 합계 23,777B / 상한 25,000B
 - 스킬 8개 · 서브에이전트 3개 · 배달 훅 5개 · 검사기 5개(+ `verify.sh` 래퍼) · 실행 엔진 `dev.sh` · git 훅 2개
-- `harness-map.md`: 축 4 · 슬롯 25 · 능력 플래그 3
+- `.claude/harness.conf`: 키 47개 — 축 1 · 슬롯 25 · 능력 플래그 3 · 훅 판정 값 18 (목록 `plugin/scripts/harness-keys.txt`)
 - 훅 규약 케이스 394개
 
 ## 11. 한 줄 요약

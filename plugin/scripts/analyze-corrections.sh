@@ -27,7 +27,7 @@
 # 아래 상수는 훅 상수처럼 본문에 직접 적는다. MODEL·BUDGET은 첫 실행 결과로 정한다(스펙 "분석 모델"·"비용 상한"):
 #   MODEL  — 기준 사례로 sonnet·opus를 한 번씩 돌려, 둘 다 그 증상을 후보로 내면 sonnet, sonnet만 놓치면 opus — 2026-10-28 첫 실행: sonnet만 기준 증상을 잡아 sonnet
 #   BUDGET — 첫 실행 2달러, 그 뒤 runs.tsv의 실제 비용의 2배. 응답 하나가 끝난 뒤 확인해 조금 넘을 수 있다 — 2026-10-28 첫 실행 실측 $0.43(세션 1개). 첫 정기 분석이 쌓인 세션을 한꺼번에 보므로 2배($0.86)를 올려 1달러
-# LEDGER는 {{문서 루트}}/audits/harness-retro.md다 — 문서 루트가 다르면 이 줄을 고친다.
+# LEDGER는 {{문서 루트}}/audits/harness-retro.md다 — 문서 루트는 프로젝트 설정 .claude/harness.conf의 DOC_ROOT(없으면 docs).
 set -u
 # 프로젝트 루트 — 이 파일은 플러그인 폴더에 있다. 훅이 부를 때는 CLAUDE_PROJECT_DIR, 사람이 부를 때는 git 최상위(없으면 현재 폴더)
 ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
@@ -35,7 +35,12 @@ ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 STORE="$ROOT/.claude/corrections"
 TRANSCRIPTS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/$(printf '%s' "$ROOT" | sed 's/[^A-Za-z0-9]/-/g')"
-LEDGER="$ROOT/docs/audits/harness-retro.md"
+doc_root=docs
+if [ -f "$ROOT/.claude/harness.conf" ]; then
+	v="$(sed -n 's/^DOC_ROOT=//p' "$ROOT/.claude/harness.conf" | tail -n 1 | tr -d '\r')"
+	case "$v" in '' | '{'*'}' | '(없음)'*) ;; *) doc_root="${v%/}" ;; esac
+fi
+LEDGER="$ROOT/$doc_root/audits/harness-retro.md"
 CLAUDE_BIN="claude"
 MODEL="sonnet"
 BUDGET="1"

@@ -22,6 +22,8 @@ hooks_dir="plugin/hooks"
 local_hooks_dir=".claude/hooks"
 plugin_registry="plugin/hooks/hooks.json"
 settings_file=".claude/settings.json"
+# 케이스의 기본 프로젝트 설정(.claude/harness.conf) — 훅은 상수 대신 프로젝트 설정 파일을 읽는다
+conf_base="scripts/hook-fixtures/harness.conf"
 only="${1:-}"
 [ -f "$cases_file" ] || { echo "FAIL: 케이스 파일이 없습니다 — $cases_file" >&2; exit 2; }
 
@@ -29,6 +31,12 @@ tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/hook-test.XXXXXX")"
 trap 'rm -r -- "$tmpdir"' EXIT
 
 pass=0; fail=0; n=0
+# conf_set <프로젝트> <키> <값> — 그 프로젝트 설정 파일의 키 줄을 바꾼다(없으면 더한다). 설정 파일이 없으면(conf:none) 그대로 둔다
+conf_set() {
+	local f="$1/.claude/harness.conf"
+	[ -f "$f" ] || return 0
+	grep -v "^$2=" "$f" >"$f.x"; printf '%s=%s\n' "$2" "$3" >>"$f.x"; mv "$f.x" "$f"
+}
 # 케이스 값 안의 $REPO·$HOME·$TMP를 실제 경로로 바꾼다 ($TMP는 이 실행 동안 케이스끼리 공유하는 임시 폴더라 앞 케이스가 남긴 상태를 뒤 케이스가 본다)
 expand() { local v="$1"; v="${v//\$REPO/$repo_root}"; v="${v//\$HOME/$HOME}"; v="${v//\$TMP/$tmpdir}"; printf '%s' "$v"; }
 # 기대 열의 `;` 뒤 검사 하나를 판정한다. 실패하면 이유를 출력하고 1
@@ -63,25 +71,32 @@ while IFS=$'\t' read -r spec scope expected stdin; do
 		printf '  FAIL  %-28s (훅 파일 없음)\n' "$hook"; fail=$((fail + 1)); continue
 	fi
 	run="$src"
-	# scope 열: `-` 원본 · `값` SCOPE 치환 · 뒤에 `;self=N`·`;test=CMD`를 붙이면 HARNESS_SELF_EDIT·TEST_CMD도 치환
-	# (배달본은 TEST_CMD가 비어 있어 Stop 훅 판정을 시험하려면 값을 넣은 복사본이 필요하다)
-	# `;대문자이름=값`은 본문의 `대문자이름=…` 줄을 `대문자이름="값"`으로 바꾼다 (예: `-;STORE=$TMP/q` — SCOPE는 그대로)
+	# 프로젝트 설정: 케이스마다 견본(conf_base)을 복사한 임시 프로젝트를 만들어 CLAUDE_PROJECT_DIR로 넘긴다 — 훅은 상수 대신
+	# 그 프로젝트의 .claude/harness.conf를 읽는다. 케이스가 `;env:CLAUDE_PROJECT_DIR=…`를 주면 그 값이 이긴다(뒤에 붙는다).
+	proj="$tmpdir/proj.$n"; mkdir -p "$proj/.claude"; cp "$conf_base" "$proj/.claude/harness.conf"
+	run_env=("CLAUDE_PROJECT_DIR=$proj")
+	# scope 열: `-` 원본 · `값` 설정 키 SCOPE · `;self=N`·`;test=CMD`는 설정 키 HARNESS_SELF_EDIT·TEST_CMD
+	# `;대문자이름=값`은 본문에 `대문자이름=…` 줄이 있으면 그 줄을 `대문자이름="값"`으로 바꾸고(예: `-;STORE=$TMP/q`), 없으면 설정 키를 바꾼다
+	# `;conf:none`은 설정 파일 없음 · `;conf:file=경로`는 그 파일을 설정 파일로 쓴다(깨진 설정 견본)
 	scope_val="${scope%%;*}"; extras=""; [ "$scope" != "$scope_val" ] && extras="${scope#*;}"
 	# `;env:이름=값`은 그 실행에만 환경 변수를 준다 · `;cp:원본=대상`은 실행 전에 파일·폴더를 복사한다(테스트가 저장소 파일을 고치지 않게)
-	run_env=()
 	if [ "$scope" != "-" ]; then
 		run="$tmpdir/$hook.$n"
 		cp "$src" "$run"
-		if [ "$scope_val" != "-" ]; then
-			sed -i.bak "s|^SCOPE=\".*\"|SCOPE=\"$scope_val\"|" "$run" && rm -f "$run.bak"
-		fi
+		[ "$scope_val" != "-" ] && conf_set "$proj" SCOPE "$scope_val"
 		IFS=';' read -r -a extra_list <<<"$extras"
 		for extra in "${extra_list[@]+"${extra_list[@]}"}"; do
 			case "$extra" in
-			self=*) sed -i.bak "s|^HARNESS_SELF_EDIT=\".*\"|HARNESS_SELF_EDIT=\"${extra#self=}\"|" "$run" && rm -f "$run.bak" ;;
-			test=*) sed -i.bak "s|^TEST_CMD=\".*\"|TEST_CMD=\"${extra#test=}\"|" "$run" && rm -f "$run.bak" ;;
+			self=*) conf_set "$proj" HARNESS_SELF_EDIT "${extra#self=}" ;;
+			test=*) conf_set "$proj" TEST_CMD "${extra#test=}" ;;
+			conf:none) rm -f "$proj/.claude/harness.conf" ;;
+			conf:file=*) cp "$(expand "${extra#conf:file=}")" "$proj/.claude/harness.conf" ;;
 			[A-Z]*=*) name="${extra%%=*}"; val="$(expand "${extra#*=}")"
-				sed -i.bak "s|^$name=.*|$name=\"$val\"|" "$run" && rm -f "$run.bak" ;;
+				if grep -q "^$name=" "$run"; then
+					sed -i.bak "s|^$name=.*|$name=\"$val\"|" "$run" && rm -f "$run.bak"
+				else
+					conf_set "$proj" "$name" "$val"
+				fi ;;
 			env:*=*) run_env+=("$(expand "${extra#env:}")") ;;
 			cp:*=*) cp_src="$(expand "${extra#cp:}")"; cp_dst="${cp_src#*=}"; cp_src="${cp_src%%=*}"
 				mkdir -p "$(dirname "$cp_dst")"; [ -e "$cp_dst" ] && rm -r -- "$cp_dst"; cp -R "$cp_src" "$cp_dst" ;;
@@ -129,9 +144,9 @@ if [ -z "$only" ] || [[ "$only" == *deny-* ]]; then
 		case "$hook" in deny-unverified-completion.sh) continue ;; esac
 		[ -n "$only" ] && [ "$hook" != "$only" ] && continue
 		n=$((n + 1))
-		run="$tmpdir/$hook.nopy"
-		sed 's|^SCOPE="\.\"|SCOPE="sub"|' "$src" >"$run"; chmod +x "$run"
-		printf '%s' '{"tool_input":{"command":"rm -rf /","file_path":"other/V1__x.sql"}}' | PATH="$tmpdir/nopy:$PATH" "$run" >/dev/null 2>"$tmpdir/err"
+		run="$tmpdir/$hook.nopy"; cp "$src" "$run"; chmod +x "$run"
+		proj="$tmpdir/proj.nopy"; mkdir -p "$proj/.claude"; cp "$conf_base" "$proj/.claude/harness.conf"; conf_set "$proj" SCOPE sub
+		printf '%s' '{"tool_input":{"command":"rm -rf /","file_path":"other/V1__x.sql"}}' | CLAUDE_PROJECT_DIR="$proj" PATH="$tmpdir/nopy:$PATH" "$run" >/dev/null 2>"$tmpdir/err"
 		actual=$?
 		if [ "$actual" = "2" ]; then
 			pass=$((pass + 1)); printf '  ok    %-28s scope=-        exit=%s  (python3 없음 → 차단)\n' "$hook" "$actual"
@@ -155,13 +170,14 @@ if [ -z "$only" ] || [[ "$only" == *deny-* ]]; then
 		hook="$(basename "$src")"
 		[ -n "$only" ] && [ "$hook" != "$only" ] && continue
 		n=$((n + 1))
-		run="$tmpdir/$hook.hijack"
-		sed -e 's|^SCOPE="\.\"|SCOPE="sub"|' -e 's|^TEST_CMD=".*"|TEST_CMD="scripts/dev.sh test"|' "$src" >"$run"; chmod +x "$run"
+		run="$tmpdir/$hook.hijack"; cp "$src" "$run"; chmod +x "$run"
+		# 설정은 범위 sub(쓰기 훅이 위반을 보게) · Stop 훅은 transcript 속 편집이 저장소 안이어야 하므로 프로젝트를 저장소로 둔다
+		proj="$tmpdir/proj.hijack"; mkdir -p "$proj/.claude"; cp "$conf_base" "$proj/.claude/harness.conf"; conf_set "$proj" SCOPE sub
 		case "$hook" in
-		deny-unverified-completion.sh) stdin="{\"transcript_path\":\"$repo_root/scripts/hook-fixtures/stop-code-no-test.jsonl\",\"stop_hook_active\":false}" ;;
+		deny-unverified-completion.sh) stdin="{\"transcript_path\":\"$repo_root/scripts/hook-fixtures/stop-code-no-test.jsonl\",\"stop_hook_active\":false}"; proj="$repo_root" ;;
 		*) stdin='{"tool_input":{"command":"rm -rf /","file_path":"other/V1__x.sql"}}' ;;
 		esac
-		(cd "$tmpdir/hijack" && printf '%s' "$stdin" | CLAUDE_PROJECT_DIR="$repo_root" "$run" >/dev/null 2>"$tmpdir/err")
+		(cd "$tmpdir/hijack" && printf '%s' "$stdin" | CLAUDE_PROJECT_DIR="$proj" "$run" >/dev/null 2>"$tmpdir/err")
 		actual=$?
 		if [ "$actual" = "2" ]; then
 			pass=$((pass + 1)); printf '  ok    %-28s scope=-        exit=%s  (작업 폴더 json.py 무시)\n' "$hook" "$actual"

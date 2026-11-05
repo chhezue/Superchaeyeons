@@ -14,15 +14,22 @@
 #         새 세션이 있고 다른 세션이 이미 띄우지 않았을 때(잠금 폴더 auto.lock — 하루 넘은 잠금은 죽은 것으로 보고 치운다)
 #   분석은 이 훅과 끊긴 별도 프로세스로 돌고 출력은 auto.log에 쓴다. 훅은 기다리지 않고 바로 끝난다.
 #   분석 세션은 프로젝트 훅을 돌리지 않아(--setting-sources user) 이 훅이 다시 불리지 않는다.
-# 상수: AUTO_ANALYZE=0이면 띄우지 않고 알림만 낸다 · INTERVAL_MIN 기본 10080(7일)
+# 설정: AUTO_ANALYZE=0(.claude/harness.conf)이면 띄우지 않고 알림만 낸다 · 상수 INTERVAL_MIN 기본 10080(7일)
 #
 # 훅 공통 규약의 예외: 알림용 훅이라 어떤 경우에도 exit 0. bash 3.2 내장 기능과 macOS 기본 명령만 쓴다.
 # Hook input: JSON with "transcript_path" on stdin.
 ROOT="${CLAUDE_PROJECT_DIR:-$PWD}"
 STORE="$ROOT/.claude/corrections"
 ANALYZE="${CLAUDE_PLUGIN_ROOT:-${0%/*}/..}/scripts/analyze-corrections.sh"
-AUTO_ANALYZE="1"
 INTERVAL_MIN="10080"
+
+# AUTO_ANALYZE — 프로젝트 설정 .claude/harness.conf의 키(1이면 뒤에서 분석을 띄운다). 설정이 없거나 키가 없으면 1
+auto_analyze=1
+if [ -f "$ROOT/.claude/harness.conf" ]; then
+	while IFS= read -r line || [ -n "$line" ]; do
+		case "${line%$'\r'}" in AUTO_ANALYZE=0) auto_analyze=0 ;; AUTO_ANALYZE=1) auto_analyze=1 ;; esac
+	done <"$ROOT/.claude/harness.conf"
+fi
 
 input=$(cat)
 dir=""; cur=""
@@ -46,7 +53,7 @@ candidates=0
 [ -f "$STORE/candidates.md" ] && candidates="$(grep -c '^### ' "$STORE/candidates.md" 2>/dev/null)"
 
 started=""
-if [ "$AUTO_ANALYZE" = 1 ] && [ "$sessions" != 0 ] && [ -f "$state" ] && [ -x "$ANALYZE" ] \
+if [ "$auto_analyze" = 1 ] && [ "$sessions" != 0 ] && [ -f "$state" ] && [ -x "$ANALYZE" ] \
 	&& [ -n "$(find "$state" -mmin +"$INTERVAL_MIN" 2>/dev/null)" ]; then
 	lock="$STORE/auto.lock"
 	[ -n "$(find "$lock" -maxdepth 0 -mmin +1440 2>/dev/null)" ] && rmdir "$lock" 2>/dev/null

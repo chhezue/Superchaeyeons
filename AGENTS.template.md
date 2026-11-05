@@ -3,7 +3,7 @@
 {한 줄 설명}. AI 에이전트가 작업할 때 참고하는 프로젝트 지도입니다.
 
 > **이 파일은 템플릿입니다.** `AGENTS.md`로 복사한 뒤 `{...}` 자리를 채우고 이 인용문을 지우세요.
-> 함께 채울 것: [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md) (축·슬롯·능력 플래그 — "하네스 자기 수정"은 ❌가 기본).
+> 함께 채울 것: [`.claude/harness.conf`](.claude/harness.conf) (축·슬롯·능력 플래그·훅 판정 값 — "하네스 자기 수정"은 0이 기본).
 > 이 파일에는 **이 프로젝트에만 있는 사실**만 적는다. 작업 순서·멈추는 조건·커밋 규율은 `.claude/rules/`가 이미 매 세션 싣기 때문에 여기 다시 적으면 같은 내용이 두 번 실린다.
 
 ## How We Build
@@ -34,7 +34,7 @@
 | `{소스 루트}` | 애플리케이션·도메인 코드 |
 | `{설정 루트}` | 환경별 설정 |
 | `{테스트 루트}` | 단위·통합 테스트 |
-| [`.claude/rules/harness-map.md`](.claude/rules/harness-map.md) | **슬롯 SSOT** — 규칙이 부르는 역할 → 실제 경로 |
+| [`.claude/harness.conf`](.claude/harness.conf) | **슬롯 SSOT** — 규칙이 부르는 역할 → 실제 경로 |
 | `{{문서 루트}}/README.md` | **문서 SSOT** |
 | [`.claude/rules/README.md`](.claude/rules/README.md) | 규칙·스킬·에이전트·훅 목록 |
 | `{{Git 컨벤션 SSOT}}` | **Git SSOT** — 브랜치·커밋·PR (없으면 `core-workflow.md` G2·G4) |

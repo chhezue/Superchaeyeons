@@ -5,7 +5,7 @@ description: 이 프로젝트의 이슈 트래커(GitHub Issues)를 다룰 때 �
 
 # 트래커 안내 — GitHub Issues
 
-이 프로젝트에서 이슈를 확인하고 만들고 연결하는 법이다. `harness-map.md`의 `{{이슈 연결}}`이 이 스킬을 가리키고, core 규칙·스킬은 트래커를 모른 채 이 안내를 따른다. 원칙(만들기 전에 확인·라벨 부여 금지)은 core가 갖고, 여기는 이 트래커의 방법만 적는다.
+이 프로젝트에서 이슈를 확인하고 만들고 연결하는 법이다. 하네스 설정의 `{{이슈 연결}}`(`ISSUE_LINK`)이 이 스킬을 가리키고, core 규칙·스킬은 트래커를 모른 채 이 안내를 따른다. 원칙(만들기 전에 확인·라벨 부여 금지)은 core가 갖고, 여기는 이 트래커의 방법만 적는다.
 
 ## 다루는 수단
 
@@ -33,7 +33,7 @@ GitHub CLI(명령줄 도구) `gh`를 쓴다. 인증 상태는 `gh auth status`�
 
 ## 글 다듬기
 
-"Gemini 다듬기" 플래그가 ☑이면 적용된다(`harness-map.md`).
+"Gemini 다듬기" 플래그가 1이면 적용된다(`.claude/harness.conf`의 `POLISH_ENABLED`).
 
 - 이슈·PR 제목과 본문, 댓글은 만들기 전에 `plugin/scripts/polish-with-gemini.sh message`로 다듬는다. 원문과 대조해 틀린 곳만 고친 뒤 그 글로 만든다
 - 입력은 `{"kind": "issue" 또는 "pr", "fields": {"title": …, "body": …}}` JSON이고, 출력의 `fields`가 다듬은 글이다. 실패하면 원문으로 만든다

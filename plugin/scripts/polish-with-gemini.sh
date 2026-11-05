@@ -18,10 +18,9 @@
 # 빈 값이면 안 함)로 한 번만 더 시도한다. 한도 초과(429)·시간 초과는 다시 시도하지 않는다 — 기다림이 두 배가 되기 때문이다.
 #
 # 아래 상수는 훅 상수처럼 본문에 직접 적는다. 테스트는 scripts/hook-cases.txt의 상수 바꾸기로 값을 바꾼다.
-#   POLISH_ENABLED — harness-map.md "Gemini 다듬기" 플래그의 기본값. 배달본은 꺼짐(0)이다 — 원본 저장소의 켜짐이 복사본에 실려
-#                    init-harness 없이 복사한 프로젝트의 글이 밖으로 나가지 않게. 켜는 값은 프로젝트 루트 harness.conf의
-#                    `POLISH_ENABLED=1`에 둔다(복사되지 않는 자리 — 플러그인 배달에서는 .claude/harness.conf로 옮긴다).
-#   DOC_ROOT       — {{문서 루트}}의 짝
+#   POLISH_ENABLED — 플래그 "Gemini 다듬기"의 기본값. 꺼짐(0)이다 — init-harness 전의 프로젝트 글이 밖으로 나가지 않게.
+#                    켜는 값은 프로젝트 설정 .claude/harness.conf의 `POLISH_ENABLED=1`이고, 이 기본값보다 앞선다.
+#   DOC_ROOT       — {{문서 루트}}의 기본값. 설정 파일의 DOC_ROOT가 앞선다
 set -u
 POLISH_ENABLED="0"
 DOC_ROOT="docs"
@@ -37,9 +36,12 @@ TIMEOUT_MESSAGE="30"
 KEY_ENV_NAME="GEMINI_API_KEY"
 KEYCHAIN_SERVICE="gemini-api-key"
 
-if [ -f "$ROOT/harness.conf" ]; then
-	conf_value="$(sed -n 's/^POLISH_ENABLED=//p' "$ROOT/harness.conf" | tail -n 1 | tr -d ' \r')"
+# 프로젝트 설정(.claude/harness.conf)의 POLISH_ENABLED·DOC_ROOT가 위 기본값보다 앞선다
+if [ -f "$ROOT/.claude/harness.conf" ]; then
+	conf_value="$(sed -n 's/^POLISH_ENABLED=//p' "$ROOT/.claude/harness.conf" | tail -n 1 | tr -d ' \r')"
 	[ -n "$conf_value" ] && POLISH_ENABLED="$conf_value"
+	conf_value="$(sed -n 's/^DOC_ROOT=//p' "$ROOT/.claude/harness.conf" | tail -n 1 | tr -d ' \r')"
+	case "$conf_value" in '' | '{'*'}' | '(없음)'*) ;; *) DOC_ROOT="${conf_value%/}" ;; esac
 fi
 
 cmd="${1:-}"

@@ -9,7 +9,7 @@
 #   PORTABILITY_BUDGET_STRICT=0 plugin/scripts/check-portability.sh   # 예산 초과를 경고로만 (기본은 차단)
 #
 # 대조 검사 2개 (산문 규칙을 결정적 검사로 옮긴 것):
-#   S  슬롯 — 배달물이 쓰는 {{슬롯}} = harness-map.md가 정의한 슬롯 (정의 안 된 슬롯 사용 · 아무도 안 쓰는 슬롯 정의)
+#   S  슬롯 — 배달물이 쓰는 {{슬롯}} = 플러그인 scripts/harness-keys.txt가 정의한 slot (정의 안 된 슬롯 사용 · 아무도 안 쓰는 슬롯 정의)
 #   I  구성 요소 목록 — 실제 규칙·스킬·에이전트·훅 = .claude/rules/README.md 언급, 그리고 살아 있는 문서가 가리키는
 #      core-*.md · 훅 *.sh · `이름` 스킬/에이전트가 실제로 있는가 (지운 구성 요소로 안내하는 문장 차단)
 #
@@ -34,8 +34,9 @@ skip="${PORTABILITY_SKIP:-}"
 # 이력: 2026-09-06 65,000B(P6 실측 63,096B) → 같은 날 토큰 최적화(라우터 통합·요약 표 제거·priority 절 local화) 뒤 52,000B
 #       → 2026-10-05 경량화 감사(규칙 3개 통합·워크플로 규모 단계·유지보수 열 삭제, 실측 27,341B) 뒤 28,000B
 #       → 2026-10-27 G4 상세를 verify-work로·map 설명을 rules/README.md로·guardrails 예시 축소(실측 24,460B) 뒤 25,000B
-#       → 2026-11-05 core 규칙 4개를 플러그인 주입 훅으로 옮김(실측 9,048B — 규칙은 아래 주입 글 길이 검사가 맡는다) 뒤 9,100B.
-budget_bytes="${PORTABILITY_BUDGET_BYTES:-9100}"
+#       → 2026-11-05 core 규칙 4개를 플러그인 주입 훅으로 옮김(실측 9,048B — 규칙은 아래 주입 글 길이 검사가 맡는다) 뒤 9,100B
+#       → 같은 날 harness-map.md를 .claude/harness.conf(설정 값 주입 훅)로 바꿈(실측 5,668B) 뒤 5,700B.
+budget_bytes="${PORTABILITY_BUDGET_BYTES:-5700}"
 # 주입 훅 하나가 넣는 글의 상한(글자 수). 훅 출력은 1만 자에서 잘리고 넘으면 앞 2,000자만 남는다.
 inject_limit="${PORTABILITY_INJECT_LIMIT:-9000}"
 # 상한이 확정됐으므로 초과는 기본 차단이다. 이행 중 한 번 넘겨야 하면 PORTABILITY_BUDGET_STRICT=0.
@@ -76,19 +77,20 @@ if [ ! -f "$patterns_file" ]; then
 fi
 
 # ---- 1. 검사 대상 수집 -------------------------------------------------------
-# 배달물 = 새 프로젝트로 그대로 복사되는 것 전부. 프로젝트가 고유 사실을 적는 자리(harness-map.md · .claude/ 안의 local-* 파일)와
+# 배달물 = 새 프로젝트로 그대로 복사되는 것 전부. 프로젝트가 고유 사실을 적는 자리(.claude/harness.conf · .claude/ 안의 local-* 파일)와
 # 견본(examples/)만 제외한다. local- 접두사가 곧 층 표시다.
 # 붙여 쓰는 프로젝트(하네스 자기 수정 ❌ = HARNESS_SELF_EDIT "0")에서는 두 가지가 프로젝트 값 자리라 검사 밖이다.
 #   .github/CONTRIBUTING.md — 그 프로젝트의 {{Git 컨벤션 SSOT}}. 원본 저장소(☑)에서는 견본이라 검사한다
-#   훅 상수 대입 줄의 값 — .claude/rules/README.md "훅 상수와 짝". 원본 저장소에서는 기본값도 견본이라 검사한다 (아래 awk)
+#   git 훅 상수 대입 줄의 값(COMMIT_RE·FORMAT_*) — 원본 저장소에서는 기본값도 견본이라 검사한다 (아래 awk)
 # 2026-10-16 TripFit 사본에 붙였을 때 이 둘이 위반 21건(CONTRIBUTING 17 · 상수 4)으로 잡혀 verify.sh가 처음부터 실패했다.
 # 값을 읽지 못하면 원본 저장소로 보고 더 많이 검사한다 — 놓치는 쪽보다 오탐이 보이는 쪽이 낫다.
-self_edit="$(sed -n -E "s/^[[:space:]]*(export[[:space:]]+)?HARNESS_SELF_EDIT=[\"']?([01])[\"']?[[:space:]]*(#.*)?$/\2/p" "$plugin_root/hooks/deny-out-of-scope-write.sh" 2>/dev/null | head -n 1)"
+# 붙여 쓰는 프로젝트인지는 프로젝트 설정(.claude/harness.conf)의 HARNESS_SELF_EDIT가 정한다
+self_edit="$(sed -n -E "s/^HARNESS_SELF_EDIT=([01])[[:space:]]*$/\1/p" .claude/harness.conf 2>/dev/null | tail -n 1)"
 adopted=0
 if [ "$self_edit" = "0" ]; then
 	adopted=1
 elif [ -z "$self_edit" ]; then
-	echo "경고: 플러그인 hooks/deny-out-of-scope-write.sh에서 HARNESS_SELF_EDIT를 읽지 못해 원본 저장소로 보고 CONTRIBUTING·훅 상수까지 검사합니다" >&2
+	echo "경고: .claude/harness.conf에서 HARNESS_SELF_EDIT를 읽지 못해 원본 저장소로 보고 CONTRIBUTING·git 훅 상수까지 검사합니다" >&2
 fi
 targets=""
 for f in plugin/rules/core-*.md; do
@@ -98,7 +100,7 @@ if [ "$scope" = "all" ]; then
 	for f in plugin/rules/*.md .claude/rules/*.md plugin/skills/*/SKILL.md plugin/skills/*/references/*.md plugin/skills/*/references/*.conf plugin/agents/*.md plugin/hooks/*.sh plugin/hooks/hooks.json .claude/settings.json scripts/git-hooks/* plugin/scripts/dev.sh AGENTS.template.md .github/CONTRIBUTING.md; do
 		[ -f "$f" ] || continue
 		case "$f" in
-		plugin/rules/core-*.md | .claude/rules/harness-map.md | .claude/*/local-*) continue ;;
+		plugin/rules/core-*.md | .claude/*/local-*) continue ;;
 		.github/CONTRIBUTING.md) [ "$adopted" = 1 ] && continue ;;
 		esac
 		targets="$targets $f"
@@ -116,7 +118,7 @@ fi
 # ---- 2. 금지 패턴 스캔 -------------------------------------------------------
 # awk 하나로 끝낸다: 패턴 파일을 먼저 읽고(FNR==NR), 이어지는 파일들을 줄 단위로 대조한다.
 # 오탐 방지: `채운 예`(견본 인용)·`다스택 예시`(여러 스택을 나열하는 실측 안내) 줄과 YAML frontmatter(`paths:` glob)는 건너뛴다.
-# 붙여 쓰는 프로젝트에서는 "훅 상수와 짝"(.claude/rules/README.md)의 (파일, 상수) 쌍 대입 줄에서 값만 지우고 나머지(줄 끝 주석)를 검사한다.
+# 붙여 쓰는 프로젝트에서는 git 훅 상수 대입 줄에서 값만 지우고 나머지(줄 끝 주석)를 검사한다.
 violations="$(
 	# shellcheck disable=SC2086
 	awk -v skip="$skip" -v adopted="$adopted" '
@@ -133,11 +135,7 @@ violations="$(
 		infm { next }
 		{
 			if (index($0, "채운 예") > 0 || index($0, "다스택 예시") > 0) next
-			# Stop 훅의 TEST_CMD는 하네스 공통 값(dev.sh 호출)만 허용한다 — 프로젝트 명령은 dev.conf가 갖는다
-			if (FILENAME == "plugin/hooks/deny-unverified-completion.sh" && $0 ~ /^TEST_CMD="scripts\/dev\.sh test"[ \t]*$/) next
-			if (adopted == 1 && ((FILENAME == "plugin/hooks/deny-out-of-scope-write.sh" && $0 ~ /^(SCOPE|HARNESS_SELF_EDIT)=/) ||
-			    (FILENAME == "plugin/hooks/deny-unverified-completion.sh" && $0 ~ /^TEST_CMD=/) ||
-			    (FILENAME == "scripts/git-hooks/pre-commit" && $0 ~ /^FORMAT_(CMD|PATHS)=/) ||
+			if (adopted == 1 && ((FILENAME == "scripts/git-hooks/pre-commit" && $0 ~ /^FORMAT_(CMD|PATHS)=/) ||
 			    (FILENAME == "scripts/git-hooks/commit-msg" && $0 ~ /^COMMIT_RE=/)))
 				sub(/^[A-Z_]+=("[^"]*"|\047[^\047]*\047|[^ \t]*)/, "")
 			for (i = 1; i <= n; i++) {
@@ -213,6 +211,12 @@ try:
     print(f"{len(ctx)}\tauto-inject-rules.sh — core 규칙")
 except Exception as e:
     print(f"ERR\tauto-inject-rules.sh 출력을 재지 못함 ({type(e).__name__}: {e})")
+# 설정 값 표 — 이 프로젝트 설정으로 잰다. 설정이 없으면 init 안내 한 줄이라 짧다
+try:
+    ctx = run("auto-inject-config.sh", {"session_id": "portability", "hook_event_name": "SessionStart", "source": "startup"})
+    print(f"{len(ctx)}\tauto-inject-config.sh — 설정 값 표")
+except Exception as e:
+    print(f"ERR\tauto-inject-config.sh 출력을 재지 못함 ({type(e).__name__}: {e})")
 for i, p in enumerate(sorted(glob.glob(os.path.join(root, "rules", "*.md")))):
     m = re.match(r"---\n(.*?)\n---\n", open(p, encoding="utf-8").read(), re.S)
     globs = re.findall(r'^\s*-\s*"([^"]+)"', m.group(1), re.M) if m and "paths:" in m.group(1) else []
@@ -237,7 +241,7 @@ PY_INJECT
 #     `.md`·`.sh`까지 쓴 표기만 보고, 저장소 어딘가에 같은 이름의 파일이 있으면 통과시킨다.
 # 스킬·에이전트는 이름이 내장·플러그인과 겹치므로 git 이력에서 **지워진** 하네스 스킬·에이전트를 가리킬 때만 잡는다.
 # 기록 문서(reports·specs·audits·out-of-scope·references·harness-engineering)는 지운 것을 이력으로 말하는 게 정상이라 대상이 아니다.
-cross_out="$(ADOPTED="$adopted" python3 - <<'PY_CROSS'
+cross_out="$(ADOPTED="$adopted" PLUGIN_ROOT="$plugin_root" python3 - <<'PY_CROSS'
 import glob, os, re, subprocess
 out = []
 def files(patterns):
@@ -256,17 +260,19 @@ harness_files = [f for f in files(["plugin/rules/*.md", ".claude/rules/*.md", "p
 project_files = files(["AGENTS.md", "CLAUDE.md", "README.md", ".github/CONTRIBUTING.md", "docs/README.md", "docs/harness/README.md"])
 # --- S: 슬롯 ---
 META = {"{{슬롯}}", "{{역할 이름}}", "{{…}}", "{{역할}}"}
-defined = set(re.findall(r"^\| `(\{\{[^}]+\}\})`", open(".claude/rules/harness-map.md", encoding="utf-8").read(), re.M))
+keys_file = os.path.join(os.environ["PLUGIN_ROOT"], "scripts", "harness-keys.txt")
+defined = {cols[2] for cols in (l.rstrip("\n").split("\t") for l in open(keys_file, encoding="utf-8"))
+           if len(cols) >= 3 and cols[1] == "slot"}
 used = {}
 # 붙여 쓰는 프로젝트의 CONTRIBUTING은 프로젝트 문서라 슬롯 사용처로 보지 않는다 (금지 패턴 검사와 같은 조건)
 contributing = [] if os.environ.get("ADOPTED") == "1" else files([".github/CONTRIBUTING.md"])
-for f in [f for f in harness_files if f != ".claude/rules/harness-map.md" and not f.startswith("examples/")] + contributing:
+for f in [f for f in harness_files if not f.startswith("examples/")] + contributing:
     for m in re.finditer(r"\{\{[^}]+\}\}", open(f, encoding="utf-8").read()):
         used.setdefault(m.group(0), f)
 for slot in sorted(set(used) - defined - META):
-    out.append(f"S\t{used[slot]}\t{slot}\tharness-map.md에 없는 슬롯을 쓴다 — 행을 추가하거나 기존 슬롯으로")
+    out.append(f"S\t{used[slot]}\t{slot}\tharness-keys.txt에 없는 슬롯을 쓴다 — 키를 추가하거나 기존 슬롯으로")
 for slot in sorted(defined - set(used)):
-    out.append(f"S\t.claude/rules/harness-map.md\t{slot}\t배달물 어디에서도 쓰지 않는 슬롯 — 지운다 (.claude/rules/README.md map 규칙 3)")
+    out.append(f"S\tplugin/scripts/harness-keys.txt\t{slot}\t배달물 어디에서도 쓰지 않는 슬롯 — 지운다 (init-harness references/harness-conf.md 규칙 3)")
 # --- I: 구성 요소 목록 ---
 readme = open(".claude/rules/README.md", encoding="utf-8").read()
 # 배달 구성 요소는 plugin/, 프로젝트 층(local-*)은 .claude/에 있다

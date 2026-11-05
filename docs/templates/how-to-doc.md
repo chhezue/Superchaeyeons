@@ -4,7 +4,7 @@
 
 독자는 조급하다. 그러므로 **증상 → 조치 → 확인** 순서를 지키고, 배경 설명은 조치 뒤로 미룬다. 원인을 모른 채 따라 해도 문제가 풀리도록 쓴다.
 
-작성 기준: [`.claude/rules/doc-writing.md`](../../.claude/rules/doc-writing.md)
+작성 기준: 하네스 플러그인의 `rules/doc-writing.md`
 
 ---
 

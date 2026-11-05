@@ -72,7 +72,7 @@
 | [`harness-slot-system-v2.md`](harness-slot-system-v2.md) "부품성 원칙" 1번 | "플러그인 매니페스트를 요구하는 장치는 채택하지 않는다" | 원칙의 목적(별도 런타임·무거운 장치 금지)은 유지하고, 플러그인 매니페스트는 금지 목록에서 뺀다. 매니페스트는 JSON 파일 하나이고 실행할 런타임이 없다 |
 | [`out-of-scope/README.md`](../../out-of-scope/README.md) "`inject-rules.sh`" 행 | 주입이 실패하면 규칙이 조용히 사라진다는 이유로 기각 | 기각 당시에 없던 이유(플러그인은 규칙 파일을 배달할 수 없음)가 생겼다. "조용히"를 Must Have의 실패 경고로 막고 채택으로 바꾼다 |
 | `harness-slot-system-v2.md` 리스크·미결정 "하네스 배달 방식" | [미정] | 이 스펙이 승인되면 "결정: 플러그인 + 세션 시작 훅"으로 고치고 이 스펙을 가리킨다 |
-| [`.claude/rules/README.md`](../../../.claude/rules/README.md) "훅 공통 규약"과 `deny-*` 훅 차단 메시지의 "훅은 구두 승인을 모릅니다"(2026-10-28 [`core-gates.md`](../../../.claude/rules/core-gates.md) §3에서 옮김) | 훅은 구두 승인을 모르므로 승인은 사용자가 설정을 바꾸는 것뿐이다 | 승인 창(`ask`)을 두 번째 통로로 더한다. 사용자가 창에서 직접 누르는 것이라 에이전트가 열 수 없다는 원칙은 그대로다. 환경 변수·마커 파일 통로를 금지한 [`out-of-scope/README.md`](../../out-of-scope/README.md) "훅 승인 우회 통로" 행과도 어긋나지 않는다 |
+| [`.claude/rules/README.md`](../../../.claude/rules/README.md) "훅 공통 규약"과 `deny-*` 훅 차단 메시지의 "훅은 구두 승인을 모릅니다"(2026-10-28 [`core-gates.md`](../../../plugin/rules/core-gates.md) §3에서 옮김) | 훅은 구두 승인을 모르므로 승인은 사용자가 설정을 바꾸는 것뿐이다 | 승인 창(`ask`)을 두 번째 통로로 더한다. 사용자가 창에서 직접 누르는 것이라 에이전트가 열 수 없다는 원칙은 그대로다. 환경 변수·마커 파일 통로를 금지한 [`out-of-scope/README.md`](../../out-of-scope/README.md) "훅 승인 우회 통로" 행과도 어긋나지 않는다 |
 
 `out-of-scope/README.md`의 "서드파티 워크플로 플러그인" 행은 Superpowers를 **설치해 쓰는 것**을 기각한 기록이다. 이 스펙은 방식만 참고하므로 그 행은 바꾸지 않는다.
 
@@ -94,18 +94,18 @@
 
 - [ ] core 규칙 4개(`core-gates`·`core-guardrails`·`core-workflow`·`core-reporting`) 원문을 `plugin/rules/`로 옮긴다. Claude Code는 이 폴더를 직접 읽지 않는다
 - [ ] 아래 "행동 강제" 훅이 맡은 문장(승인 없는 커밋 금지·삭제와 의존성 추가 전 확인 등)은 규칙에서 "훅이 승인 창을 띄운다" 한 줄로 줄인다. 규칙에는 판단만 남긴다
-- [ ] `SessionStart`(시작·`/clear`·요약 뒤) 훅이 core 규칙을 `additionalContext`로 넣는다. 지금 네 파일의 합은 8,513자다
+- [ ] `SessionStart`(시작·`/clear`·요약 뒤 — matcher `startup|clear|compact`, 이어 열기·분기는 대화에 이미 들어 있어 뺀다) 훅이 core 규칙을 `additionalContext`로 넣는다. 지금 네 파일의 합은 7,517자다(2026-11-05). 맨 앞에 플러그인 폴더의 실제 경로를 알리는 머리 줄을 붙인다 — Bash 도구에는 `CLAUDE_PLUGIN_ROOT`가 없어 규칙·스킬의 `scripts/…`를 부를 경로를 Claude가 알 수 없다
 - [ ] 같은 이벤트의 **두 번째 훅**이 프로젝트 설정 값(아래 "프로젝트 설정 파일")을 표로 넣는다. 훅 하나당 1만 자 상한을 나눠 쓰기 위해서다
-- [ ] `SubagentStart` 훅이 같은 글을 서브에이전트에 넣는다
-- [ ] 검사기가 훅마다 넣는 글의 길이를 재서 9,000자를 넘으면 실패한다. 지금 always-load 예산(25,000B)을 이 검사로 바꾼다
-- [ ] 경로 조건부 규칙 3개(`core-testing`·`core-code-comments`·`doc-writing`)는 `PostToolUse` 훅(`Read`·`Write`·`Edit`)이 파일 경로를 지금 `paths:` 값과 맞춰 보고 `additionalContext`로 넣는다. 원문은 `plugin/rules/`에 둔다. `paths` 스킬은 본문이 자동으로 들어오지 않아 쓰지 않는다(위 "실험으로 확인한 것")
+- [ ] `SubagentStart` 훅이 같은 글을 서브에이전트에 넣는다. 에이전트 파일 머리에 `omitClaudeMd: true`가 있는 플러그인 에이전트(`doc-reviewer`·`researcher`·`test-writer`)는 뺀다 — 규칙 없이 시작하게 만든 지금 동작을 지킨다. 에이전트 파일이 없거나 `agent_type`이 없으면 넣는다 (2026-11-05 사용자 결정)
+- [ ] 검사기가 훅마다 넣는 글의 길이를 재서 9,000자를 넘으면 실패한다. 지금 always-load 예산(25,000B)을 이 검사로 바꾼다. Claude Code가 직접 싣는 나머지(map·`CLAUDE.md`·`AGENTS.md`·스킬·에이전트 설명 줄)는 래칫을 남기고 실측으로 낮춘다 (2026-11-05 사용자 결정)
+- [ ] 경로 조건부 규칙 3개(`core-testing`·`core-code-comments`·`doc-writing`)는 `PostToolUse` 훅(`Read`·`Write`·`Edit`)이 파일 경로를 지금 `paths:` 값과 맞춰 보고 `additionalContext`로 넣는다. 원문은 `plugin/rules/`에 둔다. `paths` 스킬은 본문이 자동으로 들어오지 않아 쓰지 않는다(위 "실험으로 확인한 것"). 매처는 쓰기 도구 넷을 모두 덮는다(`Read|Write|Edit|MultiEdit|NotebookEdit`). 규칙마다 세션(서브에이전트는 `agent_id`별)에 한 번만 넣고, 요약·`/clear` 뒤에는 다시 넣는다 — 마크다운을 읽을 때마다 같은 규칙이 다시 들어가지 않게 (2026-11-05 사용자 결정)
 - [ ] 경로 규칙 훅을 `scripts/hook-cases.txt` 케이스로 판정한다 — 맞는 파일 읽기 · 맞는 파일 고치기(규칙이 들어감) · 맞지 않는 파일(들어가지 않음)
 - [ ] `.claude/rules/README.md`(하네스 파일을 열 때 싣는 구성 요소 목록)는 이 저장소 전용이라 플러그인에 넣지 않고 이 저장소의 `.claude/rules/`에 남긴다
 
 **실패하면 사용자에게 알린다**
 
 - [ ] 주입 훅은 bash 3.2 내장 기능만 쓴다(Superpowers 방식). macOS 기본 bash가 3.2라서 bash 4·5에만 있는 기능은 조용히 빈 값이 된다
-- [ ] 규칙 파일을 못 읽거나 중간에 오류가 나면, `trap`으로 잡아 `systemMessage`에 "하네스 규칙을 싣지 못했다 — 이 세션은 가드레일 없이 진행된다"를 담아 출력하고 종료 코드 0으로 끝낸다. 같은 문장을 `additionalContext`에도 넣어 Claude도 알게 한다
+- [ ] 규칙 파일을 못 읽거나 중간에 오류가 나면(입력 JSON이 깨졌거나 이벤트 이름이 없음 · 플러그인 폴더를 찾지 못함 · 규칙 일부만 읽힘 포함 — 일부만 읽혔으면 읽은 규칙도 넣지 않는다. 이벤트를 모르면 `systemMessage`만 낸다. 2026-11-05 사용자 결정), `trap`으로 잡아 `systemMessage`에 "하네스 규칙을 싣지 못했다 — 이 세션은 가드레일 없이 진행된다"를 담아 출력하고 종료 코드 0으로 끝낸다. 같은 문장을 `additionalContext`에도 넣어 Claude도 알게 한다
 - [ ] 위 동작을 `scripts/hook-cases.txt` 케이스로 판정한다 — 정상 · 규칙 파일 없음 · 설정 파일 없음 · 설정 파일 빈칸 남음
 
 **행동 강제 — 승인 창**
@@ -293,4 +293,5 @@ Superchaeyeons/
 | 2026-10-28 | 사용자 승인 — Gemini 글 다듬기·트래커 안내를 옮길 때 고칠 다섯 가지를 Must Have에 추가(스크립트 경로·기준 글 위치·스킬 경로·`harness.conf` 키 3개·씨앗). 씨앗을 플러그인에 실을지는 리스크 12 [미정] |
 | 2026-10-29 | 스킬 이름 변경 때 함께 바뀐 훅 판정 값을 `ask`로 되돌렸다 — `ask-decisions`는 스킬 이름이고, Claude Code가 받는 판정 값은 `ask`다 |
 | 2026-10-28 | Gemini 다듬기 단순화에 맞춤 — 메시지 훅이 없어져 훅 개수·폴더 구성·옮길 항목에서 뺐다 |
+| 2026-11-05 | 구현 중 사용자 결정 반영 — 세션 시작 matcher(`startup|clear|compact`)·머리 줄, 서브에이전트 주입에서 `omitClaudeMd` 에이전트 빼기, 경로 규칙 세션당 한 번, 실패 경고가 덮는 경우(입력 깨짐·폴더 없음·일부만 읽힘), always-load 래칫은 남은 것만. 규칙 문장 줄이기("훅이 승인 창을 띄운다")는 승인 창 훅과 같은 단계에서 한다 |
 | 2026-10-29 | 리스크 12 확정 — 씨앗을 싣지 않는다([lang 팩·씨앗 제거](lang-pack-seed-removal.md)). 씨앗 훅 대체로 `CONTRACT_PATHS`(커밋 승인 창)와 공통 포맷 훅 `auto-format.sh`를 Must에 더했다 |

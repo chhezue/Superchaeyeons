@@ -33,8 +33,11 @@ skip="${PORTABILITY_SKIP:-}"
 # 래칫: 실측 합계를 상한으로 못 박아 늘어나는 커밋은 막고, 줄이는 작업은 이 값을 낮추며 진행한다. 이유 없이 올리지 않는다.
 # 이력: 2026-09-06 65,000B(P6 실측 63,096B) → 같은 날 토큰 최적화(라우터 통합·요약 표 제거·priority 절 local화) 뒤 52,000B
 #       → 2026-10-05 경량화 감사(규칙 3개 통합·워크플로 규모 단계·유지보수 열 삭제, 실측 27,341B) 뒤 28,000B
-#       → 2026-10-27 G4 상세를 verify-work로·map 설명을 rules/README.md로·guardrails 예시 축소(실측 24,460B) 뒤 25,000B.
-budget_bytes="${PORTABILITY_BUDGET_BYTES:-25000}"
+#       → 2026-10-27 G4 상세를 verify-work로·map 설명을 rules/README.md로·guardrails 예시 축소(실측 24,460B) 뒤 25,000B
+#       → 2026-11-05 core 규칙 4개를 플러그인 주입 훅으로 옮김(실측 9,048B — 규칙은 아래 주입 글 길이 검사가 맡는다) 뒤 9,100B.
+budget_bytes="${PORTABILITY_BUDGET_BYTES:-9100}"
+# 주입 훅 하나가 넣는 글의 상한(글자 수). 훅 출력은 1만 자에서 잘리고 넘으면 앞 2,000자만 남는다.
+inject_limit="${PORTABILITY_INJECT_LIMIT:-9000}"
 # 상한이 확정됐으므로 초과는 기본 차단이다. 이행 중 한 번 넘겨야 하면 PORTABILITY_BUDGET_STRICT=0.
 strict_budget="${PORTABILITY_BUDGET_STRICT:-1}"
 
@@ -88,14 +91,14 @@ elif [ -z "$self_edit" ]; then
 	echo "경고: 플러그인 hooks/deny-out-of-scope-write.sh에서 HARNESS_SELF_EDIT를 읽지 못해 원본 저장소로 보고 CONTRIBUTING·훅 상수까지 검사합니다" >&2
 fi
 targets=""
-for f in .claude/rules/core-*.md; do
+for f in plugin/rules/core-*.md; do
 	[ -f "$f" ] && targets="$targets $f"
 done
 if [ "$scope" = "all" ]; then
-	for f in .claude/rules/*.md plugin/skills/*/SKILL.md plugin/skills/*/references/*.md plugin/skills/*/references/*.conf plugin/agents/*.md plugin/hooks/*.sh plugin/hooks/hooks.json .claude/settings.json scripts/git-hooks/* plugin/scripts/dev.sh AGENTS.template.md .github/CONTRIBUTING.md; do
+	for f in plugin/rules/*.md .claude/rules/*.md plugin/skills/*/SKILL.md plugin/skills/*/references/*.md plugin/skills/*/references/*.conf plugin/agents/*.md plugin/hooks/*.sh plugin/hooks/hooks.json .claude/settings.json scripts/git-hooks/* plugin/scripts/dev.sh AGENTS.template.md .github/CONTRIBUTING.md; do
 		[ -f "$f" ] || continue
 		case "$f" in
-		.claude/rules/core-*.md | .claude/rules/harness-map.md | .claude/*/local-*) continue ;;
+		plugin/rules/core-*.md | .claude/rules/harness-map.md | .claude/*/local-*) continue ;;
 		.github/CONTRIBUTING.md) [ "$adopted" = 1 ] && continue ;;
 		esac
 		targets="$targets $f"
@@ -106,7 +109,7 @@ elif [ "$scope" != "core" ]; then
 fi
 
 if [ -z "$targets" ]; then
-	echo "FAIL: 검사할 core-*.md 가 없습니다" >&2
+	echo "FAIL: 검사할 plugin/rules/core-*.md 가 없습니다" >&2
 	exit 2
 fi
 
@@ -146,9 +149,12 @@ violations="$(
 	' "$patterns_file" $targets
 )"
 
-# ---- 3. always-load 토큰 예산 -----------------------------------------------
-# always-load = frontmatter에 paths:가 없는 .claude/rules/*.md + CLAUDE.md + CLAUDE.md가 @로 불러오는 파일.
-# 예산은 배달물(core·map·AGENTS·CLAUDE)의 래칫이다 — 프로젝트가 스스로 얹는 local-*.md는 합계에 넣지 않고 참고로만 보여 준다.
+# ---- 3. always-load 토큰 예산 · 주입 글 길이 ------------------------------------
+# core 규칙은 플러그인 주입 훅이 넣으므로 예산이 둘로 나뉜다 (harness-plugin-delivery 스펙).
+#   주입 글 — 훅 하나가 넣는 글이 INJECT_LIMIT자(9,000) 이하. 훅 출력은 1만 자에서 잘리므로 여유를 둔다. 아래 3c
+#   always-load — Claude Code가 직접 싣는 것: frontmatter에 paths:가 없는 .claude/rules/*.md + CLAUDE.md + @로 불러오는 파일
+#     + 스킬·에이전트 설명 줄. 플러그인으로 옮긴 뒤에도 매 세션 실리므로 래칫을 남긴다.
+# 예산은 배달물(map·AGENTS·CLAUDE·설명 줄)의 래칫이다 — 프로젝트가 스스로 얹는 local-*.md는 합계에 넣지 않고 참고로만 보여 준다.
 # (넣으면 이 저장소 실측으로 정한 상한이 local 규칙을 둔 프로젝트에서 곧바로 깨진다.)
 always_files=""
 local_files=""
@@ -191,6 +197,38 @@ total_bytes=$((total_bytes + desc_bytes))
 budget_table="$budget_table$(printf '  %7d  스킬·에이전트 설명 줄 %d개' "$desc_bytes" "$desc_n")
 "
 
+# ---- 3c. 주입 글 길이 -------------------------------------------------------------
+# 주입 훅을 실제로 돌려 additionalContext 글자 수를 잰다 — 규칙 파일 합계가 아니라 머리 줄까지 붙은 실제 출력이 상한을 넘는지 본다.
+# 경로 규칙은 규칙마다 첫 glob에 맞는 견본 경로를 만들어 경로 훅에 넣는다(실행마다 세션 id를 바꿔 한 번만 넣기 기록에 걸리지 않게).
+inject_out="$(PLUGIN_ROOT="$plugin_root" PROJECT_ROOT="$repo_root" python3 -I - <<'PY_INJECT'
+import glob, json, os, re, subprocess
+root, project = os.environ["PLUGIN_ROOT"], os.environ["PROJECT_ROOT"]
+env = dict(os.environ, CLAUDE_PLUGIN_ROOT=root, CLAUDE_PROJECT_DIR=project)
+def run(hook, payload):
+    r = subprocess.run([os.path.join(root, "hooks", hook)], input=json.dumps(payload), capture_output=True,
+                       text=True, env=env, timeout=30)
+    return json.loads(r.stdout)["hookSpecificOutput"]["additionalContext"]
+try:
+    ctx = run("auto-inject-rules.sh", {"session_id": "portability", "hook_event_name": "SessionStart", "source": "startup"})
+    print(f"{len(ctx)}\tauto-inject-rules.sh — core 규칙")
+except Exception as e:
+    print(f"ERR\tauto-inject-rules.sh 출력을 재지 못함 ({type(e).__name__}: {e})")
+for i, p in enumerate(sorted(glob.glob(os.path.join(root, "rules", "*.md")))):
+    m = re.match(r"---\n(.*?)\n---\n", open(p, encoding="utf-8").read(), re.S)
+    globs = re.findall(r'^\s*-\s*"([^"]+)"', m.group(1), re.M) if m and "paths:" in m.group(1) else []
+    if not globs:
+        continue
+    sample = globs[0].replace("**/", "x/").replace("**", "x").replace("*", "x")
+    name = os.path.basename(p)
+    try:
+        ctx = run("auto-inject-path-rules.sh", {"session_id": f"portability-{os.getpid()}-{i}", "hook_event_name": "PostToolUse",
+                  "tool_name": "Read", "tool_input": {"file_path": os.path.join(project, sample)}})
+        print(f"{len(ctx)}\tauto-inject-path-rules.sh — {name} ({sample})")
+    except Exception as e:
+        print(f"ERR\tauto-inject-path-rules.sh — {name} 출력을 재지 못함 ({type(e).__name__}: {e})")
+PY_INJECT
+)" || { echo "FAIL: 주입 글 길이 검사 실행 실패 (python3 필요)" >&2; exit 2; }
+
 # ---- 3b. 대조 검사 (S 슬롯 · I 구성 요소 목록) ---------------------------------
 # --scope와 무관하게 배달물 전체를 본다(슬롯이 스킬·훅에서만 쓰여도 "쓰는 곳"이다).
 # 참조 검사는 두 종류 파일을 다르게 본다.
@@ -211,7 +249,7 @@ def files(patterns):
     return seen
 def is_local(f):
     return os.path.basename(f).startswith("local-")
-harness_files = [f for f in files([".claude/rules/*.md", "plugin/skills/*/SKILL.md", "plugin/skills/*/references/*.md",
+harness_files = [f for f in files(["plugin/rules/*.md", ".claude/rules/*.md", "plugin/skills/*/SKILL.md", "plugin/skills/*/references/*.md",
                                    "plugin/agents/*.md", "plugin/hooks/*.sh", "scripts/git-hooks/*", "AGENTS.template.md",
                                    "docs/templates/*.md"])
                  if not (f.startswith(".claude/") and is_local(f))]
@@ -235,7 +273,7 @@ readme = open(".claude/rules/README.md", encoding="utf-8").read()
 skills = {os.path.basename(os.path.dirname(p)) for d in ("plugin", ".claude") for p in glob.glob(d + "/skills/*/SKILL.md")}
 agents_all = {os.path.basename(p)[:-3] for d in ("plugin", ".claude") for p in glob.glob(d + "/agents/*.md")}
 hooks_all = {os.path.basename(p) for d in ("plugin", ".claude") for p in glob.glob(d + "/hooks/*.sh")}
-rules_all = {os.path.basename(p) for p in glob.glob(".claude/rules/*.md")}
+rules_all = {os.path.basename(p) for d in ("plugin", ".claude") for p in glob.glob(d + "/rules/*.md")}
 # 목록 SSOT에는 배달물(local-* 제외)이 전부 있어야 한다
 hooks_here = hooks_all
 for name in sorted(skills | {a for a in agents_all if not a.startswith("local-")}
@@ -322,8 +360,23 @@ else
 	echo "  → OK"
 fi
 
+echo
+echo "## 주입 글 길이 (훅 하나당 상한 ${inject_limit}자)"
+echo
+inject_max=0
+while IFS=$'\t' read -r n label; do
+	[ -n "$n" ] || continue
+	if [ "$n" = "ERR" ]; then
+		status=1; echo "  → FAIL: $label"; continue
+	fi
+	printf '  %7d  %s\n' "$n" "$label"
+	[ "$n" -gt "$inject_max" ] && inject_max="$n"
+	if [ "$n" -gt "$inject_limit" ]; then status=1; echo "  → FAIL: 상한 초과 $((n - inject_limit))자 — $label"; fi
+done <<<"$inject_out"
+[ -z "$inject_out" ] && { status=1; echo "  → FAIL: 잰 주입 글이 없다"; }
+
 n_viol=0; [ -n "$violations" ] && n_viol=$(printf '%s\n' "$violations" | wc -l | tr -d ' ')
 n_cross=0; [ -n "$cross_out" ] && n_cross=$(printf '%s\n' "$cross_out" | wc -l | tr -d ' ')
 echo
-echo "portability: 부품 계약 위반 ${n_viol} · 대조 위반 ${n_cross} · always-load ${total_bytes}B / 상한 ${budget_bytes}B"
+echo "portability: 부품 계약 위반 ${n_viol} · 대조 위반 ${n_cross} · always-load ${total_bytes}B / 상한 ${budget_bytes}B · 주입 최대 ${inject_max}자 / 상한 ${inject_limit}자"
 exit "$status"

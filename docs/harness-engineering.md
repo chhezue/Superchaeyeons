@@ -34,7 +34,7 @@ core에 프로젝트 사실이 새면 `plugin/scripts/check-portability.sh`가 �
 
 ## 3. 작업 사이클 — 트랙 × 규모 × 게이트
 
-작업 성격에 따라 트랙 하나를, 크기에 따라 규모(S·M·L) 하나를 고른다. 규모가 거칠 게이트를 정한다. SSOT는 [`core-workflow.md`](../.claude/rules/core-workflow.md)다.
+작업 성격에 따라 트랙 하나를, 크기에 따라 규모(S·M·L) 하나를 고른다. 규모가 거칠 게이트를 정한다. SSOT는 [`core-workflow.md`](../plugin/rules/core-workflow.md)다.
 
 | 트랙 | 언제 | 입구 스킬 | G2에서 승인받는 것 |
 |---|---|---|---|

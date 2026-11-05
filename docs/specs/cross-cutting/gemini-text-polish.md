@@ -26,7 +26,7 @@
 
 ## 배경
 
-- 하네스는 문서 문장 규칙([`doc-writing.md`](../../../.claude/rules/doc-writing.md))과 보고 문체 규칙([`core-reporting.md`](../../../.claude/rules/core-reporting.md))을 두고 Claude가 지키게 한다. 그래도 Claude가 쓴 글은 내부 용어가 많고 딱딱하다는 것이 사용자 판단이다
+- 하네스는 문서 문장 규칙([`doc-writing.md`](../../../plugin/rules/doc-writing.md))과 보고 문체 규칙([`core-reporting.md`](../../../plugin/rules/core-reporting.md))을 두고 Claude가 지키게 한다. 그래도 Claude가 쓴 글은 내부 용어가 많고 딱딱하다는 것이 사용자 판단이다
 - 다른 모델이 한 번 더 읽고 고치면, 같은 모델이 스스로 고칠 때 놓치는 어색함을 잡을 수 있다. 사용자가 Gemini API 무료 등급 키를 쓰기로 했다
 - 하네스는 [플러그인 배달](harness-plugin-delivery.md)로 옮기는 중이라, 지금의 복사 방식과 플러그인 방식에서 모두 돌아야 한다
 

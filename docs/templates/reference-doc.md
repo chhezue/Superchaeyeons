@@ -4,7 +4,7 @@
 
 독자는 이미 배경을 알고 있고 **특정 값 하나**를 찾으러 온다. 그러므로 설명보다 **찾기 쉬운 구조**가 우선이다 — 표를 먼저 두고, 서술은 표가 답하지 못하는 것만 남긴다.
 
-작성 기준: [`.claude/rules/doc-writing.md`](../../.claude/rules/doc-writing.md)
+작성 기준: 하네스 플러그인의 `rules/doc-writing.md`
 
 ---
 

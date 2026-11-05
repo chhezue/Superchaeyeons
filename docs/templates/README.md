@@ -4,7 +4,7 @@
 
 문서 루트는 `harness-map.md`의 `{{문서 루트}}` 슬롯 하나다(기본 `docs/`). 모노레포처럼 저장소 루트 `docs/`를 하네스가 소유하지 않는 프로젝트는 슬롯을 하위 경로로 바꾸고, 그 밖으로의 쓰기는 `deny-out-of-scope-write.sh` 훅이 막는다.
 
-유형 판정 순서와 문장·구조 작성 기준은 [`.claude/rules/doc-writing.md`](../../.claude/rules/doc-writing.md)가 SSOT다.
+유형 판정 순서와 문장·구조 작성 기준은 하네스 플러그인의 `rules/doc-writing.md`가 SSOT다.
 
 ## 언제 이 문서를 보는가
 
@@ -60,6 +60,6 @@ toss의 [테크니컬 라이팅 가이드](https://github.com/toss/technical-wri
 
 ## 관련 문서
 
-- [`.claude/rules/doc-writing.md`](../../.claude/rules/doc-writing.md) — 유형 판정·정보 구조·문장 기준
+- 하네스 플러그인의 `rules/doc-writing.md` — 유형 판정·정보 구조·문장 기준
 - [`.claude/rules/harness-map.md`](../../.claude/rules/harness-map.md) — `{{문서 루트}}` 등 경로 슬롯
 - 하네스 플러그인의 `agents/doc-reviewer.md` — 문서 품질 리뷰 기준

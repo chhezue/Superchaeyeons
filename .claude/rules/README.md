@@ -23,7 +23,7 @@ paths:
 
 | 층 | 파일 | 수정 | 이유 |
 |----|------|------|------|
-| **core** | `.claude/rules/core-*.md` · `plugin/` 전부(스킬·에이전트·훅·도구) | 금지 — `check-portability.sh`가 고유명사·스택 식별자·경로 리터럴을 막는다. 예외: 붙여 쓰는 프로젝트(하네스 자기 수정 ❌)에서는 아래 "훅 상수와 짝"의 대입 값과 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`가 프로젝트 값 자리라 검사 밖 | 모든 프로젝트에서 같아야 개선이 함께 전파된다 |
+| **core** | `plugin/` 전부(규칙·스킬·에이전트·훅·도구) | 금지 — `check-portability.sh`가 고유명사·스택 식별자·경로 리터럴을 막는다. 예외: 붙여 쓰는 프로젝트(하네스 자기 수정 ❌)에서는 아래 "훅 상수와 짝"의 대입 값과 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`가 프로젝트 값 자리라 검사 밖 | 모든 프로젝트에서 같아야 개선이 함께 전파된다 |
 | **map** | `rules/harness-map.md` | `init-harness`가 채운다 | 이 프로젝트의 축·슬롯·플래그 값 |
 | **local** | `.claude/` 안의 `local-*` 전부 | 자유 | 저장소 고유 사실·관례. 검사기가 접두사로 이 층을 뺀다 |
 
@@ -37,6 +37,14 @@ paths:
 .claude-plugin/marketplace.json       마켓플레이스 — 플러그인 superchaeyeons(plugin/) 하나를 등록
 plugin/                               배달물 — 붙인 프로젝트는 플러그인으로 받는다. 이 저장소는 로컬 경로 마켓플레이스로 제자리 로드
 ├── .claude-plugin/plugin.json        매니페스트 — version 없음(커밋 SHA가 버전). scripts/check-plugin.sh가 검사
+├── rules/                            Claude Code가 직접 읽지 않는다 — 주입 훅이 넣는다 (훅 하나당 9,000자 이하, check-portability.sh)
+│   ├── core-guardrails.md            세션 시작·서브에이전트 — ⛔ STOP: 문서·구현 정합 · [미정] · 레거시 즉시 삭제 · 현재동작 요약 갱신
+│   ├── core-gates.md                 세션 시작·서브에이전트 — 통제/위임 영역 · 멈추는 신호 · 자동으로 하지 않는 것
+│   ├── core-workflow.md              세션 시작·서브에이전트 — 트랙 4 × 규모 3 × 게이트 4
+│   ├── core-reporting.md             세션 시작·서브에이전트 — 사용자 보고 문체
+│   ├── core-code-comments.md         소스 파일을 다룰 때(paths:) — 주석 원칙
+│   ├── core-testing.md               테스트 파일을 다룰 때(paths:) — 테스트 원칙 S1~S8
+│   └── doc-writing.md                마크다운을 다룰 때(paths:) — 문서 유형·구조·문장
 ├── skills/
 │   ├── init-harness/                 D 트랙 — 실측 → 슬롯·플래그 제안 → 채움 (사용자 호출)
 │   ├── ask-decisions/                G2 앞 — 사용자 결정을 하나씩 묻는 인터뷰
@@ -55,6 +63,8 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 │   ├── deny-dangerous-bash.sh        PreToolUse Bash — 파괴·우회·시크릿 명령 차단, 실행되는 부분만 검사 (묶음별 막기·맡기기는 맨 위 상수)
 │   ├── deny-out-of-scope-write.sh    PreToolUse Write|Edit|MultiEdit|NotebookEdit — 범위 밖 쓰기 · (자기 수정 ❌) 플러그인 폴더·local 훅·settings 쓰기 차단
 │   ├── deny-unverified-completion.sh Stop — 코드 편집 뒤 TEST_CMD 미실행·실패인데 완료 선언이면 한 번 되돌림
+│   ├── auto-inject-rules.sh          SessionStart(startup|clear|compact)·SubagentStart — core 규칙 4개 주입 · 못 읽으면 경고 (omitClaudeMd 에이전트는 뺌)
+│   ├── auto-inject-path-rules.sh     PostToolUse Read|Write|Edit|MultiEdit|NotebookEdit — 다룬 파일이 paths: glob에 맞으면 그 규칙을 세션당 한 번 주입
 │   ├── auto-correction-queue.sh      PostToolUse Write|Edit|MultiEdit|NotebookEdit — 정정 기억(type: feedback) 저장을 정정 대기열에 기록
 │   └── auto-correction-notice.sh     SessionStart — 마지막 회고 분석 뒤 세션·정정 기억·검토할 후보 수를 한 줄로 (셋 다 0이면 출력 없음) · 7일 지나면 분석을 뒤에서 띄움
 └── scripts/                          도구 — 스킬·에이전트 본문은 ${CLAUDE_PLUGIN_ROOT}/scripts/…로 부른다. 프로젝트 루트는 git 최상위(없으면 현재 폴더)
@@ -68,14 +78,7 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 ├── settings.json                     마켓플레이스 등록(extraKnownMarketplaces)·플러그인 켜기(enabledPlugins) + permissions.deny(.env 읽기·쓰기 · force push · hard reset · --no-verify — 훅이 막는 묶음과 이중)
 ├── settings.local.json               개인 allowlist — 커밋 안 함
 ├── rules/
-│   ├── core-guardrails.md            항상 — ⛔ STOP: 문서·구현 정합 · [미정] · 레거시 즉시 삭제 · 현재동작 요약 갱신
-│   ├── core-gates.md                 항상 — 통제/위임 영역 · 멈추는 신호 · 자동으로 하지 않는 것
-│   ├── core-workflow.md              항상 — 트랙 4 × 규모 3 × 게이트 4
-│   ├── core-reporting.md             항상 — 사용자 보고 문체
 │   ├── harness-map.md                항상 — 축·슬롯·플래그 값
-│   ├── core-code-comments.md         소스 파일을 열 때 — 주석 원칙
-│   ├── core-testing.md               테스트 파일을 열 때 — 테스트 원칙 S1~S8
-│   ├── doc-writing.md                마크다운을 열 때 — 문서 유형·구조·문장
 │   ├── README.md                     플러그인·.claude/ 구성 요소·harness-map·git 훅을 열 때 — 이 파일 (목록 · map 고치기)
 │   └── local-*.md                    저장소 고유 (있을 때만)
 └── skills/

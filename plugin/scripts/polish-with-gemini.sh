@@ -10,7 +10,8 @@
 #
 # docs·done은 항상 exit 0이다(사용법 오류만 2). 꺼져 있으면 출력이 없고, 실패하면 `다듬기 건너뜀(<원인>)` 한 줄을 내고 파일을 바꾸지 않는다.
 # 기준판은 STATE_DIR/base/<경로>에 두고, 없으면 마지막 커밋의 판, 그것도 없으면 새 문서로 보고 전체를 보낸다.
-# 기준 글은 실행할 때마다 ROOT의 doc-writing.md 3절 · core-reporting.md · doc-style-patterns.txt를 읽는다 — 기준을 따로 두지 않는다.
+# 기준 글은 실행할 때마다 플러그인 폴더(PLUGIN_ROOT)의 rules/doc-writing.md 3절 · rules/core-reporting.md · scripts/doc-style-patterns.txt를
+# 읽는다 — 기준을 따로 두지 않는다. 하나도 못 찾으면 기준 없이 보내지 않고 `다듬기 건너뜀(기준 글 없음)`으로 끝낸다.
 #
 # 키는 파일에 두지 않는다. KEY_ENV_NAME 환경 변수 → (macOS면) 키체인 KEYCHAIN_SERVICE 순으로 찾고, 출력·경고·상태 폴더 어디에도 쓰지 않는다.
 # 모델은 환경 변수 GEMINI_MODEL, 없으면 DEFAULT_MODEL. 그 모델이 503(사용량 몰림)이면 FALLBACK_MODEL(환경 변수 GEMINI_FALLBACK_MODEL로 바꿈,
@@ -25,6 +26,8 @@ set -u
 POLISH_ENABLED="0"
 DOC_ROOT="docs"
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# 기준 글이 있는 플러그인 폴더 — 스킬이 부를 때는 이 파일의 상위 폴더다(Bash 도구에는 CLAUDE_PLUGIN_ROOT가 없다)
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 STATE_DIR=".claude/polish"
 GEMINI_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 DEFAULT_MODEL="gemini-3.5-flash"
@@ -205,11 +208,14 @@ def section(path, heading=None):
 
 def guide():
     parts = [
-        section(os.path.join(ROOT, ".claude/rules/doc-writing.md"), "3."),
-        section(os.path.join(ROOT, ".claude/rules/core-reporting.md")),
-        section(os.path.join(E["P_TOOL_DIR"], "doc-style-patterns.txt")),
+        section(os.path.join(E["P_PLUGIN_ROOT"], "rules", "doc-writing.md"), "3."),
+        section(os.path.join(E["P_PLUGIN_ROOT"], "rules", "core-reporting.md")),
+        section(os.path.join(E["P_PLUGIN_ROOT"], "scripts", "doc-style-patterns.txt")),
     ]
-    return "\n\n".join(p for p in parts if p.strip())
+    text = "\n\n".join(p for p in parts if p.strip())
+    if not text:
+        raise Skip("기준 글 없음")  # 빈 기준으로 보내면 품질만 조용히 떨어진다
+    return text
 
 
 INSTRUCTION = """너는 Claude가 쓴 한국어 글을 사람이 읽기 쉽게 다듬는 교정자다.
@@ -222,10 +228,11 @@ INSTRUCTION = """너는 Claude가 쓴 한국어 글을 사람이 읽기 쉽게 �
 
 
 def call(items, timeout, model=MODEL):
+    rules = guide()
     if not KEY:
         raise Skip("키 없음")
     body = {
-        "systemInstruction": {"parts": [{"text": INSTRUCTION + "\n\n## 기준\n\n" + guide()}]},
+        "systemInstruction": {"parts": [{"text": INSTRUCTION + "\n\n## 기준\n\n" + rules}]},
         "contents": [{"role": "user", "parts": [{"text": json.dumps({"items": items}, ensure_ascii=False)}]}],
         "generationConfig": {
             "temperature": 0.3,
@@ -418,7 +425,7 @@ except BaseException:
     sys.exit(1 if cmd == "message" else 0)
 PY
 
-P_TOOL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" P_ROOT="$ROOT" P_DOC_ROOT="$DOC_ROOT" P_STATE_DIR="$STATE_DIR" P_KEY="$key" P_DEFAULT_MODEL="$DEFAULT_MODEL" P_FALLBACK_MODEL="$FALLBACK_MODEL" \
+P_PLUGIN_ROOT="$PLUGIN_ROOT" P_ROOT="$ROOT" P_DOC_ROOT="$DOC_ROOT" P_STATE_DIR="$STATE_DIR" P_KEY="$key" P_DEFAULT_MODEL="$DEFAULT_MODEL" P_FALLBACK_MODEL="$FALLBACK_MODEL" \
 	P_ENDPOINT="$GEMINI_ENDPOINT" P_TIMEOUT_DOCS="$TIMEOUT_DOCS" P_TIMEOUT_MESSAGE="$TIMEOUT_MESSAGE" \
 	python3 -c "$PY" "$@"
 rc=$?

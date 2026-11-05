@@ -23,9 +23,9 @@ Issue · PR · 브랜치 · 커밋 규칙을 하네스(`{{문서 루트}}`, `.cl
 |------|------|
 | (프로젝트가 채운다) | |
 
-`./scripts/install-git-hooks.sh`로 설치되는 `commit-msg` 훅이 이 형식을 기계적으로 검증한다(위반 시 커밋 차단). 정규식은 훅 본문의 `COMMIT_RE` 상수에 직접 적혀 있고, 견본에서는 비어 있어 검사하지 않는다. 형식을 정하거나 바꾸면 `scripts/git-hooks/commit-msg`도 함께 고친다. Merge·Revert 커밋은 검사 대상에서 제외.
+Claude가 `git commit`을 하면 하네스 승인 창 훅(`ask-approval.sh`)이 창을 띄우기 전에 이 형식을 검증한다(위반 시 커밋 차단). 정규식은 프로젝트 설정 `.claude/harness.conf`의 `COMMIT_RE`이고, 비어 있으면 검사하지 않는다. 형식을 정하거나 바꾸면 `COMMIT_RE`도 함께 고친다. Merge·Revert 커밋은 검사 대상에서 제외. 사람이 터미널에서 직접 하는 커밋은 검사하지 않는다.
 
-같은 스크립트가 설치하는 `pre-commit` 훅은 배달물이 stage에 있으면 `plugin/scripts/check-portability.sh`(부품 계약·always-load 예산), 훅·케이스가 있으면 `scripts/test-hooks.sh`(훅 규약), `plugin/scripts/dev.sh`·`test-dev.sh`·`dev.conf`가 있으면 `scripts/test-dev.sh`(실행 엔진), 마크다운이 있으면 `plugin/scripts/check-doc-style.sh`(문서 스타일)를 돌려 위반이면 커밋을 막는다. 자동 포맷은 훅 본문의 `FORMAT_CMD`(= `{{포맷 명령}}`)가 비어 있지 않을 때만 실행한다. 이행 중 특정 분류를 잠시 빼려면 `PORTABILITY_SKIP=C3 git commit ...`처럼 환경 변수로 넘긴다.
+같은 훅은 바뀐 마크다운의 문서 스타일(하네스 플러그인의 `scripts/check-doc-style.sh`)과 설정 `COMMIT_CHECK`(커밋 전 검사 명령)를 돌려 실패하면 커밋을 막는다. 자동 포맷은 파일을 고칠 때마다 `auto-format.sh`가 설정 `FORMAT_CMD`(= `{{포맷 명령}}`)를 `FORMAT_PATHS`에 맞는 파일에 돌린다.
 
 ## 풀 리퀘스트(PR)
 

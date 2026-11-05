@@ -27,7 +27,7 @@ cd "$repo_root"
 
 patterns_file="$plugin_root/scripts/portability-patterns.txt"
 scope="all"
-# 이행 중 특정 분류를 잠시 빼야 할 때: PORTABILITY_SKIP=C3 (pre-commit도 이 변수를 그대로 물려받는다)
+# 이행 중 특정 분류를 잠시 빼야 할 때: PORTABILITY_SKIP=C3
 skip="${PORTABILITY_SKIP:-}"
 # always-load 합계 상한(바이트). 한국어 UTF-8 기준 바이트/2.5 ≈ 토큰.
 # 래칫: 실측 합계를 상한으로 못 박아 늘어나는 커밋은 막고, 줄이는 작업은 이 값을 낮추며 진행한다. 이유 없이 올리지 않는다.
@@ -79,9 +79,8 @@ fi
 # ---- 1. 검사 대상 수집 -------------------------------------------------------
 # 배달물 = 새 프로젝트로 그대로 복사되는 것 전부. 프로젝트가 고유 사실을 적는 자리(.claude/harness.conf · .claude/ 안의 local-* 파일)와
 # 견본(examples/)만 제외한다. local- 접두사가 곧 층 표시다.
-# 붙여 쓰는 프로젝트(하네스 자기 수정 ❌ = HARNESS_SELF_EDIT "0")에서는 두 가지가 프로젝트 값 자리라 검사 밖이다.
+# 붙여 쓰는 프로젝트(하네스 자기 수정 = HARNESS_SELF_EDIT 0)에서는 아래가 프로젝트 값 자리라 검사 밖이다.
 #   .github/CONTRIBUTING.md — 그 프로젝트의 {{Git 컨벤션 SSOT}}. 원본 저장소(☑)에서는 견본이라 검사한다
-#   git 훅 상수 대입 줄의 값(COMMIT_RE·FORMAT_*) — 원본 저장소에서는 기본값도 견본이라 검사한다 (아래 awk)
 # 2026-10-16 TripFit 사본에 붙였을 때 이 둘이 위반 21건(CONTRIBUTING 17 · 상수 4)으로 잡혀 verify.sh가 처음부터 실패했다.
 # 값을 읽지 못하면 원본 저장소로 보고 더 많이 검사한다 — 놓치는 쪽보다 오탐이 보이는 쪽이 낫다.
 # 붙여 쓰는 프로젝트인지는 프로젝트 설정(.claude/harness.conf)의 HARNESS_SELF_EDIT가 정한다
@@ -90,14 +89,14 @@ adopted=0
 if [ "$self_edit" = "0" ]; then
 	adopted=1
 elif [ -z "$self_edit" ]; then
-	echo "경고: .claude/harness.conf에서 HARNESS_SELF_EDIT를 읽지 못해 원본 저장소로 보고 CONTRIBUTING·git 훅 상수까지 검사합니다" >&2
+	echo "경고: .claude/harness.conf에서 HARNESS_SELF_EDIT를 읽지 못해 원본 저장소로 보고 CONTRIBUTING까지 검사합니다" >&2
 fi
 targets=""
 for f in plugin/rules/core-*.md; do
 	[ -f "$f" ] && targets="$targets $f"
 done
 if [ "$scope" = "all" ]; then
-	for f in plugin/rules/*.md .claude/rules/*.md plugin/skills/*/SKILL.md plugin/skills/*/references/*.md plugin/skills/*/references/*.conf plugin/agents/*.md plugin/hooks/*.sh plugin/hooks/hooks.json .claude/settings.json scripts/git-hooks/* plugin/scripts/dev.sh AGENTS.template.md .github/CONTRIBUTING.md; do
+	for f in plugin/rules/*.md .claude/rules/*.md plugin/skills/*/SKILL.md plugin/skills/*/references/*.md plugin/skills/*/references/*.conf plugin/agents/*.md plugin/hooks/*.sh plugin/hooks/hooks.json .claude/settings.json plugin/scripts/dev.sh AGENTS.template.md .github/CONTRIBUTING.md; do
 		[ -f "$f" ] || continue
 		case "$f" in
 		plugin/rules/core-*.md | .claude/*/local-*) continue ;;
@@ -118,7 +117,6 @@ fi
 # ---- 2. 금지 패턴 스캔 -------------------------------------------------------
 # awk 하나로 끝낸다: 패턴 파일을 먼저 읽고(FNR==NR), 이어지는 파일들을 줄 단위로 대조한다.
 # 오탐 방지: `채운 예`(견본 인용)·`다스택 예시`(여러 스택을 나열하는 실측 안내) 줄과 YAML frontmatter(`paths:` glob)는 건너뛴다.
-# 붙여 쓰는 프로젝트에서는 git 훅 상수 대입 줄에서 값만 지우고 나머지(줄 끝 주석)를 검사한다.
 violations="$(
 	# shellcheck disable=SC2086
 	awk -v skip="$skip" -v adopted="$adopted" '
@@ -135,9 +133,6 @@ violations="$(
 		infm { next }
 		{
 			if (index($0, "채운 예") > 0 || index($0, "다스택 예시") > 0) next
-			if (adopted == 1 && ((FILENAME == "scripts/git-hooks/pre-commit" && $0 ~ /^FORMAT_(CMD|PATHS)=/) ||
-			    (FILENAME == "scripts/git-hooks/commit-msg" && $0 ~ /^COMMIT_RE=/)))
-				sub(/^[A-Z_]+=("[^"]*"|\047[^\047]*\047|[^ \t]*)/, "")
 			for (i = 1; i <= n; i++) {
 				if (match($0, re[i])) {
 					printf "%s\t%s:%d\t%s\t%s\n", cls[i], FILENAME, FNR, substr($0, RSTART, RLENGTH), msg[i]
@@ -254,7 +249,7 @@ def files(patterns):
 def is_local(f):
     return os.path.basename(f).startswith("local-")
 harness_files = [f for f in files(["plugin/rules/*.md", ".claude/rules/*.md", "plugin/skills/*/SKILL.md", "plugin/skills/*/references/*.md",
-                                   "plugin/agents/*.md", "plugin/hooks/*.sh", "scripts/git-hooks/*", "AGENTS.template.md",
+                                   "plugin/agents/*.md", "plugin/hooks/*.sh", "AGENTS.template.md",
                                    "docs/templates/*.md"])
                  if not (f.startswith(".claude/") and is_local(f))]
 project_files = files(["AGENTS.md", "CLAUDE.md", "README.md", ".github/CONTRIBUTING.md", "docs/README.md", "docs/harness/README.md"])

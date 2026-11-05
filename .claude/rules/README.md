@@ -8,7 +8,6 @@ paths:
   - ".claude/settings*.json"
   - ".claude/rules/README.md"
   - ".claude/harness.conf"
-  - "scripts/git-hooks/**"
 ---
 
 # `.claude/` — 하네스 구성 요소 목록
@@ -62,10 +61,12 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 │   ├── hooks.json                    훅 등록 — 명령은 "${CLAUDE_PLUGIN_ROOT}/hooks/…"
 │   ├── deny-dangerous-bash.sh        PreToolUse Bash — 파괴·우회·시크릿 명령 차단, 실행되는 부분만 검사 (묶음별 막기·맡기기는 맨 위 상수)
 │   ├── deny-out-of-scope-write.sh    PreToolUse Write|Edit|MultiEdit|NotebookEdit — 범위 밖 쓰기 · (자기 수정 ❌) 플러그인 폴더·local 훅·settings 쓰기 차단
+│   ├── ask-approval.sh               PreToolUse Bash|Write|Edit|MultiEdit|NotebookEdit — 승인 창: 커밋·원격 반영(먼저 메시지 형식·문서 스타일·COMMIT_CHECK) · 추적 파일 삭제 · 의존성 · 민감한 경로 · 스펙 승인·[미정] 확정 · 채워진 harness.conf 수정
 │   ├── deny-unverified-completion.sh Stop — 코드 편집 뒤 TEST_CMD 미실행·실패인데 완료 선언이면 한 번 되돌림
 │   ├── auto-inject-rules.sh          SessionStart(startup|clear|compact)·SubagentStart — core 규칙 4개 주입 · 못 읽으면 경고 (omitClaudeMd 에이전트는 뺌)
 │   ├── auto-inject-config.sh         SessionStart(startup|clear|compact)·SubagentStart — .claude/harness.conf의 slot·flag 값 표 주입 · 없거나 빈칸이면 init-harness 제안
 │   ├── auto-inject-path-rules.sh     PostToolUse Read|Write|Edit|MultiEdit|NotebookEdit — 다룬 파일이 paths: glob에 맞으면 그 규칙을 세션당 한 번 주입
+│   ├── auto-format.sh                PostToolUse Write|Edit|MultiEdit|NotebookEdit — 고친 파일이 FORMAT_PATHS에 맞으면 FORMAT_CMD (막지 않음)
 │   ├── auto-correction-queue.sh      PostToolUse Write|Edit|MultiEdit|NotebookEdit — 정정 기억(type: feedback) 저장을 정정 대기열에 기록
 │   └── auto-correction-notice.sh     SessionStart — 마지막 회고 분석 뒤 세션·정정 기억·검토할 후보 수를 한 줄로 (셋 다 0이면 출력 없음) · 7일 지나면 분석을 뒤에서 띄움
 └── scripts/                          도구 — 스킬·에이전트 본문은 ${CLAUDE_PLUGIN_ROOT}/scripts/…로 부른다. 프로젝트 루트는 git 최상위(없으면 현재 폴더)
@@ -95,12 +96,13 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 
 `scripts/test-hooks.sh`가 `scripts/hook-cases.txt`로 판정한다.
 
+- `ask-*`는 판정 불가(입력 깨짐·설정 깨짐·python3 없음)면 `ask`를 낸다 — 막지도 그냥 통과시키지도 않고 사람에게 넘긴다. 창을 띄우지 않아야 하는 경우도 케이스로 판정한다(과잉 경보가 이 장치를 무력하게 만든다)
 - `deny-*`는 정상 범위 통과 · 위반 exit 2 · **판정 불가(JSON 깨짐·키 없음·빈 입력·python3 없음)도 exit 2**. 경로는 실경로로 정규화한다
 - 훅 안의 python3는 **`python3 -I`**로 부른다 — 훅은 작업 폴더에서 도는데 `-I` 없이는 그 폴더가 모듈 경로 맨 앞에 들어가, 폴더에 있는 `json.py` 같은 파일이 표준 라이브러리 대신 불려 판정이 뒤집힌다. `test-hooks.sh`가 가짜 `json.py`를 둔 폴더에서 `deny-*`를 돌려 확인한다
 - `Stop` 훅만 판정 불가와 재진입(`stop_hook_active`)이면 통과한다 — 대화가 끝나지 못하는 피해가 더 크다
 - `auto-*`(기록·알림)는 막지 않는다 — 어떤 입력에도 exit 0이고, 기록하지 못하면 `systemMessage`로 알린다. 세션마다 도니 bash 3.2 내장 기능과 macOS 기본 명령만 쓴다(python3 없음). 출력과 남긴 파일은 케이스의 `out~`·`file:` 검사로 판정한다
 - 배달 훅은 `"${CLAUDE_PLUGIN_ROOT}/hooks/…"`로 등록하고 `plugin/hooks/*.sh`는 전부 `plugin/hooks/hooks.json`에 등록돼야 한다. 프로젝트 층 local 훅은 `$CLAUDE_PROJECT_DIR` 기준 `.claude/hooks/`에 두고 `settings.json`에 등록한다(플러그인 훅을 `settings.json`에도 적으면 두 번 돈다). 프로젝트 루트는 훅이면 `CLAUDE_PROJECT_DIR`, Bash로 부르는 도구면 git 최상위로 잡는다 — Bash 도구에는 두 변수가 모두 없다. 쓰기 도구 매처는 `Write`·`Edit`·`MultiEdit`·`NotebookEdit`를 모두 덮어야 한다 — 매처는 정확한 이름 목록이라 `Write|Edit`만 두면 나머지 둘이 훅을 건너뛴다
-- "확인받았으면 통과" 통로는 없다. 승인은 사용자가 `.claude/harness.conf`의 값을 바꾸는 것이다. 막힐 때 각 `deny-*` 훅의 차단 메시지가 이 안내를 Claude에게 준다
+- "확인받았으면 통과" 통로는 없다. 승인 통로는 사용자가 `.claude/harness.conf`의 값을 바꾸는 것과 `ask-*` 훅이 띄운 승인 창에서 누르는 것뿐이다 — 둘 다 에이전트가 열 수 없다. 막힐 때 각 `deny-*` 훅의 차단 메시지가 이 안내를 Claude에게 준다
 - 훅은 명령 문자열만 본다. 변수·별도 스크립트 간접 실행과 Bash로 하네스 파일을 고치는 것은 못 보므로 규칙으로만 막는다 (`eval`·`bash -c` 안은 `deny-dangerous-bash.sh`가 다시 검사한다)
 - 판단이 필요한 것은 훅에 넣지 않는다. advisory 훅이 필요하면 `command`-type으로 — `agent`-type 훅이 "막지 마라"는 지시에도 커밋을 막은 사고가 있었다
 
@@ -116,7 +118,7 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 |------|------|-----|
 | 스킬 | 동사-목적어(필요하면 동사-부사). 이름만 보고 하는 일을 알 수 있게 | `write-spec`, `refactor-safely` |
 | 규칙 | 적용 시점·대상 명사구. 부품은 `core-`, 고유는 `local-` | `core-gates`, `local-release` |
-| 훅 | 동작 접두사 — 차단 `deny-` · 경고 `warn-` · 자동 실행 `auto-` | `deny-dangerous-bash.sh` |
+| 훅 | 동작 접두사 — 차단 `deny-` · 승인 창 `ask-` · 경고 `warn-` · 자동 실행 `auto-` | `deny-dangerous-bash.sh` |
 | 에이전트 | 역할 명사, 20자 이내 | `researcher`, `{스택}-reviewer` |
 
 새 이름은 저장소에서 그 단어가 몇 번 쓰이는지 먼저 센다 — 흔한 단어면 일괄 치환이 불가능해진다.

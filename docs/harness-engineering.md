@@ -81,7 +81,7 @@ core 규칙 4개는 세션 시작·요약 뒤 훅이 주입하고, `paths:`가 �
 | `test-hooks.sh` | 훅 공통 규약 · 훅이 전부 등록돼 있고 쓰기 도구 매처가 빠짐없는가 |
 | `check-doc-style.sh` | 문서 개요·깊이·번역투(오류) · 제목 길이·약어·깨진 링크(경고) |
 
-`scripts/verify.sh`가 셋과 `dev.sh` 엔진 테스트를 한 번에 돌린다. 이 저장소의 `{{테스트 명령}}`은 `plugin/scripts/dev.sh test`이고 루트 `dev.conf`가 `verify.sh`를 부르며, `Stop` 훅이 이 명령의 실행 기록과 결과를 본다. git `pre-commit`이 stage된 내용에 따라 같은 검사를, `commit-msg`가 커밋 메시지 형식을 판정한다. 오탐이 나면 스크립트가 아니라 데이터 파일(패턴·케이스)을 고친다. 판단이 필요한 항목은 검사기에 넣지 않는다 — 넣으면 오탐으로 커밋이 막히고, 막히는 검사기는 곧 우회된다.
+`scripts/verify.sh`가 셋과 `dev.sh` 엔진 테스트를 한 번에 돌린다. 이 저장소의 `{{테스트 명령}}`은 `plugin/scripts/dev.sh test`이고 루트 `dev.conf`가 `verify.sh`를 부르며, `Stop` 훅이 이 명령의 실행 기록과 결과를 본다. Claude가 커밋하면 승인 창 훅(`ask-approval.sh`)이 커밋 메시지 형식(`COMMIT_RE`)·바뀐 문서의 스타일·`COMMIT_CHECK`(이 저장소는 `verify.sh`)를 먼저 판정한다. 오탐이 나면 스크립트가 아니라 데이터 파일(패턴·케이스)을 고친다. 판단이 필요한 항목은 검사기에 넣지 않는다 — 넣으면 오탐으로 커밋이 막히고, 막히는 검사기는 곧 우회된다.
 
 ## 8. 실제로 겪고 고친 것
 
@@ -114,12 +114,13 @@ core 규칙 4개는 세션 시작·요약 뒤 훅이 주입하고, `paths:`가 �
 
 ## 10. 숫자로 보는 현재
 
-2026-10-29 기준이다. 정확한 목록은 [`.claude/rules/README.md`](../.claude/rules/README.md)가 SSOT다.
+2026-11-05 기준이다. 정확한 목록은 [`.claude/rules/README.md`](../.claude/rules/README.md)가 SSOT다.
 
-- 규칙: always-load 5개 · path-scoped 4개 · always-load 합계 23,777B / 상한 25,000B
-- 스킬 8개 · 서브에이전트 3개 · 배달 훅 5개 · 검사기 5개(+ `verify.sh` 래퍼) · 실행 엔진 `dev.sh` · git 훅 2개
-- `.claude/harness.conf`: 키 47개 — 축 1 · 슬롯 25 · 능력 플래그 3 · 훅 판정 값 18 (목록 `plugin/scripts/harness-keys.txt`)
-- 훅 규약 케이스 394개
+- 배달: 플러그인 `superchaeyeons` 하나(`plugin/`, 버전은 커밋 SHA) — 붙인 프로젝트는 `.claude/settings.json`에서 켜고 자동 업데이트로 받는다
+- 규칙: 세션 시작 주입 core 4개(주입 글 약 8,000자 / 훅 하나당 상한 9,000자) · 경로 주입 3개 · Claude Code가 직접 싣는 always-load 합계 약 5,600B / 상한 5,700B
+- 스킬 8개 · 서브에이전트 3개 · 훅 10개(차단 3 · 승인 창 1 · 주입 3 · 기록·알림 2 · 포맷 1) · 검사기 5개(+ `verify.sh` 래퍼) · 실행 엔진 `dev.sh` · git 훅 0개
+- `.claude/harness.conf`: 키 48개 — 축 1 · 슬롯 25 · 능력 플래그 3 · 훅 판정 값 19 (목록 `plugin/scripts/harness-keys.txt`)
+- 훅 규약 케이스 약 560개
 
 ## 11. 한 줄 요약
 

@@ -74,7 +74,8 @@ while IFS=$'\t' read -r spec scope expected stdin; do
 	# 프로젝트 설정: 케이스마다 견본(conf_base)을 복사한 임시 프로젝트를 만들어 CLAUDE_PROJECT_DIR로 넘긴다 — 훅은 상수 대신
 	# 그 프로젝트의 .claude/harness.conf를 읽는다. 케이스가 `;env:CLAUDE_PROJECT_DIR=…`를 주면 그 값이 이긴다(뒤에 붙는다).
 	proj="$tmpdir/proj.$n"; mkdir -p "$proj/.claude"; cp "$conf_base" "$proj/.claude/harness.conf"
-	run_env=("CLAUDE_PROJECT_DIR=$proj")
+	# Claude Code처럼 플러그인 폴더도 넘긴다 — 임시 복사본으로 도는 훅이 자기 위치로 플러그인을 찾지 못하므로
+	run_env=("CLAUDE_PROJECT_DIR=$proj" "CLAUDE_PLUGIN_ROOT=$repo_root/plugin")
 	# scope 열: `-` 원본 · `값` 설정 키 SCOPE · `;self=N`·`;test=CMD`는 설정 키 HARNESS_SELF_EDIT·TEST_CMD
 	# `;대문자이름=값`은 본문에 `대문자이름=…` 줄이 있으면 그 줄을 `대문자이름="값"`으로 바꾸고(예: `-;STORE=$TMP/q`), 없으면 설정 키를 바꾼다
 	# `;conf:none`은 설정 파일 없음 · `;conf:file=경로`는 그 파일을 설정 파일로 쓴다(깨진 설정 견본)

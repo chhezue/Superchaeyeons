@@ -346,7 +346,7 @@ deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"cat <<'E' | python3 scripts
 deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}
 # 플러그인 배달 — Bash 도구에는 CLAUDE_PLUGIN_ROOT가 없어 Claude가 dev.sh 경로를 모른다. 안내 문장에 플러그인 경로를 붙인 명령을 준다
 deny-unverified-completion.sh	-;env:CLAUDE_PLUGIN_ROOT=/opt/plug	2;err~`/opt/plug/scripts/dev\.sh test`	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}
-deny-unverified-completion.sh	-	2;err~`scripts/dev\.sh test`	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-;env:CLAUDE_PLUGIN_ROOT=	2;err~`scripts/dev\.sh test`	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-tested.jsonl","stop_hook_active":false}
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-docs-only.jsonl","stop_hook_active":false}
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":true}
@@ -660,3 +660,126 @@ auto-inject-config.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/full.conf;TES
 auto-inject-config.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/full.conf;BRANCH_FORMAT={type}/{issue};env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"additionalContext";out~\{type\}/\{issue\};out!~설정이 비어 있다	{"session_id":"s1","hook_event_name":"SessionStart","source":"startup"}
 auto-inject-config.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/full.conf;FORMAT_CMD=(없음) — 이유;env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"additionalContext";out!~설정이 비어 있다	{"session_id":"s1","hook_event_name":"SessionStart","source":"startup"}
 auto-inject-config.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/full.conf;env:CLAUDE_PLUGIN_ROOT=$REPO/plugin	0;out~"systemMessage";out!~additionalContext	not json
+
+# ---- ask-approval.sh (harness-plugin-delivery 스펙 "행동 강제 — 승인 창"·"프로젝트 설정 파일" — PreToolUse ask/deny. 사용자 승인 해석 2026-11-05) ----
+# 판정 = stdout의 permissionDecision(ask·deny·출력 없음) · exit는 늘 0. git 상태가 필요한 케이스는 hook-fixtures/ask/setup.sh가 $TMP 아래 견본 저장소를 만든다
+#   (setup.sh <폴더> <기본 설정|-> [덮어쓸 설정]) — askrepo 기본 · askre COMMIT_RE · askfail/askok COMMIT_CHECK false/true · askcontract CONTRACT_PATHS · askzero ASK_* 전부 0 · askinit 빈칸 남은 설정 · askbare 설정 없음
+#   견본 저장소 안: 추적 tracked.txt·src/a.ts·lib/x.txt·lib/y.txt·package.json·api/openapi.yaml·docs/specs/{draft·approved·two}.md·docs/decisions/adr.md / 스테이징 staged.txt+api/openapi.yaml(2개) / 미추적 untracked.txt·build/out.o
+#   저장소를 안 쓰는 케이스는 러너의 임시 프로젝트에 hook-fixtures/ask/base.conf를 설정으로 쓴다(conf:file=)
+# 견본 저장소 만들기 (setup.sh는 실행 권한이 있어야 한다)
+hook-fixtures/ask/setup.sh $TMP/askrepo $REPO/scripts/hook-fixtures/ask/base.conf	-	0
+hook-fixtures/ask/setup.sh $TMP/askre $REPO/scripts/hook-fixtures/ask/base.conf $REPO/scripts/hook-fixtures/ask/re.conf	-	0
+hook-fixtures/ask/setup.sh $TMP/askfail $REPO/scripts/hook-fixtures/ask/base.conf $REPO/scripts/hook-fixtures/ask/check-fail.conf	-	0
+hook-fixtures/ask/setup.sh $TMP/askok $REPO/scripts/hook-fixtures/ask/base.conf $REPO/scripts/hook-fixtures/ask/check-ok.conf	-	0
+hook-fixtures/ask/setup.sh $TMP/askcontract $REPO/scripts/hook-fixtures/ask/base.conf $REPO/scripts/hook-fixtures/ask/contract.conf	-	0
+hook-fixtures/ask/setup.sh $TMP/askzero $REPO/scripts/hook-fixtures/ask/base.conf $REPO/scripts/hook-fixtures/ask/allzero.conf	-	0
+hook-fixtures/ask/setup.sh $TMP/askinit $REPO/scripts/hook-fixtures/ask/base.conf $REPO/scripts/hook-fixtures/ask/blank.conf	-	0
+hook-fixtures/ask/setup.sh $TMP/askbare -	-	0
+
+# 커밋·원격 반영 — 형식 통과면 창(이유에 파일 수·첫 줄), 형식 실패는 deny(이유에 정규식·첫 줄)
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~커밋 — 파일 2개;out~Feat: 로그인 추가;out!~api/openapi	{"tool_name":"Bash","tool_input":{"command":"git commit -m \"Feat: 로그인 추가\""}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~커밋 — 파일 2개	{"tool_name":"Bash","tool_input":{"command":"git add . && git commit -m \"Feat: a\""}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askre	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"deny";out~Feat[|]Fix;out~added login	{"tool_name":"Bash","tool_input":{"command":"git commit -m \"added login\""}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askre	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~Fix: 오타	{"tool_name":"Bash","tool_input":{"command":"git commit -m \"Fix: 오타\""}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askre	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~Feat: 헤레독 메시지	{"tool_name":"Bash","tool_input":{"command":"git commit -F - <<'EOF'\nFeat: 헤레독 메시지\n\n본문 설명\nEOF"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askre	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"deny";out~bad heredoc	{"tool_name":"Bash","tool_input":{"command":"git commit -F - <<'EOF'\nbad heredoc title\n\nFeat: 본문에만 형식\nEOF"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askre	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask"	{"tool_name":"Bash","tool_input":{"command":"git commit -m \"Merge branch 'main' into feat\""}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askre	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask"	{"tool_name":"Bash","tool_input":{"command":"git commit -m \"Revert Feat: 로그인\""}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askre	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~메시지 확인 못 함	{"tool_name":"Bash","tool_input":{"command":"git commit --amend --no-edit"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askfail	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"deny";out~false	{"tool_name":"Bash","tool_input":{"command":"git commit -m \"Feat: x\""}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askok	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~커밋 — 파일 2개	{"tool_name":"Bash","tool_input":{"command":"git commit -m \"Feat: x\""}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askcontract	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~api/openapi\.yaml	{"tool_name":"Bash","tool_input":{"command":"git commit -m \"Feat: x\""}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~원격 반영 — git push origin feat/x	{"tool_name":"Bash","tool_input":{"command":"git push origin feat/x"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~원격 반영 — gh pr create	{"tool_name":"Bash","tool_input":{"command":"gh pr create --title \"Feat: x\" --body y"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~원격 반영 — gh pr merge	{"tool_name":"Bash","tool_input":{"command":"gh pr merge 12 --squash"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askzero	0;out=	{"tool_name":"Bash","tool_input":{"command":"git commit -m \"Feat: x\""}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askzero	0;out=	{"tool_name":"Bash","tool_input":{"command":"git push origin feat/x"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askbare	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~커밋	{"tool_name":"Bash","tool_input":{"command":"git commit -m \"아무 형식\""}}
+
+# 커밋·원격 반영 — 띄우지 않는 경우 (읽기·스테이징·따옴표 안 글자)
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"git status"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"git diff --cached --stat"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"git log --oneline -3"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"git add -A"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"git show HEAD"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"echo \"git commit\""}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"echo 'git push origin main'"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"grep \"gh pr create\" README.md"}}
+
+# 삭제 — 추적 중인 파일(폴더면 그 아래 추적 파일 하나 이상)만 창. 경로는 프로젝트 폴더 기준
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~삭제 — 추적 중인 .tracked\.txt	{"tool_name":"Bash","tool_input":{"command":"rm tracked.txt"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"rm untracked.txt"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"rm -rf build"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~삭제 — 추적 중인 .lib	{"tool_name":"Bash","tool_input":{"command":"rm -r lib"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~삭제 — 추적 중인 .src/a\.ts	{"tool_name":"Bash","tool_input":{"command":"git rm src/a.ts"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~삭제 — 추적 중인 .src/a\.ts	{"tool_name":"Bash","tool_input":{"command":"mv tracked.txt src/a.ts"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"mv untracked.txt fresh-name.txt"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"mv tracked.txt renamed.txt"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"mv tracked.txt untracked.txt"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~tracked\.txt	{"tool_name":"Bash","tool_input":{"command":"rm untracked.txt tracked.txt"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Bash","tool_input":{"command":"ls lib"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askzero	0;out=	{"tool_name":"Bash","tool_input":{"command":"rm tracked.txt"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askbare	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~삭제 — 추적 중인 .tracked\.txt	{"tool_name":"Bash","tool_input":{"command":"rm tracked.txt"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askbare	0;out=	{"tool_name":"Bash","tool_input":{"command":"git status"}}
+
+# 의존성 추가 — DEPS_FILES 쓰기 · DEPS_ADD_CMD 접두사(세그먼트 단위). 목록이 비면 묻지 않는다
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~package\.json	{"tool_name":"Write","tool_input":{"file_path":"package.json","content":"{}"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~pom\.xml	{"tool_name":"Edit","tool_input":{"file_path":"services/api/pom.xml","old_string":"a","new_string":"b"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask"	{"tool_name":"Bash","tool_input":{"command":"npm install left-pad"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask"	{"tool_name":"Bash","tool_input":{"command":"cd app && pip install -r requirements.txt"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out=	{"tool_name":"Bash","tool_input":{"command":"npm ls"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out=	{"tool_name":"Bash","tool_input":{"command":"npm run build"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out=	{"tool_name":"Bash","tool_input":{"command":"scripts/dev.sh test"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out=	{"tool_name":"Bash","tool_input":{"command":"echo \"npm install\""}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out=	{"tool_name":"Write","tool_input":{"file_path":"docs/a.md","content":"# a"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf;DEPS_FILES=	0;out=	{"tool_name":"Write","tool_input":{"file_path":"package.json","content":"{}"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf;DEPS_ADD_CMD=	0;out=	{"tool_name":"Bash","tool_input":{"command":"npm install left-pad"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf;ASK_DEPS=0	0;out=	{"tool_name":"Write","tool_input":{"file_path":"package.json","content":"{}"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askzero	0;out=	{"tool_name":"Bash","tool_input":{"command":"npm install left-pad"}}
+
+# 민감한 경로 — ASK_PATHS glob에 맞는 쓰기. 빈 목록이면 묻지 않는다
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~src/auth/login\.ts	{"tool_name":"Write","tool_input":{"file_path":"src/auth/login.ts","content":"x"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask"	{"tool_name":"Edit","tool_input":{"file_path":"db/migrations/001.sql","old_string":"a","new_string":"b"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask"	{"tool_name":"MultiEdit","tool_input":{"file_path":"src/auth/deep/token.ts","edits":[{"old_string":"a","new_string":"b"}]}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask"	{"tool_name":"NotebookEdit","tool_input":{"notebook_path":"src/auth/n.ipynb","new_source":"x"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out=	{"tool_name":"Write","tool_input":{"file_path":"src/other/a.ts","content":"x"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf;ASK_PATHS=	0;out=	{"tool_name":"Write","tool_input":{"file_path":"src/auth/login.ts","content":"x"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf;ASK_SENSITIVE=0	0;out=	{"tool_name":"Write","tool_input":{"file_path":"src/auth/login.ts","content":"x"}}
+
+# 스펙 승인·[미정] 확정 — 고친 뒤 내용 기준: 상태 줄이 Approved로 바뀌거나 [미정] 개수가 줄 때만 창
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~스펙 승인 — .draft\.md. · \[미정\] 0개	{"tool_name":"Edit","tool_input":{"file_path":"$TMP/askrepo/docs/specs/draft.md","old_string":"> 상태: Draft","new_string":"> 상태: Approved"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~스펙 승인 — .draft\.md.	{"tool_name":"MultiEdit","tool_input":{"file_path":"$TMP/askrepo/docs/specs/draft.md","edits":[{"old_string":"> 상태: Draft","new_string":"> 상태: Approved"}]}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~스펙 승인 — .draft\.md.	{"tool_name":"Write","tool_input":{"file_path":"$TMP/askrepo/docs/specs/draft.md","content":"# Draft\n\n> 상태: Approved\n\n초안 문장입니다.\n"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~스펙 승인 — .new\.md.	{"tool_name":"Write","tool_input":{"file_path":"$TMP/askrepo/docs/specs/new.md","content":"# New\n\n> 상태: Approved\n\n새 문장.\n"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~\[미정\] 확정 — .two\.md. · \[미정\] 2→1개	{"tool_name":"Edit","tool_input":{"file_path":"$TMP/askrepo/docs/specs/two.md","old_string":"- [미정] 첫째","new_string":"- 확정: 첫째"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~\[미정\] 확정 — .two\.md. · \[미정\] 2→0개	{"tool_name":"Edit","tool_input":{"file_path":"$TMP/askrepo/docs/specs/two.md","old_string":"[미정]","new_string":"확정","replace_all":true}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~\[미정\] 확정 — .adr\.md. · \[미정\] 1→0개	{"tool_name":"Edit","tool_input":{"file_path":"$TMP/askrepo/docs/decisions/adr.md","old_string":"- [미정] 하나","new_string":"- 확정: 하나"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Edit","tool_input":{"file_path":"$TMP/askrepo/docs/specs/draft.md","old_string":"초안 문장입니다.","new_string":"고친 문장입니다."}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Edit","tool_input":{"file_path":"$TMP/askrepo/docs/specs/approved.md","old_string":"승인된 문장입니다.","new_string":"다듬은 문장입니다."}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Write","tool_input":{"file_path":"$TMP/askrepo/docs/specs/draft.md","content":"# Draft\n\n> 상태: Draft\n\n다시 쓴 초안.\n"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out=	{"tool_name":"Edit","tool_input":{"file_path":"$TMP/askrepo/docs/specs/two.md","old_string":"- [미정] 둘째","new_string":"- [미정] 둘째\n- [미정] 셋째"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askzero	0;out=	{"tool_name":"Edit","tool_input":{"file_path":"$TMP/askzero/docs/specs/draft.md","old_string":"> 상태: Draft","new_string":"> 상태: Approved"}}
+
+# 설정 파일 쓰기 — 채워진 뒤(빈칸 없음)에는 ASK_*와 무관하게 창, 이유에 바뀌는 키와 값. 파일이 없거나 빈칸이 남은 init 중에는 창 없음
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~설정 변경 — .TEST_CMD.: scripts/dev\.sh test → make verify	{"tool_name":"Edit","tool_input":{"file_path":"$TMP/askrepo/.claude/harness.conf","old_string":"TEST_CMD=scripts/dev.sh test","new_string":"TEST_CMD=make verify"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askrepo	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~설정 변경 — .SCOPE.: \. → src	{"tool_name":"Write","tool_input":{"file_path":"$TMP/askrepo/.claude/harness.conf","content":"SCOPE=src\nHARNESS_SELF_EDIT=1\nTEST_CMD=scripts/dev.sh test\nASK_COMMIT=1\nASK_DELETE=1\nASK_DEPS=1\nASK_SENSITIVE=1\nASK_SPEC=1\nCOMMIT_RE=\nCOMMIT_CHECK=\nCONTRACT_PATHS=\nDEPS_FILES=package.json **/pom.xml\nDEPS_ADD_CMD=npm install|pip install\nASK_PATHS=src/auth/** db/migrations/*\nSPEC_DIR=docs/specs\nDECISIONS_DIR=docs/decisions\n"}}
+ask-approval.sh	-	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~설정 변경 — .HARNESS_SELF_EDIT.: 1 → 0	{"tool_name":"Edit","tool_input":{"file_path":".claude/harness.conf","old_string":"HARNESS_SELF_EDIT=1","new_string":"HARNESS_SELF_EDIT=0"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askzero	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~설정 변경 — .TEST_CMD.	{"tool_name":"Edit","tool_input":{"file_path":"$TMP/askzero/.claude/harness.conf","old_string":"TEST_CMD=scripts/dev.sh test","new_string":"TEST_CMD=make verify"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askinit	0;out=	{"tool_name":"Edit","tool_input":{"file_path":"$TMP/askinit/.claude/harness.conf","old_string":"SCOPE=.","new_string":"SCOPE=src"}}
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/askbare	0;out=	{"tool_name":"Write","tool_input":{"file_path":"$TMP/askbare/.claude/harness.conf","content":"SCOPE=.\n"}}
+
+# 판정 불가 — 설정 깨짐(키=값이 아닌 줄 · ASK_* 값이 0/1이 아님)은 모든 호출에 ask · 입력 JSON 깨짐도 ask. 설정 없음은 엄격한 기본값(깨짐 아님)
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/broken-line.conf	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~판정 불가;out~harness\.conf	{"tool_name":"Bash","tool_input":{"command":"git status"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/broken-line.conf	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~판정 불가	{"tool_name":"Write","tool_input":{"file_path":"docs/a.md","content":"# a"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf;ASK_COMMIT=yes	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~판정 불가;out~harness\.conf	{"tool_name":"Bash","tool_input":{"command":"git status"}}
+ask-approval.sh	-;conf:none	0;out=	{"tool_name":"Bash","tool_input":{"command":"git status"}}
+ask-approval.sh	-;conf:none	0;out=	{"tool_name":"Write","tool_input":{"file_path":"docs/a.md","content":"# a"}}
+ask-approval.sh	-;conf:file=$REPO/scripts/hook-fixtures/ask/base.conf	0;out~"permissionDecision"[[:space:]]*:[[:space:]]*"ask";out~판정 불가	not json
+
+# ---- auto-format.sh (harness-plugin-delivery 스펙 — git pre-commit의 포맷을 맡는 공통 포맷 훅, 막지 않음) ----
+# 고친 파일이 설정 FORMAT_PATHS(glob, 공백 구분)에 맞으면 설정 FORMAT_CMD를 프로젝트 폴더에서 돌린다. 어떤 입력에도 exit 0
+auto-format.sh	-;FORMAT_CMD=echo ran >$TMP/fmt-ran;FORMAT_PATHS=src/**/*.ts *.py	0;out=;nofile:$TMP/fmt-ran	{"tool_name":"Write","tool_input":{"file_path":"docs/a.md","content":"x"}}
+auto-format.sh	-;FORMAT_CMD=echo ran >$TMP/fmt-ran;FORMAT_PATHS=src/**/*.ts *.py	0;out=;file:$TMP/fmt-ran~^ran$	{"tool_name":"Edit","tool_input":{"file_path":"src/app/main.ts","old_string":"a","new_string":"b"}}
+auto-format.sh	-;FORMAT_CMD=;FORMAT_PATHS=src/**/*.ts	0;out=	{"tool_name":"Write","tool_input":{"file_path":"src/app/main.ts","content":"x"}}
+auto-format.sh	-;FORMAT_CMD=false;FORMAT_PATHS=*.py	0;out~포맷 실패	{"tool_name":"Write","tool_input":{"file_path":"a.py","content":"x"}}
+auto-format.sh	-;FORMAT_CMD=touch $TMP/fmt-ran;FORMAT_PATHS=src/**/*.ts	0;out=	not json

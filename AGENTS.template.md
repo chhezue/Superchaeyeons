@@ -48,7 +48,6 @@
 
 ```bash
 {최초 셋업}
-./scripts/install-git-hooks.sh   # 최초 1회 — pre-commit·commit-msg 훅 설치
 scripts/dev.sh test              # 전체 테스트 ({{테스트 명령}}) — 실제 명령은 scripts/dev.conf
 scripts/dev.sh build             # 빌드
 scripts/dev.sh start             # 의존 서비스 + 앱 기동, 헬스 확인까지 (stop · status · logs)

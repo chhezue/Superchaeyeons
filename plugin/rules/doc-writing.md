@@ -10,7 +10,7 @@ paths:
 
 독자가 원하는 정보를 빨리 찾고 한 번에 이해하게 쓰는 기준이다. `{{문서 루트}}`·`.claude/`의 `.md`와 이슈·PR 본문(`paths:`로는 잡히지 않지만 같은 기준)에 적용한다. 채팅·완료 보고·`refactor-log.md` 요약은 `core-reporting.md`, 코드 주석은 `core-code-comments.md`가 따로 정한다. 원칙은 [toss/technical-writing](https://github.com/toss/technical-writing)(CC BY-NC-SA 4.0)을 참고해 다시 썼다 — **원문 문장을 옮기지 않는다.**
 
-**기계 판정:** ⚙ 표시 항목은 `scripts/check-doc-style.sh`가 잡는다. 오류(E)면 pre-commit이 커밋을 막고, 경고(W)는 막지 않는다. 패턴은 `scripts/doc-style-patterns.txt`에 있고, 오탐이면 스크립트가 아니라 그 파일을 고친다. 판단이 필요한 항목(유형 적합성·개요가 실제 요약인지·근거 없는 단정)은 `doc-reviewer`가 새 문서나 50줄 이상 고친 문서에서 advisory로 본다.
+**기계 판정:** ⚙ 표시 항목은 `scripts/check-doc-style.sh`가 잡는다. 오류(E)면 커밋 승인 창 훅이 커밋을 막고, 경고(W)는 막지 않는다. 패턴은 `scripts/doc-style-patterns.txt`에 있고, 오탐이면 스크립트가 아니라 그 파일을 고친다. 판단이 필요한 항목(유형 적합성·개요가 실제 요약인지·근거 없는 단정)은 `doc-reviewer`가 새 문서나 50줄 이상 고친 문서에서 advisory로 본다.
 
 ## 1. 유형을 먼저 정한다
 

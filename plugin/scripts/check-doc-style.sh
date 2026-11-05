@@ -4,7 +4,7 @@
 # 사용:
 #   plugin/scripts/check-doc-style.sh <file.md> [...]      # 지정한 마크다운 파일 검사
 #   plugin/scripts/check-doc-style.sh --all                # docs/ · .claude/ · 루트 *.md 전부
-#   plugin/scripts/check-doc-style.sh --staged             # git stage에 있는 *.md만 (pre-commit이 쓴다)
+#   plugin/scripts/check-doc-style.sh --staged             # git stage에 있는 *.md만
 #
 # 판정 (E = exit 1 · W = 경고만):
 #   E  H4(####) 이상 제목 — 문서를 나눌 신호            (doc-writing "한 문서는 하나의 주제")

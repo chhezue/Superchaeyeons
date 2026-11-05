@@ -20,7 +20,7 @@ AUDIT_DIR	slot	{{감사 로그}}	감사·리팩터 기록 폴더
 DEPLOY_SSOT	slot	{{배포 SSOT}}	배포 SSOT 문서
 TEST_CMD	slot	{{테스트 명령}}	전체 테스트 명령. 하네스 기본은 플러그인 scripts/dev.sh test — deny-unverified-completion.sh가 이 명령의 실행 기록을 본다
 BUILD_CMD	slot	{{빌드 명령}}	빌드 명령 (보통 scripts/dev.sh build)
-FORMAT_CMD	slot	{{포맷 명령}}	포맷 명령 (보통 scripts/dev.sh fmt) — 비어 있거나 (없음)이면 포맷하지 않는다
+FORMAT_CMD	slot	{{포맷 명령}}	포맷 명령 (보통 scripts/dev.sh fmt — 첫 단어가 프로젝트에 없고 플러그인에 있으면 플러그인 쪽). 비어 있거나 (없음)이면 포맷하지 않는다
 DEPS_CMD	slot	{{의존성 조회}}	의존성 조회 명령
 BRANCH_FORMAT	slot	{{브랜치명 형식}}	브랜치 이름 형식
 COMMIT_FORMAT	slot	{{커밋 메시지 형식}}	커밋 메시지 형식(사람이 읽는 꼴)
@@ -31,6 +31,7 @@ FLAG_GENERATED_DOCS	flag	생성 문서 검증	1이면 core-guardrails §1.6 적�
 HARNESS_SELF_EDIT	flag	하네스 자기 수정	1이면 에이전트가 하네스 훅·설정을 고칠 수 있다(하네스 원본 저장소만). 0이면 deny-out-of-scope-write.sh가 막는다
 POLISH_ENABLED	flag	Gemini 다듬기	1이면 스킬이 사람용 문서·메시지를 polish-with-gemini.sh로 다듬는다
 COMMIT_RE	hook	커밋 메시지 정규식	{{커밋 메시지 형식}}을 판정하는 확장 정규식(ERE). 비어 있으면 형식을 검사하지 않는다
+COMMIT_CHECK	hook	커밋 전 검사 명령	승인 창을 띄우기 전에 돌릴 검사 명령. 실패하면 커밋을 막는다. 비어 있으면 돌리지 않는다. 프로젝트 폴더에서 돌고, 첫 단어가 프로젝트에 없는 상대 경로인데 플러그인 폴더에 있으면 플러그인 쪽을 부른다(예: scripts/dev.sh test)
 FORMAT_PATHS	hook	포맷 대상 경로	FORMAT_CMD를 돌릴 파일 glob(공백 구분)
 CONTRACT_PATHS	hook	API 계약 파일	커밋 승인 창이 이유에 적을 계약 파일 glob(공백 구분)
 DEPS_FILES	hook	의존성 선언 파일	고치면 승인 창을 띄울 빌드 선언 파일 glob(공백 구분)

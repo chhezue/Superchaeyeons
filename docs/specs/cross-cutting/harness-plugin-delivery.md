@@ -3,6 +3,7 @@
 > 상태: Approved (2026-10-27 사용자 승인)
 > MVP: In scope
 > 관련 BR: N/A
+> 공동 지원 확장: [Claude Code·Codex 공동 지원](codex-harness-delivery.md) — 이 문서의 Claude 계약은 유지한다
 
 ## 목표
 

@@ -783,3 +783,93 @@ auto-format.sh	-;FORMAT_CMD=echo ran >$TMP/fmt-ran;FORMAT_PATHS=src/**/*.ts *.py
 auto-format.sh	-;FORMAT_CMD=;FORMAT_PATHS=src/**/*.ts	0;out=	{"tool_name":"Write","tool_input":{"file_path":"src/app/main.ts","content":"x"}}
 auto-format.sh	-;FORMAT_CMD=false;FORMAT_PATHS=*.py	0;out~포맷 실패	{"tool_name":"Write","tool_input":{"file_path":"a.py","content":"x"}}
 auto-format.sh	-;FORMAT_CMD=touch $TMP/fmt-ran;FORMAT_PATHS=src/**/*.ts	0;out=	not json
+
+# ---- deny-codex-tool.py (공동 지원 M4 — Codex 입력·전체 패치 경로를 기존 판정에 연결) ----
+# JSON cwd와 tool_input.command를 검사한다. 정상·위반·판정 불가를 실제 편집 없이 판정한다.
+deny-codex-tool.py	-	0	{"cwd":"$REPO","tool_name":"Bash","tool_input":{"command":"git status"}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"Bash","tool_input":{"command":"git reset --hard"}}
+deny-codex-tool.py	sub	0	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: sub/new.txt\n+new\n*** End Patch"}}
+deny-codex-tool.py	sub	0	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: $REPO/sub/new.txt\n+new\n*** End Patch"}}
+deny-codex-tool.py	sub	0	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: sub/existing.txt\n@@\n-old\n+new\n*** End Patch"}}
+deny-codex-tool.py	sub	0	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Delete File: sub/obsolete.txt\n*** End Patch"}}
+deny-codex-tool.py	sub	0	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: sub/old.txt\n*** Move to: sub/new.txt\n@@\n-old\n+new\n*** End Patch"}}
+deny-codex-tool.py	sub	0	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: sub/a.txt\n+one\n*** Update File: sub/b.txt\n@@\n old\n-old2\n+new2\n*** Delete File: sub/c.txt\n*** End Patch"}}
+deny-codex-tool.py	sub	0	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: sub/path with spaces.txt\n+new\n*** End Patch"}}
+deny-codex-tool.py	sub	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: other/new.txt\n+new\n*** End Patch"}}
+deny-codex-tool.py	sub	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: sub/a.txt\n+one\n*** Add File: other/b.txt\n+two\n*** End Patch"}}
+deny-codex-tool.py	sub	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: other/a.txt\n+one\n*** Add File: sub/b.txt\n+two\n*** End Patch"}}
+deny-codex-tool.py	sub	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: sub/old.txt\n*** Move to: other/new.txt\n@@\n-old\n+new\n*** End Patch"}}
+deny-codex-tool.py	sub	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: other/old.txt\n*** Move to: sub/new.txt\n@@\n-old\n+new\n*** End Patch"}}
+deny-codex-tool.py	sub	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Delete File: other/obsolete.txt\n*** End Patch"}}
+deny-codex-tool.py	sub	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: sub/../other/new.txt\n+new\n*** End Patch"}}
+deny-codex-tool.py	.	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: ../outside.txt\n+new\n*** End Patch"}}
+deny-codex-tool.py	.	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: $TMP/outside.txt\n+new\n*** End Patch"}}
+deny-codex-tool.py	.	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: /etc/hosts\n@@\n-old\n+new\n*** End Patch"}}
+deny-codex-tool.py	.;self=0	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: .codex/config.toml\n@@\n-old\n+new\n*** End Patch"}}
+deny-codex-tool.py	.;self=0	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: .codex/hooks.json\n@@\n-old\n+new\n*** End Patch"}}
+deny-codex-tool.py	.;self=0	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: .codex/rules/local.rules\n@@\n-old\n+new\n*** End Patch"}}
+deny-codex-tool.py	.;self=0	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: .codex/agents/researcher.toml\n@@\n-old\n+new\n*** End Patch"}}
+deny-codex-tool.py	.;self=0	0	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: app.txt\n@@\n-old\n+new\n*** End Patch"}}
+deny-codex-tool.py	.;self=1	0	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: .codex/config.toml\n@@\n-old\n+new\n*** End Patch"}}
+deny-codex-tool.py	-	2
+deny-codex-tool.py	-	2	not json
+deny-codex-tool.py	-	2	{}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{}}
+deny-codex-tool.py	-	2	{"tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: sub/a.txt\n+new\n*** End Patch"}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"unknown-tool","tool_input":{"command":"git status"}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"Bash","tool_input":{"command":null}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":""}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n\n*** End Patch"}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Add File: sub/a.txt\n+new\n*** End Patch"}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: sub/a.txt\n+new"}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch extra\n*** Add File: sub/a.txt\n+new\n*** End Patch"}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Unknown File: sub/a.txt\n+new\n*** End Patch"}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: sub/a.txt\nnot-prefixed\n*** End Patch"}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: sub/a.txt\n@@\nnot-prefixed\n*** End Patch"}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: sub/a.txt\n-old\n+new\n*** End Patch"}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Add File: \n+new\n*** End Patch"}}
+deny-codex-tool.py	-	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Delete File: sub/a.txt\n+unexpected\n*** End Patch"}}
+
+deny-codex-tool.py	.	2	{"cwd": "$TMP/codex-root", "tool_name": "apply_patch", "tool_input": {"command": "*** Begin Patch\n*** Add File: outside/escape.txt\n+new\n*** End Patch"}}
+deny-codex-tool.py	.;self=0	2	{"cwd": "$REPO", "tool_name": "apply_patch", "tool_input": {"command": "*** Begin Patch\n*** Add File: .codex/config.toml \n+x\n*** End Patch"}}
+deny-codex-tool.py	.;self=0	2	{"cwd": "$REPO", "tool_name": "apply_patch", "tool_input": {"command": "*** Begin Patch\n*** Update File: app.txt\n*** Move to: .codex/config.toml \n@@\n-a\n+b\n*** End Patch"}}
+deny-codex-tool.py	.;self=0;env:CLAUDE_PROJECT_DIR=$TMP/codex-unrelated	2	{"cwd": "$REPO", "tool_name": "apply_patch", "tool_input": {"command": "*** Begin Patch\n*** Update File: .codex/config.toml\n@@\n-a\n+b\n*** End Patch"}}
+
+# ---- check-codex-approval.py (M5 — 사전 판정만, 승인 대상 행동을 실행하지 않음) ----
+# 공통 승인 필요 판정을 Codex용 allow/confirm/deny와 0/3/2로 변환한다. 런타임 ask 응답은 내보내지 않는다.
+check-codex-approval.py	-	0;out~"decision"[[:space:]]*:[[:space:]]*"allow";out!~permissionDecision	{"tool_name": "Bash", "tool_input": {"command": "git status"}}
+check-codex-approval.py	-	3;out~"decision"[[:space:]]*:[[:space:]]*"confirm";out!~permissionDecision	{"tool_name": "Bash", "tool_input": {"command": "git push origin feature/test"}}
+check-codex-approval.py	-;ASK_COMMIT=0	0;out~"decision"[[:space:]]*:[[:space:]]*"allow";out!~permissionDecision	{"tool_name": "Bash", "tool_input": {"command": "git push origin feature/test"}}
+check-codex-approval.py	-;COMMIT_RE=^Feat:;COMMIT_CHECK=	2;out~"decision"[[:space:]]*:[[:space:]]*"deny";out!~permissionDecision	{"tool_name": "Bash", "tool_input": {"command": "git commit -m \"Bad: message\""}}
+check-codex-approval.py	-;COMMIT_CHECK=false	2;out~"decision"[[:space:]]*:[[:space:]]*"deny";out!~permissionDecision	{"tool_name": "Bash", "tool_input": {"command": "git commit -m \"Feat: test\""}}
+check-codex-approval.py	-;DEPS_ADD_CMD=npm install	3;out~"decision"[[:space:]]*:[[:space:]]*"confirm";out!~permissionDecision	{"tool_name": "Bash", "tool_input": {"command": "npm install example-package"}}
+check-codex-approval.py	-;DEPS_ADD_CMD=npm install	0;out~"decision"[[:space:]]*:[[:space:]]*"allow";out!~permissionDecision	{"tool_name": "Bash", "tool_input": {"command": "npm ls"}}
+check-codex-approval.py	-;DEPS_ADD_CMD=npm install;ASK_DEPS=0	0;out~"decision"[[:space:]]*:[[:space:]]*"allow";out!~permissionDecision	{"tool_name": "Bash", "tool_input": {"command": "npm install example-package"}}
+check-codex-approval.py	-;DEPS_FILES=package.json	3;out~"decision"[[:space:]]*:[[:space:]]*"confirm";out!~permissionDecision	{"tool_name": "Write", "tool_input": {"file_path": "package.json", "content": "{}"}}
+check-codex-approval.py	-;DEPS_FILES=package.json;ASK_DEPS=0	0;out~"decision"[[:space:]]*:[[:space:]]*"allow";out!~permissionDecision	{"tool_name": "Write", "tool_input": {"file_path": "package.json", "content": "{}"}}
+check-codex-approval.py	-;ASK_PATHS=auth/**	3;out~"decision"[[:space:]]*:[[:space:]]*"confirm";out!~permissionDecision	{"tool_name": "Write", "tool_input": {"file_path": "auth/login.ts", "content": "new"}}
+check-codex-approval.py	-;ASK_PATHS=auth/**	3;out~"decision"[[:space:]]*:[[:space:]]*"confirm";out!~permissionDecision	{"tool_name": "Edit", "tool_input": {"file_path": "auth/login.ts", "old_string": "old", "new_string": "new"}}
+check-codex-approval.py	-;ASK_PATHS=auth/**;ASK_SENSITIVE=0	0;out~"decision"[[:space:]]*:[[:space:]]*"allow";out!~permissionDecision	{"tool_name": "Write", "tool_input": {"file_path": "auth/login.ts", "content": "new"}}
+check-codex-approval.py	-;DEPS_FILES=package.json;ASK_PATHS=auth/**	0;out~"decision"[[:space:]]*:[[:space:]]*"allow";out!~permissionDecision	{"tool_name": "Write", "tool_input": {"file_path": "src/view.ts", "content": "new"}}
+check-codex-approval.py	-	0;out~"decision"[[:space:]]*:[[:space:]]*"allow";out!~permissionDecision;nofile:$TMP/codex-approval-must-not-run	{"tool_name": "Bash", "tool_input": {"command": "touch $TMP/codex-approval-must-not-run"}}
+check-codex-approval.py	-	3;out~"decision"[[:space:]]*:[[:space:]]*"confirm";out!~permissionDecision	not json
+check-codex-approval.py	-	3;out~"decision"[[:space:]]*:[[:space:]]*"confirm";out!~permissionDecision	{}
+
+# Codex 비차단 세션 연결 — 잘못된 입력도 경고 후 종료한다.
+codex-context.py rules	-	0;out~systemMessage	not json
+codex-context.py pre	-	0;out~systemMessage	not json
+codex-context.py config	-	0;out~systemMessage	not json
+codex-context.py post	-	0;out~systemMessage	not json
+codex-context.py stop	-	0;out~systemMessage	not json
+codex-context.py prompt	-	0;out~systemMessage	not json
+
+# M5 — 쓰기 내용이 빠진 입력을 일반 작업 허용으로 간주하지 않는다.
+check-codex-approval.py	-	3;out~"decision"[[:space:]]*:[[:space:]]*"confirm";out!~permissionDecision	{"tool_name": "Write", "tool_input": {"file_path": "src/missing-body.ts"}}
+check-codex-approval.py	-	3;out~"decision"[[:space:]]*:[[:space:]]*"confirm";out!~permissionDecision	{"tool_name": "Edit", "tool_input": {"file_path": "src/missing-body.ts"}}
+
+# 도구별 기록 연결 — 알 수 없는 도구 이름을 조용히 Claude 상태로 쓰지 않는다.
+auto-correction-queue.sh	-;env:HARNESS_RUNTIME=invalid	0;out~systemMessage	{}
+auto-correction-notice.sh	-;env:HARNESS_RUNTIME=invalid	0;out~systemMessage	{}
+
+# 연결이 남기는 검증 증거도 자기 수정 보호 대상이다.
+deny-codex-tool.py	.;self=0	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: .codex/harness-state/session.json\n@@\n-old\n+new\n*** End Patch"}}

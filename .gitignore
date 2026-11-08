@@ -14,3 +14,8 @@ docs/portfolio/
 
 # Gemini 글 다듬기 — 기준판에 문서 내용이 들어간다 (gemini-text-polish 스펙)
 .claude/polish/
+
+# Codex 도구별 로컬 검증·회고·다듬기 상태
+.codex/harness-state/
+.codex/corrections/
+.codex/polish/

@@ -21,7 +21,7 @@
 | 기능 스펙 | `write-spec` 스킬 (범위를 미룰 때의 Draft 포함) | `{{스펙 저장소}}/{unit}/{kebab-case}.md` | 참조 | 골격은 하네스 플러그인의 `skills/write-spec/references/spec-template.md` (참조 유형의 작업 산출물 판) |
 | 아키텍처 감사 | `refactor-safely` 스킬 (Audit 단계) | `{{감사 로그}}/{unit}/{NNN}-{kebab-topic}.md` (작업 단위 안에서 001부터 증가) | 문제 해결 | 골격은 하네스 플러그인의 `skills/refactor-safely/references/audit-template.md` (문제 해결 유형의 작업 산출물 판) |
 | 리팩터 반영 이력 | `refactor-safely` 스킬 (G4 Report) | `{{감사 로그}}/{unit}/refactor-log.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
-| 하네스 회고 백로그 | `improve-harness` 스킬 | `{{문서 루트}}/audits/harness-retro.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
+| 하네스 회고 백로그 | `improve-harness` 스킬 | `{{문서 루트}}/audits/harness-retro.md`(Claude) · `{{문서 루트}}/audits/harness-retro-codex.md`(Codex) | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 아키텍처 결정 (ADR) | 사용자 승인 후 수동 작성 | `{{결정 기록}}/{번호}-{kebab-case}.md` | 설명 | [`explanation-doc.md`](explanation-doc.md) "작업 산출물로 쓸 때" |
 | 하네스 슬롯 값 | `init-harness` 스킬 | `.claude/harness.conf` | 참조 | 키 목록은 하네스 플러그인의 `scripts/harness-keys.txt` |
 | 작업 보고서 (`report.md`) | G4 — L 규모(3파일 이상·API·DB) 작업 끝에 | `{{문서 루트}}/reports/{YYYY-MM-DD}-{kebab-topic}.md` | 참조 | [`reference-doc.md`](reference-doc.md) "작업 보고서" |

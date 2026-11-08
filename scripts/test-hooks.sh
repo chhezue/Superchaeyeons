@@ -30,6 +30,11 @@ only="${1:-}"
 tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/hook-test.XXXXXX")"
 trap 'rm -r -- "$tmpdir"' EXIT
 
+# Codex 패치가 저장소 밖을 가리키는 링크를 통과시키지 않는지 보는 임시 작업 폴더.
+mkdir -p "$tmpdir/codex-root"
+ln -s "$tmpdir" "$tmpdir/codex-root/outside"
+mkdir -p "$tmpdir/codex-unrelated/.claude"
+printf 'SCOPE=.\nHARNESS_SELF_EDIT=1\n' >"$tmpdir/codex-unrelated/.claude/harness.conf"
 pass=0; fail=0; n=0
 # conf_set <프로젝트> <키> <값> — 그 프로젝트 설정 파일의 키 줄을 바꾼다(없으면 더한다). 설정 파일이 없으면(conf:none) 그대로 둔다
 conf_set() {
@@ -38,7 +43,7 @@ conf_set() {
 	grep -v "^$2=" "$f" >"$f.x"; printf '%s=%s\n' "$2" "$3" >>"$f.x"; mv "$f.x" "$f"
 }
 # 케이스 값 안의 $REPO·$HOME·$TMP를 실제 경로로 바꾼다 ($TMP는 이 실행 동안 케이스끼리 공유하는 임시 폴더라 앞 케이스가 남긴 상태를 뒤 케이스가 본다)
-expand() { local v="$1"; v="${v//\$REPO/$repo_root}"; v="${v//\$HOME/$HOME}"; v="${v//\$TMP/$tmpdir}"; printf '%s' "$v"; }
+expand() { local v="$1"; v="${v//\$REPO/${case_repo:-$repo_root}}"; v="${v//\$HOME/$HOME}"; v="${v//\$TMP/$tmpdir}"; printf '%s' "$v"; }
 # 기대 열의 `;` 뒤 검사 하나를 판정한다. 실패하면 이유를 출력하고 1
 check() {
 	local c="$1" path pat want got
@@ -74,6 +79,9 @@ while IFS=$'\t' read -r spec scope expected stdin; do
 	# 프로젝트 설정: 케이스마다 견본(conf_base)을 복사한 임시 프로젝트를 만들어 CLAUDE_PROJECT_DIR로 넘긴다 — 훅은 상수 대신
 	# 그 프로젝트의 .claude/harness.conf를 읽는다. 케이스가 `;env:CLAUDE_PROJECT_DIR=…`를 주면 그 값이 이긴다(뒤에 붙는다).
 	proj="$tmpdir/proj.$n"; mkdir -p "$proj/.claude"; cp "$conf_base" "$proj/.claude/harness.conf"
+	case_repo="$repo_root"
+	# Codex 입력 cwd와 설정 소유자를 같은 임시 프로젝트로 맞춘다.
+	[ "$hook" = "deny-codex-tool.py" ] && case_repo="$proj"
 	# Claude Code처럼 플러그인 폴더도 넘긴다 — 임시 복사본으로 도는 훅이 자기 위치로 플러그인을 찾지 못하므로
 	run_env=("CLAUDE_PROJECT_DIR=$proj" "CLAUDE_PLUGIN_ROOT=$repo_root/plugin")
 	# scope 열: `-` 원본 · `값` 설정 키 SCOPE · `;self=N`·`;test=CMD`는 설정 키 HARNESS_SELF_EDIT·TEST_CMD
@@ -83,6 +91,12 @@ while IFS=$'\t' read -r spec scope expected stdin; do
 	# `;env:이름=값`은 그 실행에만 환경 변수를 준다 · `;cp:원본=대상`은 실행 전에 파일·폴더를 복사한다(테스트가 저장소 파일을 고치지 않게)
 	if [ "$scope" != "-" ]; then
 		run="$tmpdir/$hook.$n"
+		if [ "$hook" = "deny-unverified-completion.sh" ]; then
+			# 완료 정책은 실행 파일의 형제 scripts/ 원본에서 읽는다. 복사 fixture도 설치 구조를 유지한다.
+			mkdir -p "$tmpdir/stop.$n/hooks" "$tmpdir/stop.$n/scripts"
+			cp "$repo_root/plugin/scripts/completion-policy.py" "$tmpdir/stop.$n/scripts/"
+			run="$tmpdir/stop.$n/hooks/$hook"
+		fi
 		cp "$src" "$run"
 		[ "$scope_val" != "-" ] && conf_set "$proj" SCOPE "$scope_val"
 		IFS=';' read -r -a extra_list <<<"$extras"
@@ -171,7 +185,13 @@ if [ -z "$only" ] || [[ "$only" == *deny-* ]]; then
 		hook="$(basename "$src")"
 		[ -n "$only" ] && [ "$hook" != "$only" ] && continue
 		n=$((n + 1))
-		run="$tmpdir/$hook.hijack"; cp "$src" "$run"; chmod +x "$run"
+		run="$tmpdir/$hook.hijack"
+		if [ "$hook" = "deny-unverified-completion.sh" ]; then
+			mkdir -p "$tmpdir/stop.hijack/hooks" "$tmpdir/stop.hijack/scripts"
+			cp "$repo_root/plugin/scripts/completion-policy.py" "$tmpdir/stop.hijack/scripts/"
+			run="$tmpdir/stop.hijack/hooks/$hook"
+		fi
+		cp "$src" "$run"; chmod +x "$run"
 		# 설정은 범위 sub(쓰기 훅이 위반을 보게) · Stop 훅은 transcript 속 편집이 저장소 안이어야 하므로 프로젝트를 저장소로 둔다
 		proj="$tmpdir/proj.hijack"; mkdir -p "$proj/.claude"; cp "$conf_base" "$proj/.claude/harness.conf"; conf_set "$proj" SCOPE sub
 		case "$hook" in
@@ -275,6 +295,24 @@ PY
 		fail=$((fail + 1)); printf '  FAIL  %-28s scope=-        (hooks.json·settings.json 등록과 훅 파일이 어긋남)\n' "(등록 대조)"
 		printf '%s\n' "$registry_out" | sed 's/^/          /'
 	fi
+fi
+
+if [ -z "$only" ] || [ "$only" = "deny-codex-tool.py" ]; then
+ if scripts/check-plugin.sh --codex "$repo_root/plugin" >"$tmpdir/codex-registry.out" 2>&1; then
+  pass=$((pass + 1)); echo "  ok    Codex 별도 등록 대조"
+ else
+  fail=$((fail + 1)); cat "$tmpdir/codex-registry.out"
+ fi
+ # 등록된 명령을 그대로 실행한다. Python 런타임 부재도 exit 2로 바뀌어야 한다.
+ cmd="$(python3 -I -c 'import json; print(json.load(open("plugin/hooks/codex.json"))["hooks"]["PreToolUse"][0]["hooks"][0]["command"])')"
+ mkdir -p "$tmpdir/codex-nopy"
+ printf '#!/bin/sh\nexit 127\n' >"$tmpdir/codex-nopy/python3"; chmod +x "$tmpdir/codex-nopy/python3"
+ env PATH="$tmpdir/codex-nopy:$PATH" PLUGIN_ROOT="$repo_root/plugin" /bin/sh -c "$cmd" </dev/null >"$tmpdir/out" 2>"$tmpdir/err"
+ if [ "$?" -eq 2 ]; then
+  pass=$((pass + 1)); echo "  ok    Codex 등록 명령의 Python 부재 차단"
+ else
+  fail=$((fail + 1)); echo "  FAIL  Codex 등록 명령의 Python 부재 차단"
+ fi
 fi
 
 echo

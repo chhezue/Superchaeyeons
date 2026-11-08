@@ -33,21 +33,25 @@ set -u
 ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 # 분석 지시문은 플러그인 폴더에 있다 — 훅이 부를 때는 CLAUDE_PLUGIN_ROOT, 사람이 부를 때는 이 파일의 상위 폴더
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-STORE="$ROOT/.claude/corrections"
+HARNESS_RUNTIME="${HARNESS_RUNTIME:-claude}"
+case "$HARNESS_RUNTIME" in claude|codex) ;; *) echo "지원하지 않는 하네스 도구" >&2; exit 2 ;; esac
+STORE="$ROOT/.$HARNESS_RUNTIME/corrections"
 TRANSCRIPTS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/$(printf '%s' "$ROOT" | sed 's/[^A-Za-z0-9]/-/g')"
+[ "$HARNESS_RUNTIME" = codex ] && TRANSCRIPTS="$STORE/sessions"
 doc_root=docs
 if [ -f "$ROOT/.claude/harness.conf" ]; then
 	v="$(sed -n 's/^DOC_ROOT=//p' "$ROOT/.claude/harness.conf" | tail -n 1 | tr -d '\r')"
 	case "$v" in '' | '{'*'}' | '(없음)'*) ;; *) doc_root="${v%/}" ;; esac
 fi
 LEDGER="$ROOT/$doc_root/audits/harness-retro.md"
+[ "$HARNESS_RUNTIME" = codex ] && LEDGER="$ROOT/$doc_root/audits/harness-retro-codex.md"
 CLAUDE_BIN="claude"
 MODEL="sonnet"
 BUDGET="1"
 
 command -v python3 >/dev/null 2>&1 || { echo "python3가 필요합니다" >&2; exit 2; }
 
-export ROOT PLUGIN_ROOT STORE TRANSCRIPTS LEDGER CLAUDE_BIN MODEL BUDGET
+export ROOT PLUGIN_ROOT STORE TRANSCRIPTS LEDGER CLAUDE_BIN MODEL BUDGET HARNESS_RUNTIME
 python3 - "$@" <<'PY'
 import datetime, json, os, re, subprocess, sys, time
 
@@ -120,6 +124,12 @@ def digest(path):
                 continue
             if not isinstance(d, dict):
                 bad += 1
+                continue
+            if ENV.get("HARNESS_RUNTIME") == "codex":
+                if d.get("type") in ("harness_feedback", "harness_user_message") and isinstance(d.get("text"), str):
+                    add(d["text"], d.get("timestamp"))
+                else:
+                    bad += 1
                 continue
             if d.get("type") == "attachment" and isinstance(d.get("attachment"), dict):
                 for t in queued_texts(d["attachment"]):
@@ -315,6 +325,8 @@ def run(argv):
     if not model:
         print("모델을 정하지 않았다 — 첫 실행은 --model sonnet과 --model opus로 비교하고, 고른 모델을 이 스크립트의 MODEL에 적는다", file=sys.stderr)
         return 2
+    if ENV.get("HARNESS_RUNTIME") == "codex" and any(not re.fullmatch(r"[A-Za-z0-9_-]+", sid) for sid in picked):
+        print("Codex 세션 ID 형식이 잘못됐습니다", file=sys.stderr); return 1
     trial = bool(picked)
     kind = "시험" if trial else "정기"
     os.makedirs(os.path.join(STORE, "digests"), exist_ok=True)
@@ -384,7 +396,7 @@ def run(argv):
         log_run(result="비용 상한", **common)
         print(f"비용 상한(${budget})에 걸렸다 — 쓴 비용 ${cost}. 후보를 쓰지 않고 마지막 분석 시각도 옮기지 않는다")
         return 1
-    out = None if res.get("is_error") or "_error" in res else parse_output(res)
+    out = None if p is None or p.returncode != 0 or res.get("is_error") or "_error" in res else parse_output(res)
     if out is None or not isinstance(out.get("candidates"), list):
         log_run(result="실패", **common)
         detail = res.get("_error") or res.get("subtype") or (p.stderr.strip()[:200] if p else "") or "결과 형식을 읽지 못함"
@@ -437,6 +449,23 @@ def run(argv):
     return 0
 
 def main(argv):
+    if ENV.get("HARNESS_RUNTIME") == "codex":
+        at, boundary = os.path.abspath(STORE), os.path.abspath(ROOT)
+        while at != boundary:
+            if os.path.islink(at):
+                print("Codex 회고 상태의 심볼릭 링크를 거절합니다", file=sys.stderr); return 1
+            parent = os.path.dirname(at)
+            if parent == at:
+                print("Codex 회고 상태가 프로젝트 밖입니다", file=sys.stderr); return 1
+            at = parent
+        if os.path.isdir(STORE):
+            for folder, dirs, files in os.walk(STORE, followlinks=False):
+                if any(os.path.islink(os.path.join(folder, item)) for item in dirs + files):
+                    print("Codex 회고 기록의 심볼릭 링크를 거절합니다", file=sys.stderr); return 1
+        if argv and argv[0] == "digest" and len(argv) == 2:
+            path = os.path.realpath(argv[1])
+            if os.path.commonpath([path, os.path.realpath(TRANSCRIPTS)]) != os.path.realpath(TRANSCRIPTS):
+                print("Codex 자체 정정 기록 경로가 아닙니다", file=sys.stderr); return 1
     if argv and argv[0] == "digest":
         if len(argv) != 2 or not os.path.isfile(argv[1]):
             print("사용: analyze-corrections.sh digest <대화 기록.jsonl>", file=sys.stderr); return 2

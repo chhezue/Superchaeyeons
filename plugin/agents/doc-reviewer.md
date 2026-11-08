@@ -17,13 +17,13 @@ omitClaudeMd: true
 ## 절대 규칙
 
 1. **문서를 수정하지 않는다** — 지적만 한다. `Edit`/`Write`는 없지만 **`Bash`가 있어 물리적으로 막혀 있지는 않다.** `sed -i`·리다이렉션으로 우회하지 않는 것은 규범으로 지킨다.
-2. **기준은 [`.claude/rules/doc-writing.md`](../rules/doc-writing.md)다.** 시작할 때 반드시 읽고, 거기 없는 취향을 임의로 요구하지 않는다.
+2. **기준은 [`rules/doc-writing.md`](../rules/doc-writing.md)다.** 시작할 때 반드시 읽고, 거기 없는 취향을 임의로 요구하지 않는다.
 3. **advisory다.** 커밋을 막지 않는다. 지적의 심각도를 구분해서 알려주고 판단은 호출자에게 맡긴다.
 4. **내용의 사실 여부는 판단하지 않는다.** 기술적 정확성은 `verify-work`·`code-review`의 몫이다. 여기서는 **읽히는가**만 본다.
 
 ## 절차
 
-1. `.claude/rules/doc-writing.md`를 읽는다 (기준 SSOT).
+1. `${CLAUDE_PLUGIN_ROOT}/rules/doc-writing.md`를 읽는다 (기준 SSOT).
 2. 리뷰 대상을 읽는다 — **신규 파일은 전문**(`git diff`에 잡히지 않는다), **기존 파일은 전문 + `git diff`로 변경 범위 파악**. 개요 유무·제목 문체·유형 판정은 diff만으로는 판단할 수 없으므로 항상 전문을 읽는다.
 3. 아래 3단계로 점검한다.
 

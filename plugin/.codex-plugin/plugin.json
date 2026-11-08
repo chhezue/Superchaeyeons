@@ -1,0 +1,6 @@
+{
+  "name": "superchaeyeons",
+  "description": "공통 하네스의 Codex 연결",
+  "skills": "./skills/",
+  "hooks": "./hooks/codex.json"
+}

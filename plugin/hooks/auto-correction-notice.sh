@@ -19,7 +19,13 @@
 # 훅 공통 규약의 예외: 알림용 훅이라 어떤 경우에도 exit 0. bash 3.2 내장 기능과 macOS 기본 명령만 쓴다.
 # Hook input: JSON with "transcript_path" on stdin.
 ROOT="${CLAUDE_PROJECT_DIR:-$PWD}"
-STORE="$ROOT/.claude/corrections"
+harness_runtime="${HARNESS_RUNTIME:-claude}"
+case "$harness_runtime" in
+claude) harness_state=.claude ;;
+codex) harness_state=.codex ;;
+*) printf '{"systemMessage":"회고 연결 경고 — 지원하지 않는 도구 이름"}\n'; exit 0 ;;
+esac
+STORE="$ROOT/$harness_state/corrections"
 ANALYZE="${CLAUDE_PLUGIN_ROOT:-${0%/*}/..}/scripts/analyze-corrections.sh"
 INTERVAL_MIN="10080"
 
@@ -35,6 +41,10 @@ input=$(cat)
 dir=""; cur=""
 if [[ $input =~ \"transcript_path\"[[:space:]]*:[[:space:]]*\"([^\"]*)\" ]]; then
 	dir="${BASH_REMATCH[1]%/*}"; cur="${BASH_REMATCH[1]##*/}"
+fi
+# Codex에서는 네이티브 transcript 경로를 따라가지 않고 자체 정정 기록만 센다.
+if [ "$harness_runtime" = codex ]; then
+	dir="$STORE/sessions"
 fi
 state="$STORE/last-analysis"
 
@@ -76,7 +86,7 @@ else
 	line="[회고] 회고 분석을 한 번도 돌리지 않았다 — $counts"
 fi
 if [ "$started" = 1 ]; then
-	line="$line — 주간 분석을 뒤에서 시작했다(결과는 다음 세션 알림, 로그 .claude/corrections/auto.log)"
+	line="$line — 주간 분석을 뒤에서 시작했다(결과는 다음 세션 알림, 로그 $harness_state/corrections/auto.log)"
 	hint="분석은 별도 프로세스가 돌린다. 이 세션에서 돌리지 않는다."
 elif [ "$started" = busy ]; then
 	line="$line — 주간 분석이 이미 돌고 있다"
@@ -85,7 +95,11 @@ elif [ "$candidates" != 0 ]; then
 	line="$line — improve-harness 스킬로 검토"
 	hint="검토할 후보가 있으니 사용자에게 improve-harness 스킬을 제안한다."
 else
-	line="$line — ${ANALYZE}로 분석"
+	if [ "$harness_runtime" = codex ]; then
+		line="$line — HARNESS_RUNTIME=codex ${ANALYZE}로 분석"
+	else
+		line="$line — ${ANALYZE}로 분석"
+	fi
 	hint="분석은 사용자가 따로 돌린다. 이 세션에서 돌리지 않는다."
 fi
 printf '{"systemMessage":"%s","hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"%s %s"}}\n' "$line" "$line" "$hint"

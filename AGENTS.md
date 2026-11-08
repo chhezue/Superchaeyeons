@@ -1,6 +1,6 @@
-# Superchaeyeons — Claude Code 하네스 템플릿
+# Superchaeyeons — Claude Code·Codex 하네스 템플릿
 
-Claude Code용 **하네스**(규칙·스킬·에이전트·훅·검사 스크립트) 템플릿 저장소다. 플러그인(`plugin/`)으로 배달해 새 프로젝트가 `init-harness` 스킬로 붙여 쓰는 것이 목적이고, 애플리케이션 코드는 없다. 여기서 하는 작업은 **하네스를 고치는 일**이다.
+Claude Code·Codex용 **하네스**(규칙·스킬·에이전트·훅·검사 스크립트) 템플릿 저장소다. 플러그인(`plugin/`)으로 배달해 새 프로젝트가 `init-harness` 스킬로 붙여 쓰는 것이 목적이고, 애플리케이션 코드는 없다. 여기서 하는 작업은 **하네스를 고치는 일**이다.
 
 ## 무엇이 들어 있나
 
@@ -11,7 +11,7 @@ Claude Code용 **하네스**(규칙·스킬·에이전트·훅·검사 스크립
 - **완료·통과를 말하기 전에 항상 `plugin/scripts/dev.sh test`** — 이 저장소의 `{{테스트 명령}}`이고 `scripts/verify.sh`를 부른다. 문서도 검사 대상이라 문서만 고친 작업도 돌린다 (`verify-work`의 "문서 전용은 생략 가능"보다 이 줄이 우선)
 - **`core-*.md`에 프로젝트 고유 사실을 넣지 않는다** — 경로면 슬롯, 정책이면 플래그, 둘 다 아니면 `local-*.md`. 슬롯·플래그는 core가 실제로 쓸 때만 늘린다
 - **구성 요소를 추가·삭제·개명하면 `.claude/rules/README.md`를 같은 턴에** 고친다 — `check-portability.sh`가 실물과 대조한다
-- **훅을 고치거나 우회 경로를 찾으면 `scripts/hook-cases.txt`에 케이스부터** 넣는다 — `deny-*`는 판정 불가(python3 없음 포함)도 막아야 하고, 새 훅은 `plugin/hooks/hooks.json`에 등록해야 통과한다
+- **훅을 고치거나 우회 경로를 찾으면 `scripts/hook-cases.txt`에 케이스부터** 넣는다 — `deny-*`는 판정 불가(python3 없음 포함)도 막아야 하고, 등록은 Claude `plugin/hooks/hooks.json`, Codex `plugin/hooks/codex.json`이다
 - **이 저장소만 `HARNESS_SELF_EDIT=1`** — 붙여 쓰는 프로젝트는 `init-harness`가 0으로 둔다
 - **프로젝트 고유 파일은 `local-*` 이름**을 쓴다 — 접두사가 검사기에 층을 알린다. `examples/`는 참고 자료이고 규칙이 아니다
-- 커밋은 `{Type}: {한글}`, 목적·주제별 최대 5개. **커밋 승인은 훅 승인 창이다** (`core-workflow.md` G4 · `.github/CONTRIBUTING.md`)
+- 커밋은 `{Type}: {한글}`, 목적·주제별 최대 5개. **커밋 승인은 Claude 창·Codex 명시적 확인이다** (`core-workflow.md` G4 · `.github/CONTRIBUTING.md`)

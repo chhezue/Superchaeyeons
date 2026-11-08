@@ -1,13 +1,13 @@
 ---
 name: init-harness
-description: 하네스를 붙이거나(설정이 비어 있다는 알림) .claude/harness.conf가 실제와 다를 때(재동기화) 사용. 저장소를 실측해 설정 값을 제안하고, 승인 후 harness.conf·settings.json·local-*.md를 채운다. 코드는 바꾸지 않는다.
+description: 저장소를 실측하고 Claude·Codex·양쪽 중 도구를 선택해 공통 설정과 도구별 연결을 채운다. 사용자 승인 후 적용하며 애플리케이션 코드는 바꾸지 않는다.
 ---
 
 # Harness Init — 하네스를 프로젝트에 붙이는 유일한 경로
 
 **이 스킬이 기본 동작과 다른 단 하나:** 축·슬롯·형식 값을 **물려받지 않고 저장소에서 실측한다.** 플러그인은 프로젝트 값을 갖고 오지 않는다 — 기존 저장소는 실측으로, 그린필드는 질문으로 채운다.
 
-**이 스킬은 `core-workflow.md` 사이클의 D 트랙이다.** 실측이 진입, 제안이 **G2 승인**, 채움 뒤 아래 산출물 체크리스트가 **G3 검증**이다. Invariant(작업 내내 참이어야 하는 것): **애플리케이션 코드를 한 줄도 바꾸지 않는다** — 산출물은 `.claude/harness.conf`·`.claude/settings.json`·`local-*`·`scripts/dev.conf`·`AGENTS.md`·`.gitignore`뿐이다.
+**이 스킬은 `core-workflow.md` 사이클의 D 트랙이다.** 실측이 진입, 제안이 **G2 승인**, 채움 뒤 아래 산출물 체크리스트가 **G3 검증**이다. Invariant(작업 내내 참이어야 하는 것): **애플리케이션 코드를 한 줄도 바꾸지 않는다** — 산출물은 공통 `.claude/harness.conf`·`scripts/dev.conf`·`AGENTS.md`·`.gitignore`와 선택한 도구의 프로젝트 설정·생성 역할·명령 규칙·`local-*`다.
 
 설정 키 목록은 `${CLAUDE_PLUGIN_ROOT}/scripts/harness-keys.txt`, 값을 적는 규칙(빈칸 `{…}`·`(없음) — 이유`·파일이 없거나 깨졌을 때)은 이 스킬 폴더의 `references/harness-conf.md`가 SSOT다. 먼저 둘을 읽는다.
 
@@ -20,6 +20,16 @@ description: 하네스를 붙이거나(설정이 비어 있다는 알림) .claud
 **생략 불가:** "앞의 프로젝트와 비슷하니 그 값을 쓰자"는 이 스킬을 깨뜨리는 것이다. 커밋 형식을 물려받았다가 963개 커밋을 세어보고서야 실제 관례가 다르다는 걸 안 사례가 계기다.
 
 ## Steps
+
+### 0. 사용할 도구 선택
+
+Claude / Codex / 둘 다 중 선택한다. 이미 도구 선택을 승인받았으면 반복해서 묻지 않는다. 공통 설정은 `.claude/harness.conf` 한 개이고, Codex만 선택해도 이 위치를 사용한다. 도구별 기록만 분리한다.
+
+이 스킬이 호출하는 `${CLAUDE_PLUGIN_ROOT}/scripts/configure-harness.py --project <프로젝트> --target claude|codex|both`는 설치 설정 변경안을 JSON으로 보여 준다. 기본은 미적용이며, 0단계에서는 제안만 만들고 적용하지 않는다. 아래 1·2단계 실측·승인으로 실제 값을 확정한 뒤 3단계에서 공통 설정을 채우고, 파일별 변경안과 충돌을 검토해 승인받은 연결에만 `--apply`를 붙인다. 스크립트의 빈칸 골격은 실측을 대신하지 않으며, 골격 생성만으로 초기화를 완료했다고 보고하지 않는다. 이미 있는 공통 설정·dev.conf·사용자 권한 배열은 보존한다.
+
+Codex는 프로젝트 `.codex/config.toml`의 marketplace·enabled, `.codex/agents/` 역할 3개와 `.codex/rules/harness.rules`를 생성한다. 역할 본문은 공통 agents/에서 생성하며 직접 관리하지 않고 플러그인 업데이트 뒤 이 스킬로 재동기화한다. 사용자 수정이 있는 생성 파일은 충돌로 보고 덮어쓰지 않는다. 명령 규칙은 지원하는 권한 경계에서만 보조하며 일반 편집 승인을 강제하지 않는다.
+
+**설정 생성·프로젝트 신뢰·플러그인 설치·훅 신뢰는 별개다.** 프로젝트 설정을 썼다는 이유로 설치·보호 완료라고 보고하지 않는다. 사용자 전역 설정이나 신뢰를 자동 변경하지 않는다. Codex 승인은 codex/INSTRUCTIONS.md의 사전 검사와 명시적 확인을 따른다. 아래 Claude settings 절은 Claude 또는 양쪽을 고른 경우에만 적용한다.
 
 ### 1. 실측 — 사람을 기다리지 않는다
 
@@ -49,11 +59,11 @@ description: 하네스를 붙이거나(설정이 비어 있다는 알림) .claud
     - `CONTRACT_PATHS`(API 계약 파일 — 커밋 승인 창이 이유에 적는다)
     - `COMMIT_CHECK`(커밋 전 검사 명령 — 보통 비워 두거나 빠른 검사 하나)
   - 운영 데이터를 앞으로 보존할지, 외부 클라이언트를 붙일 계획인지처럼 이력에 없는 계획
-- `ASK_*` 범주 플래그 다섯 개는 묻지 않고 1로 둔다(스펙 리스크 8). 나머지 `BLOCK_*`도 묻지 않고 1로 둔다
+- `ASK_*` 범주 플래그 다섯 개는 묻지 않고 1로 둔다 — 창이 잦아지면 사용자가 끈다. 나머지 `BLOCK_*`도 묻지 않고 1로 둔다
 - `(없음)`은 "아직 모름"이 아니라 "이 프로젝트엔 그 개념이 없음"일 때만 남기고 이유를 붙인다
 - **사용자 승인 없이 3단계로 넘어가지 않는다**
 
-### 3. 채움 → **승인 (G3)**
+### 3. 채움 → **검증 (G3)**
 
 승인된 값으로 아래를 만든다. 플러그인 파일(`${CLAUDE_PLUGIN_ROOT}` 아래)과 `core-*.md`는 손대지 않는다.
 
@@ -66,9 +76,17 @@ description: 하네스를 붙이거나(설정이 비어 있다는 알림) .claud
 4. **`local-*.md`** — 설정 키로 빠지지 않는 **그 저장소만의 사실**이 있을 때만. 기존 코드만 봐서는 알 수 없는 관례(표기·테스트 도구)도 여기에 적을 수 있다. 스택 규칙을 지어 쓰지는 않는다. `AGENTS.md`와 중복이면 만들지 않는다
 5. **`scripts/dev.conf`** — 이 스킬 폴더의 `references/dev.conf`(골격)를 복사해 1단계 CI 워크플로의 실제 명령으로 채운다. 실행 엔진(플러그인 `scripts/dev.sh`)은 고치지 않는다. 키를 채운 근거를 2단계 표에 붙이고, 실측으로 정해지지 않는 것(로컬에서 띄울 의존 서비스·헬스 판정 주소)만 묻는다. 값이 있는 명령 슬롯(`TEST_CMD` 등)은 `scripts/dev.sh <동사>`로 적는다 — 규칙 머리 줄이 이 `scripts/`가 플러그인 폴더라고 알린다
 6. **`AGENTS.md`** — 플러그인의 견본이 없으면 하네스 원본 저장소의 `AGENTS.template.md`를 참고해 채운다
+Codex 연결은 0단계의 변경안을 승인받아 3단계에서 적용한 뒤 생성 파일을 검증한다. Codex만 고르면 아래 Claude 전용 생성·확인 항목은 적용하지 않는다.
+
 7. **`.gitignore`** — `.claude/corrections/`와 `.claude/polish/`가 없으면 더한다. 회고 루프가 정정 기억 설명과 대화 원문 일부를, Gemini 다듬기가 문서 기준판을 쓰는 폴더라 커밋되면 안 된다
 
-**산출물 체크리스트** — 전부 통과해야 완료다.
+**산출물 체크리스트** — 선택한 도구에 해당하는 항목이 전부 통과해야 완료다.
+
+- [ ] 선택한 도구의 연결만 생성했고 공통 설정은 한 개다.
+- [ ] Codex 프로젝트 설정·역할 파일·명령 규칙이 유효하고 기존 사용자 값이 보존됐다(Codex 선택 시).
+- [ ] Codex 플러그인 설치·프로젝트 신뢰·훅 신뢰를 별도로 확인했다. 미확인은 생성 완료와 구분해 보고한다.
+- [ ] Codex 상태 `.codex/harness-state/`·`.codex/corrections/`·`.codex/polish/`가 git에서 제외된다(Codex 선택 시).
+
 
 - [ ] 새 세션(또는 `/reload-plugins` 뒤)에서 "하네스 설정이 비어 있다"가 뜨지 않고 설정 값 표가 들어온다
 - [ ] `.claude/harness.conf`에 빈칸이 0개 — `grep -cE '=\{[^{}]*\}$' .claude/harness.conf`가 `0`
@@ -98,7 +116,7 @@ description: 하네스를 붙이거나(설정이 비어 있다는 알림) .claud
 | `.claude/rules/harness-map.md`의 축·슬롯·플래그 표 | `.claude/harness.conf`의 키로 옮기고 파일을 지운다. `☑`·`❌`·`⬜`는 `1`·`0`·`{…}` |
 | 훅 상수(`deny-out-of-scope-write.sh`의 `SCOPE`·`HARNESS_SELF_EDIT` · `deny-unverified-completion.sh`의 `TEST_CMD` · `deny-dangerous-bash.sh`의 `BLOCK_*`) · git 훅 상수(`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`) · 루트 `harness.conf`(`POLISH_ENABLED`) | 같은 이름의 키로 옮긴다 |
 | 복사해 온 `.claude/rules/core-*.md`·`doc-writing.md`·`README.md` · `.claude/skills/`(`local-*` 빼고) · `.claude/agents/` · `.claude/hooks/`(`local-*` 빼고) · `scripts/`의 하네스 도구(`dev.sh`·`check-*.sh`·`*-patterns.txt`·`init-harness-probe.sh`·`analyze-corrections.sh`·`polish-with-gemini.sh`·`test-hooks.sh`·`hook-cases.txt`·`verify.sh`·`install-git-hooks.sh`·`git-hooks/`) | 지운다 — 플러그인이 싣는다. `.git/hooks/`에 설치된 `pre-commit`·`commit-msg`도 지운다(커밋 검사는 승인 창 훅이 한다) |
-| `.claude/settings.json`의 `hooks` 블록(복사한 훅 등록) | 지우고 2단계 3번의 마켓플레이스·플러그인 켜기로 바꾼다 — 남기면 같은 훅이 두 번 돈다 |
+| `.claude/settings.json`의 `hooks` 블록(복사한 훅 등록) | 지우고 3단계 2번의 마켓플레이스·플러그인 켜기로 바꾼다 — 남기면 같은 훅이 두 번 돈다 |
 | `scripts/dev.conf` · `local-*` | 그대로 둔다(프로젝트 값) |
 
 ## 보고

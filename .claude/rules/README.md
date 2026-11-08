@@ -12,7 +12,7 @@ paths:
 
 # `.claude/` — 하네스 구성 요소 목록
 
-하네스 구성 요소(규칙·스킬·에이전트·훅)의 **목록 SSOT**다. 매 작업에 필요한 행동 규칙이 아니라서 플러그인(`plugin/`)·`.claude/`의 구성 요소·설정 파일·git 훅을 열 때만 로드된다.
+하네스 구성 요소(규칙·스킬·에이전트·훅)의 **목록 SSOT**다. 매 작업에 필요한 행동 규칙이 아니라서 플러그인(`plugin/`)·`.claude/`의 구성 요소·설정 파일을 열 때만 로드된다.
 
 구성 요소를 추가·삭제·개명하면 이 파일을 같은 턴에 고친다 — `plugin/scripts/check-portability.sh`가 실제 파일과 이 목록을 대조하고, 살아 있는 문서가 없는 규칙·훅·스킬·에이전트를 가리키면 실패한다. 각 구성 요소의 상세 동작은 그 파일 머리가 SSOT다.
 
@@ -22,7 +22,7 @@ paths:
 
 | 층 | 파일 | 수정 | 이유 |
 |----|------|------|------|
-| **core** | `plugin/` 전부(규칙·스킬·에이전트·훅·도구) | 금지 — `check-portability.sh`가 고유명사·스택 식별자·경로 리터럴을 막는다. 예외: 붙여 쓰는 프로젝트(하네스 자기 수정 ❌)에서는 아래 "훅 상수와 짝"의 대입 값과 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`가 프로젝트 값 자리라 검사 밖 | 모든 프로젝트에서 같아야 개선이 함께 전파된다 |
+| **core** | `plugin/` 전부(규칙·스킬·에이전트·훅·도구) | 금지 — `check-portability.sh`가 고유명사·스택 식별자·경로 리터럴을 막는다. 프로젝트 값은 `.claude/harness.conf`에 있어 검사 밖이고, 붙여 쓰는 프로젝트(`HARNESS_SELF_EDIT=0`)에서는 `{{Git 컨벤션 SSOT}}`인 `CONTRIBUTING.md`도 검사 밖 | 모든 프로젝트에서 같아야 개선이 함께 전파된다 |
 | **설정** | `.claude/harness.conf` | `init-harness`가 채운다 | 이 프로젝트의 축·슬롯·플래그·훅 판정 값 |
 | **local** | `.claude/` 안의 `local-*` 전부 | 자유 | 저장소 고유 사실·관례. 검사기가 접두사로 이 층을 뺀다 |
 
@@ -59,7 +59,7 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 │   └── doc-reviewer.md               G3 — 문서 유형·구조·문장 리뷰 (advisory)
 ├── hooks/
 │   ├── hooks.json                    훅 등록 — 명령은 "${CLAUDE_PLUGIN_ROOT}/hooks/…"
-│   ├── deny-dangerous-bash.sh        PreToolUse Bash — 파괴·우회·시크릿 명령 차단, 실행되는 부분만 검사 (묶음별 막기·맡기기는 맨 위 상수)
+│   ├── deny-dangerous-bash.sh        PreToolUse Bash — 파괴·우회·시크릿 명령 차단, 실행되는 부분만 검사 (묶음별 막기·맡기기는 설정 키 BLOCK_*)
 │   ├── deny-out-of-scope-write.sh    PreToolUse Write|Edit|MultiEdit|NotebookEdit — 범위 밖 쓰기 · (자기 수정 ❌) 플러그인 폴더·local 훅·settings 쓰기 차단
 │   ├── ask-approval.sh               PreToolUse Bash|Write|Edit|MultiEdit|NotebookEdit — 승인 창: 커밋·원격 반영(먼저 메시지 형식·문서 스타일·COMMIT_CHECK) · 추적 파일 삭제 · 의존성 · 민감한 경로 · 스펙 승인·[미정] 확정 · 채워진 harness.conf 수정
 │   ├── deny-unverified-completion.sh Stop — 코드 편집 뒤 TEST_CMD 미실행·실패인데 완료 선언이면 한 번 되돌림
@@ -82,7 +82,7 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 ├── settings.json                     마켓플레이스 등록(extraKnownMarketplaces)·플러그인 켜기(enabledPlugins) + permissions.deny(.env 읽기·쓰기 · force push · hard reset · --no-verify — 훅이 막는 묶음과 이중)
 ├── settings.local.json               개인 allowlist — 커밋 안 함
 ├── rules/
-│   ├── README.md                     플러그인·.claude/ 구성 요소·설정 파일·git 훅을 열 때 — 이 파일 (목록)
+│   ├── README.md                     플러그인·.claude/ 구성 요소·설정 파일을 열 때 — 이 파일 (목록)
 │   └── local-*.md                    저장소 고유 (있을 때만)
 └── skills/
     └── local-track-issues/           프로젝트 층 트래커 안내 — 이슈 확인·만들기·연결의 수단·키·표기. `{{이슈 연결}}`이 가리킨다 (골격 plugin/skills/init-harness/references/)
@@ -93,6 +93,8 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 우선순위는 `core-guardrails` ⛔ > `core-gates` > `core-workflow` > 스킬 > 일반 관례다. 같은 주제를 여러 파일에 쓰지 않고, 아래쪽 파일은 위쪽을 가리킨다.
 
 ## 훅 공통 규약
+
+아래 이벤트·승인 창·등록 경로는 Claude 연결 기준이다. Codex는 뒤의 별도 연결 절을 따른다. 차단 실패 처리·입력 격리 원칙은 양쪽에 적용한다.
 
 `scripts/test-hooks.sh`가 `scripts/hook-cases.txt`로 판정한다.
 
@@ -133,3 +135,19 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 - 문서 신설·50줄 이상 수정 → `plugin/scripts/check-doc-style.sh` 오류 0 + `doc-reviewer`
 - 안 하기로 한 것 → `{{문서 루트}}/out-of-scope/README.md`에 이유와 함께
 - 끝나면 `plugin/scripts/dev.sh test`
+
+## Codex 연결 (공동 지원 추가 중)
+
+Claude 매니페스트와 `plugin/hooks/hooks.json`은 그대로 유지한다. Codex는 `plugin/.codex-plugin/plugin.json`에서 같은 `skills/`와 별도 `plugin/hooks/codex.json`을 참조한다. `deny-codex-tool.py`는 Bash·apply_patch 입력을 받아 기존 위험 명령·범위 판정 스크립트를 호출한다. 패치 전체와 이동 양쪽 경로를 검사하며 저장소 밖은 거절한다. Codex 설정·명령 규칙·역할도 자기 수정 보호 대상이다. Codex 등록 명령은 Python 부재·실행 오류를 exit 2로 바꾼다.
+
+등록 검사는 `scripts/check-plugin.sh --codex <plugin-root>`, 회귀 검사는 `scripts/test-codex-plugin.sh`와 `scripts/hook-cases.txt`가 담당한다. Python 연결은 Claude 등록에 넣지 않으며 Codex 등록 파일에 실존 경로로 등록돼야 한다. 설치·활성화·훅 신뢰는 별개다. 차단·규칙·승인 사전 검사·후처리·기록·초기화 연결을 제공하며, 실제 신뢰 후 실행과 역할 도구 제한 검증은 별도로 확인한다.
+
+Codex 승인 사전 검사는 `plugin/scripts/check-codex-approval.py`가 기존 `ask-approval.sh` 판정을 재사용한다. allow/confirm/deny를 반환하며 confirm은 사용자 답을 기다리는 행동 절차다. 이 도구를 Codex PreToolUse 승인 훅으로 등록하거나 승인 표식·토큰으로 차단을 우회하지 않는다.
+
+Codex 세션 연결 `plugin/hooks/codex-context.py`는 SessionStart·SubagentStart의 공통 규칙·설정과 Codex 호출 안내(`plugin/codex/INSTRUCTIONS.md`)를 넣는다. PostToolUse는 경로 규칙·공통 포맷을 호출하고 `.codex/harness-state/`에 테스트 증거만 기록한다. 단독 `TEST_CMD`는 루트 실행의 호출별 종료 코드·작업 폴더를 확인하며 문자열 출력을 성공으로 추측하지 않는다. Stop은 last_assistant_message를 공통 완료 선언 정책 `plugin/scripts/completion-policy.py`로 판정한다. Claude Stop도 같은 완료 선언 정책 원본을 읽으며 기존 transcript 해석은 유지한다. 별도 회귀 검사는 `scripts/test-codex-context.sh`다.
+
+초기 설정의 도구 선택은 `init-harness`가 `plugin/scripts/configure-harness.py`를 호출해 수행한다. 공통 값은 한 벌이며 Claude JSON과 Codex TOML·역할·명령 규칙만 도구별로 생성한다. 생성 역할 3개의 원본은 `plugin/agents/*.md`다. 사용자 수정·외부 심볼릭 링크는 덮어쓰지 않는다. `scripts/test-harness-config.sh`가 선택·합치기·충돌·멱등성을 검사한다.
+
+회고·다듬기 도구는 HARNESS_RUNTIME으로 도구별 상태를 선택한다. Codex는 `.codex/corrections/`·`.codex/polish/`와 `harness-retro-codex.md` 장부를 사용하고 현재 프로젝트 사용자 메시지와 확인한 feedback의 자체 JSONL을 분석한다. UserPromptSubmit는 원문을 로컬 기록하며 정정 여부는 분석 단계에서 판단한다. 공통 분석 실행기·모델·비용 상한·최초 수동 분석 후 7일 자동 조건은 유지한다. `scripts/test-codex-retro.sh`는 가짜 분석 실행기로 격리·실패·기록·상한 인자를 검증한다.
+
+Codex 설정 생성의 실행 전제는 루트 README를 따른다. 표준 TOML 파서를 사용한다. 생성 역할은 플러그인 업데이트 뒤 init-harness로 재동기화한다. 실제 Codex 설치 캐시에서 스킬 8개·훅 12개가 발견돼도, 훅 신뢰 전에는 실행 보호를 보장하지 않는다.

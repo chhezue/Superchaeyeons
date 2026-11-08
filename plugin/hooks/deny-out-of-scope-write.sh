@@ -91,6 +91,12 @@ if not self_edit:
     settings = os.path.realpath(os.path.join(root, ".claude", "settings.json"))
     if real == settings or real == hooks_dir or real.startswith(hooks_dir + os.sep):
         print("DENY_HARNESS:" + rel); sys.exit(0)
+# 1-c. Codex 연결의 실행 설정·명령 규칙·역할도 같은 자기 수정 정책으로 보호한다.
+if not self_edit:
+    for protected in (".codex/config.toml", ".codex/hooks.json", ".codex/rules", ".codex/agents", ".codex/harness-state"):
+        target = os.path.realpath(os.path.join(root, protected))
+        if real == target or real.startswith(target + os.sep):
+            print("DENY_HARNESS:" + rel); sys.exit(0)
 # 2. 작업 범위 — "."이면 저장소 전체
 if scope == ".":
     print("ALLOW"); sys.exit(0)

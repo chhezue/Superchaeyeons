@@ -134,7 +134,7 @@ run_simple() { # run_simple <키>
 	local rc=$?
 	[ "$rc" -eq 0 ] || fail_out 1 "$(tail_lines "$log" 10)"
 	if [ "$verb" = "deps" ]; then
-		echo "dev deps: 통과 — $(grep -c '' "$log")줄 · 내용은 $log에서 찾는다"
+		echo "dev deps: 통과 — $(grep -c '' "$log")줄 · 내용은 ${log}에서 찾는다"
 	else
 		echo "dev $verb: 통과 — $(secs "$t0")"
 	fi

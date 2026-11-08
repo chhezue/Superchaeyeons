@@ -27,7 +27,9 @@ DOC_ROOT="docs"
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 # 기준 글이 있는 플러그인 폴더 — 스킬이 부를 때는 이 파일의 상위 폴더다(Bash 도구에는 CLAUDE_PLUGIN_ROOT가 없다)
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-STATE_DIR=".claude/polish"
+HARNESS_RUNTIME="${HARNESS_RUNTIME:-claude}"
+case "$HARNESS_RUNTIME" in claude|codex) ;; *) echo "지원하지 않는 하네스 도구" >&2; exit 2 ;; esac
+STATE_DIR=".$HARNESS_RUNTIME/polish"
 GEMINI_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 DEFAULT_MODEL="gemini-3.5-flash"
 FALLBACK_MODEL="gemini-3.5-flash-lite"
@@ -419,9 +421,25 @@ def message():
 
 # 뜻밖의 예외는 원인 종류만 남긴다 — traceback이 표준 오류로 나가면 예외 값에 든 키·문서가 대화 기록에 남는다
 try:
+    if E.get("HARNESS_RUNTIME") == "codex":
+        at = STATE
+        while at != ROOT:
+            if os.path.islink(at):
+                raise Skip("Codex 다듬기 상태가 심볼릭 링크")
+            parent = os.path.dirname(at)
+            if parent == at:
+                raise Skip("Codex 상태가 프로젝트 밖")
+            at = parent
+        if os.path.isdir(STATE):
+            for folder, dirs, files in os.walk(STATE, followlinks=False):
+                if any(os.path.islink(os.path.join(folder, item)) for item in dirs + files):
+                    raise Skip("Codex 다듬기 상태에 심볼릭 링크")
     {"docs": docs, "done": done, "message": message}[cmd]()
 except SystemExit:
     raise
+except Skip as error:
+    print(str(error) if cmd == "message" else "다듬기 건너뜀(" + str(error) + ")")
+    sys.exit(1 if cmd == "message" else 0)
 except BaseException:
     print("스크립트 오류" if cmd == "message" else "다듬기 건너뜀(스크립트 오류)")
     sys.exit(1 if cmd == "message" else 0)

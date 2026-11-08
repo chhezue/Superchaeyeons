@@ -1,0 +1,104 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/hooks/codex-context.py\" prompt"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/hooks/deny-codex-tool.py\" || exit 2"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/hooks/codex-context.py\" pre"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact|fork",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/hooks/codex-context.py\" rules",
+            "additionalContextLimit": 9000
+          },
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/hooks/codex-context.py\" config",
+            "additionalContextLimit": 9000
+          },
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/hooks/codex-context.py\" runtime",
+            "additionalContextLimit": 9000
+          },
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/hooks/codex-context.py\" notice",
+            "additionalContextLimit": 2500
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/hooks/codex-context.py\" rules",
+            "additionalContextLimit": 9000
+          },
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/hooks/codex-context.py\" config",
+            "additionalContextLimit": 9000
+          },
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/hooks/codex-context.py\" runtime",
+            "additionalContextLimit": 9000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/hooks/codex-context.py\" post",
+            "additionalContextLimit": 9000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"${PLUGIN_ROOT}/hooks/codex-context.py\" stop"
+          }
+        ]
+      }
+    ]
+  }
+}

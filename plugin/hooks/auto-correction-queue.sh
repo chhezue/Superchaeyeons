@@ -11,7 +11,13 @@
 # bash 3.2 내장 기능과 macOS 기본 명령만 쓴다(python3 없는 컴퓨터에서도 기록이 빠지지 않게).
 # STORE는 .gitignore 대상이다(정정 기억 설명이 들어간다).
 # Hook input: JSON with "session_id", "tool_input.file_path" on stdin.
-STORE="${CLAUDE_PROJECT_DIR:-$PWD}/.claude/corrections"
+harness_runtime="${HARNESS_RUNTIME:-claude}"
+case "$harness_runtime" in
+claude) harness_state=.claude ;;
+codex) harness_state=.codex ;;
+*) printf '{"systemMessage":"회고 연결 경고 — 지원하지 않는 도구 이름"}\n'; exit 0 ;;
+esac
+STORE="${CLAUDE_PROJECT_DIR:-$PWD}/$harness_state/corrections"
 
 warn() {
 	printf '{"systemMessage":"[회고 기록] 정정 대기열에 쓰지 못했다 — %s"}\n' "$1"
@@ -27,7 +33,11 @@ else
 	warn "훅 입력에서 파일 경로를 읽지 못함"
 fi
 
-case "$path" in */.claude/projects/*/memory/*.md) ;; *) exit 0 ;; esac
+case "$harness_runtime:$path" in
+claude:*/.claude/projects/*/memory/*.md) ;;
+codex:"${CLAUDE_PROJECT_DIR:-$PWD}"/.codex/corrections/feedback/*.md) ;;
+*) exit 0 ;;
+esac
 [ "${path##*/}" = "MEMORY.md" ] && exit 0
 [ -f "$path" ] || exit 0
 
@@ -49,6 +59,9 @@ done <"$path"
 [ "$type" = "feedback" ] || exit 0
 
 name="${path##*/}"
+if [ "$harness_runtime" = codex ]; then
+	name="${path#"${CLAUDE_PROJECT_DIR:-$PWD}/.codex/corrections/feedback/"}"
+fi
 sid="-"
 [[ $input =~ \"session_id\"[[:space:]]*:[[:space:]]*\"([^\"]*)\" ]] && sid="${BASH_REMATCH[1]}"
 desc="${desc//$'\t'/ }"

@@ -4,7 +4,7 @@
 AXES	info	축	lang·shape·deploy·stage — 붙이는 시점에 실측한 값. 규칙은 축을 직접 부르지 않는다
 DOC_ROOT	slot	{{문서 루트}}	함께 배달되는 문서 경로의 기준 폴더 — 회고 장부·글 다듬기 대상도 이 값을 쓴다
 SCOPE	slot	{{작업 범위}}	쓰기 범위. `.`이면 저장소 전체라 범위 검사를 하지 않는다 — deny-out-of-scope-write.sh가 읽는다
-GIT_CONVENTION	slot	{{Git 컨벤션 SSOT}}	Git 형식 문서. (없음)이면 core-workflow G2·G4가 SSOT
+GIT_CONVENTION	slot	{{Git 컨벤션 SSOT}}	Git 형식 문서. (없음)이면 core-task-steps G2·G4가 SSOT
 SPEC_DIR	slot	{{스펙 저장소}}	스펙 문서 폴더
 CURRENT_BEHAVIOR	slot	{{현재동작 요약}}	보안·아키텍처 성격 변경 때 쉬운 말로 갱신할 문서
 PRIORITY_SSOT	slot	{{우선순위 SSOT}}	이슈 우선순위·Milestone의 SSOT
@@ -27,7 +27,7 @@ COMMIT_FORMAT	slot	{{커밋 메시지 형식}}	커밋 메시지 형식(사람이
 BASE_BRANCH	slot	{{기본 브랜치}}	PR base 브랜치
 MERGE_METHOD	slot	{{머지 방식}}	PR 머지 방식
 ISSUE_LINK	slot	{{이슈 연결}}	이슈 트래커와 연결 표기 — 안내는 local-track-issues 스킬
-FLAG_GENERATED_DOCS	flag	생성 문서 검증	1이면 core-guardrails §1.6 적용
+FLAG_GENERATED_DOCS	flag	생성 문서 검증	1이면 core-stop-conditions §1.6 적용
 HARNESS_SELF_EDIT	flag	하네스 자기 수정	1이면 에이전트가 하네스 훅·설정을 고칠 수 있다(하네스 원본 저장소만). 0이면 deny-out-of-scope-write.sh가 막는다
 POLISH_ENABLED	flag	Gemini 다듬기	1이면 스킬이 사람용 문서·메시지를 polish-with-gemini.sh로 다듬는다
 COMMIT_RE	hook	커밋 메시지 정규식	{{커밋 메시지 형식}}을 판정하는 확장 정규식(ERE). 비어 있으면 형식을 검사하지 않는다

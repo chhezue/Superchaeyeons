@@ -45,8 +45,8 @@ judge_codex() {
  python3 -I - "$1" <<'CODEX_PY'
 import json, pathlib, re, sys
 
-SKILLS = ("init-harness", "ask-decisions", "write-spec", "test-first",
-          "refactor-safely", "fix-bug", "verify-work", "improve-harness")
+SKILLS = ("init-harness", "clarify-requirements", "write-spec", "test-first",
+          "refactor-safely", "fix-bug", "verify-work", "review-harness-feedback")
 try:
     root = pathlib.Path(sys.argv[1]).resolve(strict=True)
 

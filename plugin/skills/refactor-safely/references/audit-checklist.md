@@ -12,7 +12,7 @@
 
 ## 3. Legacy 코드
 
-deprecated 로직 · 임시 코드 · TODO · FIXME · 더 이상 호출되지 않는 분기 · 현행 스펙과 다른 호환 레이어 (`core-guardrails.md` STOP §2).
+deprecated 로직 · 임시 코드 · TODO · FIXME · 더 이상 호출되지 않는 분기 · 현행 스펙과 다른 호환 레이어 (`core-stop-conditions.md` STOP §2).
 
 ## 4. 프레임워크 관례
 

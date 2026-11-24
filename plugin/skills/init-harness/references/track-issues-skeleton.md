@@ -28,7 +28,7 @@ description: 이 프로젝트의 이슈 트래커({트래커 이름})를 다룰 
 
 ## 이슈 만들기·고치기·댓글
 
-- 만들기 전에 사용자에게 확인한다(`core-workflow.md` G4). 라벨·우선순위는 붙이지 않는다(`core-guardrails.md` §1.8)
+- 만들기 전에 사용자에게 확인한다(`core-task-steps.md` G4). 라벨·우선순위는 붙이지 않는다(`core-stop-conditions.md` §1.8)
 - 만들기: {명령 또는 MCP 도구와 필수 입력}
 - 댓글: {명령 또는 MCP 도구}
 - 고치기: {명령 또는 MCP 도구}

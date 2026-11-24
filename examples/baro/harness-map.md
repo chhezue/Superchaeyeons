@@ -17,7 +17,7 @@
 |------|-----------|
 | `{{문서 루트}}` | `baro-ai/docs/` |
 | `{{작업 범위}}` | `baro-ai` — `deny-out-of-scope-write.sh`의 `SCOPE="baro-ai"`와 함께 고친다 |
-| `{{Git 컨벤션 SSOT}}` | (없음) — 루트 `.github/`는 5인 공용이라 파일을 둘 수 없다 → `core-workflow` G2·G4가 SSOT |
+| `{{Git 컨벤션 SSOT}}` | (없음) — 루트 `.github/`는 5인 공용이라 파일을 둘 수 없다 → `core-task-steps` G2·G4가 SSOT |
 | `{{스펙 저장소}}` | `baro-ai/docs/specs/` |
 | `{{현재동작 요약}}` | `[확인 필요]` — 후보 `baro-ai/docs/IMPLEMENTATION.md` |
 | `{{우선순위 SSOT}}` | `[확인 필요]` |

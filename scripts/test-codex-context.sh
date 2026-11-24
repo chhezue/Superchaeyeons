@@ -18,7 +18,7 @@ REPO = Path(sys.argv[1])
 HOOK = REPO / 'plugin/hooks/codex-context.py'
 TEST_CMD = 'scripts/dev.sh test'
 BASE_CONF = (REPO / 'scripts/hook-fixtures/conf/full.conf').read_text()
-CORE = ('core-gates', 'core-guardrails', 'core-workflow', 'core-reporting')
+CORE = ('core-approval-triggers', 'core-stop-conditions', 'core-task-steps', 'core-reporting')
 DOC_HEADING = next(line for line in (REPO / 'plugin/rules/doc-writing.md').read_text().splitlines()
                    if line.startswith('# '))
 passed = failed = 0

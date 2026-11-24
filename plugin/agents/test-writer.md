@@ -1,6 +1,6 @@
 ---
 name: test-writer
-description: 통제 영역(core-gates.md §1)에 닿는 테스트 먼저 지점의 실패하는 테스트를, 구현 계획 없이 스펙 문장(버그는 기대 동작과 재현 스텝)만 보고 쓴다. test-first 스킬 1단계가 부른다. 구현은 쓰지 않는다.
+description: 통제 영역(core-approval-triggers.md §1)에 닿는 테스트 먼저 지점의 실패하는 테스트를, 구현 계획 없이 스펙 문장(버그는 기대 동작과 재현 스텝)만 보고 쓴다. test-first 스킬 1단계가 부른다. 구현은 쓰지 않는다.
 tools: Read, Grep, Glob, Write, Edit
 model: sonnet
 omitClaudeMd: true

@@ -92,8 +92,8 @@ elif [ "$started" = busy ]; then
 	line="$line — 주간 분석이 이미 돌고 있다"
 	hint="분석은 별도 프로세스가 돌린다. 이 세션에서 돌리지 않는다."
 elif [ "$candidates" != 0 ]; then
-	line="$line — improve-harness 스킬로 검토"
-	hint="검토할 후보가 있으니 사용자에게 improve-harness 스킬을 제안한다."
+	line="$line — review-harness-feedback 스킬로 검토"
+	hint="검토할 후보가 있으니 사용자에게 review-harness-feedback 스킬을 제안한다."
 else
 	if [ "$harness_runtime" = codex ]; then
 		line="$line — HARNESS_RUNTIME=codex ${ANALYZE}로 분석"

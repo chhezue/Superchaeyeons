@@ -7,6 +7,6 @@
 | `{{제품 범위}}` | `AGENTS.md` — "무엇이 들어 있나"·"이 저장소에서 작업할 때" |
 | `{{우선순위 SSOT}}` | (없음) — 이슈 우선순위 라벨 체계가 없다 |
 | `{{클라이언트 전제}}` | (없음) — 클라이언트 없음 |
-| `{{용어집}}` | (없음) — 하네스 용어는 플러그인 `scripts/harness-keys.txt`와 `core-workflow.md`가 정의 |
+| `{{용어집}}` | (없음) — 하네스 용어는 플러그인 `scripts/harness-keys.txt`와 `core-task-steps.md`가 정의 |
 
 이 폴더에 기획 문서를 만들면 `.claude/harness.conf`의 해당 키를 같은 턴에 그 경로로 바꾼다.

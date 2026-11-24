@@ -16,8 +16,8 @@ import tempfile
 
 REPO = pathlib.Path(sys.argv[1])
 CHECKER = REPO / 'scripts/check-plugin.sh'
-SKILLS = ('init-harness', 'ask-decisions', 'write-spec', 'test-first',
-          'refactor-safely', 'fix-bug', 'verify-work', 'improve-harness')
+SKILLS = ('init-harness', 'clarify-requirements', 'write-spec', 'test-first',
+          'refactor-safely', 'fix-bug', 'verify-work', 'review-harness-feedback')
 CLAUDE_PATHS = ('.claude-plugin/plugin.json', 'hooks/hooks.json')
 passed = failed = 0
 

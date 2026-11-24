@@ -14,4 +14,4 @@ Claude Code·Codex용 **하네스**(규칙·스킬·에이전트·훅·검사 �
 - **훅을 고치거나 우회 경로를 찾으면 `scripts/hook-cases.txt`에 케이스부터** 넣는다 — `deny-*`는 판정 불가(python3 없음 포함)도 막아야 하고, 등록은 Claude `plugin/hooks/hooks.json`, Codex `plugin/hooks/codex.json`이다
 - **이 저장소만 `HARNESS_SELF_EDIT=1`** — 붙여 쓰는 프로젝트는 `init-harness`가 0으로 둔다
 - **프로젝트 고유 파일은 `local-*` 이름**을 쓴다 — 접두사가 검사기에 층을 알린다. `examples/`는 참고 자료이고 규칙이 아니다
-- 커밋은 `{Type}: {한글}`, 목적·주제별 최대 5개. **커밋 승인은 Claude 창·Codex 명시적 확인이다** (`core-workflow.md` G4 · `.github/CONTRIBUTING.md`)
+- 커밋은 `{Type}: {한글}`, 목적·주제별 최대 5개. **커밋 승인은 Claude 창·Codex 명시적 확인이다** (`core-task-steps.md` G4 · `.github/CONTRIBUTING.md`)

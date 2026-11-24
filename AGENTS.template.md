@@ -8,7 +8,7 @@
 
 ## How We Build
 
-**계획 축**은 `{{우선순위 SSOT}}`, **기획**은 `{{제품 범위}}`, **기능 설계**는 `{{스펙 저장소}}`, **아키텍처 선택**은 `{{결정 기록}}`에 둡니다. 작업 순서는 `.claude/rules/core-workflow.md`, 멈추는 조건은 `core-guardrails.md`·`core-gates.md`가 정합니다.
+**계획 축**은 `{{우선순위 SSOT}}`, **기획**은 `{{제품 범위}}`, **기능 설계**는 `{{스펙 저장소}}`, **아키텍처 선택**은 `{{결정 기록}}`에 둡니다. 작업 순서는 `.claude/rules/core-task-steps.md`, 멈추는 조건은 `core-stop-conditions.md`·`core-approval-triggers.md`가 정합니다.
 
 ## Tech Stack
 
@@ -37,7 +37,7 @@
 | [`.claude/harness.conf`](.claude/harness.conf) | **슬롯 SSOT** — 규칙이 부르는 역할 → 실제 경로 |
 | `{{문서 루트}}/README.md` | **문서 SSOT** |
 | [`.claude/rules/README.md`](.claude/rules/README.md) | 규칙·스킬·에이전트·훅 목록 |
-| `{{Git 컨벤션 SSOT}}` | **Git SSOT** — 브랜치·커밋·PR (없으면 `core-workflow.md` G2·G4) |
+| `{{Git 컨벤션 SSOT}}` | **Git SSOT** — 브랜치·커밋·PR (없으면 `core-task-steps.md` G2·G4) |
 
 ## Product Context
 

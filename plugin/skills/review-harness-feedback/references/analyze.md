@@ -1,6 +1,6 @@
 # 회고 분석 지시문
 
-`${CLAUDE_PLUGIN_ROOT}/scripts/analyze-corrections.sh`가 이 파일 전문 뒤에 입력 JSON을 붙여 `claude -p`로 넘긴다. 분석 세션은 읽기 도구만 쓰고, 결과는 스크립트가 받아 근거를 검사한 뒤 후보 파일에 쓴다. 사람은 `improve-harness` 스킬로 후보를 하나씩 검토한다.
+`${CLAUDE_PLUGIN_ROOT}/scripts/analyze-corrections.sh`가 이 파일 전문 뒤에 입력 JSON을 붙여 `claude -p`로 넘긴다. 분석 세션은 읽기 도구만 쓰고, 결과는 스크립트가 받아 근거를 검사한 뒤 후보 파일에 쓴다. 사람은 `review-harness-feedback` 스킬로 후보를 하나씩 검토한다.
 
 ## 할 일
 
@@ -45,3 +45,11 @@
 ```json
 {"candidates": [{"kind": "new", "symptom": "…", "action": "…", "layer": "규칙", "token_cost": "…", "ledger_id": "", "effect": "", "evidence": [{"session": "…", "message": 3}, {"session": "…", "message": 7}]}]}
 ```
+
+## Codex 기록과 실행
+
+현재 프로젝트의 UserPromptSubmit 메시지는 `.codex/corrections/sessions/`에 로컬 기록한다. 메시지 원문은 버전 관리에서 제외한 로컬 파일에 보관한다. 분석을 실행할 때 추출·길이 제한한 메시지가 기존 Claude 분석기로 전달된다. 사용자 메시지를 정정으로 미리 분류하지 않으며 분석 단계에서 판단한다. 사용자가 확인한 정정 내용은 `.codex/corrections/feedback/`의 type: feedback 문서로 기록한다.
+
+공통 스킬에서 회고·다듬기 상태를 `.claude/corrections/`·`.claude/polish/`로 적은 부분은 Codex에서 `.codex/corrections/`·`.codex/polish/`로 읽는다. 장부 `harness-retro.md`는 Codex에서 `harness-retro-codex.md`를 사용한다. 공통 설정 `.claude/harness.conf`는 바꾸지 않는다. 분석·다듬기는 `HARNESS_RUNTIME=codex`로 공통 도구를 호출한다.
+
+회고 분석은 기존 Claude 실행기를 재사용해 1달러 상한을 유지한다. 첫 분석은 사용자 요청으로 실행하며, 그 뒤에는 기존 AUTO_ANALYZE·7일 간격·잠금을 따른다. 분석 실행기가 없으면 원인을 알리고 미분석 상태를 유지한다. Claude 개인 메모리나 대화 원문을 Codex 기록으로 수집하지 않는다.

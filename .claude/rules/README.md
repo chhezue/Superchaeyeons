@@ -37,22 +37,22 @@ paths:
 plugin/                               배달물 — 붙인 프로젝트는 플러그인으로 받는다. 이 저장소는 로컬 경로 마켓플레이스로 제자리 로드
 ├── .claude-plugin/plugin.json        매니페스트 — version 없음(커밋 SHA가 버전). scripts/check-plugin.sh가 검사
 ├── rules/                            Claude Code가 직접 읽지 않는다 — 주입 훅이 넣는다 (훅 하나당 9,000자 이하, check-portability.sh)
-│   ├── core-guardrails.md            세션 시작·서브에이전트 — ⛔ STOP: 문서·구현 정합 · [미정] · 레거시 즉시 삭제 · 현재동작 요약 갱신
-│   ├── core-gates.md                 세션 시작·서브에이전트 — 통제/위임 영역 · 멈추는 신호 · 자동으로 하지 않는 것
-│   ├── core-workflow.md              세션 시작·서브에이전트 — 트랙 4 × 규모 3 × 게이트 4
+│   ├── core-stop-conditions.md       세션 시작·서브에이전트 — ⛔ STOP: 문서·구현 정합 · [미정] · 레거시 즉시 삭제 · 현재동작 요약 갱신
+│   ├── core-approval-triggers.md     세션 시작·서브에이전트 — 통제/위임 영역 · 멈추는 신호 · 자동으로 하지 않는 것
+│   ├── core-task-steps.md            세션 시작·서브에이전트 — 작업 선택, 영향 범위, 구현·검증·커밋 순서
 │   ├── core-reporting.md             세션 시작·서브에이전트 — 사용자 보고 문체
 │   ├── core-code-comments.md         소스 파일을 다룰 때(paths:) — 주석 원칙
 │   ├── core-testing.md               테스트 파일을 다룰 때(paths:) — 테스트 원칙 S1~S8
 │   └── doc-writing.md                마크다운을 다룰 때(paths:) — 문서 유형·구조·문장
 ├── skills/
 │   ├── init-harness/                 D 트랙 — 실측 → 슬롯·플래그 제안 → 채움 (사용자 호출)
-│   ├── ask-decisions/                G2 앞 — 사용자 결정을 하나씩 묻는 인터뷰
+│   ├── clarify-requirements/         G2 앞 — 구현 결과가 달라지는 요구사항 질문
 │   ├── write-spec/                   A 트랙 — 스펙 → 승인. 범위를 다른 이슈로 미룰 때도
 │   ├── test-first/                   구현 — 승인된 테스트 먼저 지점 · 버그 재현 테스트
 │   ├── refactor-safely/              B 트랙 — 감사 → 승인 → 구현 → 기계 검증 (사용자 호출)
 │   ├── fix-bug/                      C 트랙 — 재현 → 원인 분리 → 최소 수정
 │   ├── verify-work/                  G2 직후 · G3 · G4 마무리 — 실행 결과만 보고 (G3 절차 · G4 상세 SSOT)
-│   └── improve-harness/              G4 — 회고 분석이 낸 하네스 개선 후보를 사람과 검토해 장부에 (분석 지시문 references/analyze.md)
+│   └── review-harness-feedback/      G4 — 회고 분석이 낸 하네스 개선 후보를 사람과 검토해 장부에 (분석 지시문 references/analyze.md)
 ├── agents/                           셋 다 omitClaudeMd — 주입 규칙 없이 시작, 슬롯 값은 .claude/harness.conf를 읽는다
 │   ├── researcher.md                 G1 — 외부 문서 조사, 결론·근거만 반환
 │   ├── test-writer.md                test-first 1단계 — 통제 영역 지점의 테스트를 스펙만 보고 작성 (Bash 없음)
@@ -90,7 +90,7 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 
 회고 루프의 분석은 훅이 아니라 `plugin/scripts/analyze-corrections.sh`가 별도 실행으로 한다. 기록·분석 상태는 `.claude/corrections/`(git이 무시)에 있고, 형식은 그 스크립트 머리가 SSOT다. 문서 다듬기도 훅이 아니라 스킬 단계에서 `plugin/scripts/polish-with-gemini.sh`를 부르고, 상태는 `.claude/polish/`(git이 무시)에 둔다.
 
-우선순위는 `core-guardrails` ⛔ > `core-gates` > `core-workflow` > 스킬 > 일반 관례다. 같은 주제를 여러 파일에 쓰지 않고, 아래쪽 파일은 위쪽을 가리킨다.
+우선순위는 `core-stop-conditions` ⛔ > `core-approval-triggers` > `core-task-steps` > 스킬 > 일반 관례다. 같은 주제를 여러 파일에 쓰지 않고, 아래쪽 파일은 위쪽을 가리킨다.
 
 ## 훅 공통 규약
 
@@ -119,7 +119,7 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 | 종류 | 규칙 | 예 |
 |------|------|-----|
 | 스킬 | 동사-목적어(필요하면 동사-부사). 이름만 보고 하는 일을 알 수 있게 | `write-spec`, `refactor-safely` |
-| 규칙 | 적용 시점·대상 명사구. 부품은 `core-`, 고유는 `local-` | `core-gates`, `local-release` |
+| 규칙 | 적용 시점·대상 명사구. 부품은 `core-`, 고유는 `local-` | `core-approval-triggers`, `local-release` |
 | 훅 | 동작 접두사 — 차단 `deny-` · 승인 창 `ask-` · 경고 `warn-` · 자동 실행 `auto-` | `deny-dangerous-bash.sh` |
 | 에이전트 | 역할 명사, 20자 이내 | `researcher`, `{스택}-reviewer` |
 
@@ -127,7 +127,7 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 
 ## 유지보수 체크리스트
 
-- 구성 요소 추가·삭제·개명 → 이 목록 · `core-workflow.md` 트랙 표 · 산출물이 md면 `{{문서 루트}}/templates/README.md` 등록부. 새 개념은 기존 개념을 대체할 때만 들인다
+- 구성 요소 추가·삭제·개명 → 이 목록 · `core-task-steps.md` 트랙 표 · 산출물이 md면 `{{문서 루트}}/templates/README.md` 등록부. 새 개념은 기존 개념을 대체할 때만 들인다
 - 훅 추가·수정 → `scripts/hook-cases.txt` 케이스 먼저 → `scripts/test-hooks.sh`
 - 규칙 수정 → `plugin/scripts/check-portability.sh` (always-load 예산은 래칫 — 낮추기만 한다. 스킬·에이전트 설명 줄도 합계에 든다)
 - **새 규칙을 넣을 곳** → 종료 코드로 판정되면 훅 → 끝난 뒤 확인해도 되면 `verify-work` 점검표 → 특정 파일을 다룰 때만 필요하면 `paths:` 규칙 → 구현 도중 늘 지켜야 할 때만 매번 읽히는 규칙. 앞 층으로 안 되는 이유가 있어야 다음 층으로 간다
@@ -136,9 +136,11 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
 - 안 하기로 한 것 → `{{문서 루트}}/out-of-scope/README.md`에 이유와 함께
 - 끝나면 `plugin/scripts/dev.sh test`
 
-## Codex 연결 (공동 지원 추가 중)
+## Codex 연결
 
 Claude 매니페스트와 `plugin/hooks/hooks.json`은 그대로 유지한다. Codex는 `plugin/.codex-plugin/plugin.json`에서 같은 `skills/`와 별도 `plugin/hooks/codex.json`을 참조한다. `deny-codex-tool.py`는 Bash·apply_patch 입력을 받아 기존 위험 명령·범위 판정 스크립트를 호출한다. 패치 전체와 이동 양쪽 경로를 검사하며 저장소 밖은 거절한다. Codex 설정·명령 규칙·역할도 자기 수정 보호 대상이다. Codex 등록 명령은 Python 부재·실행 오류를 exit 2로 바꾼다.
+
+두 호스트의 시작 지시 합계는 `scripts/measure-startup-context.py --check`로 검사한다. 작업 경로 규칙 자체의 모델 비용은 선택 실행하는 `scripts/evaluate-task-routing.py`로 비교한다.
 
 등록 검사는 `scripts/check-plugin.sh --codex <plugin-root>`, 회귀 검사는 `scripts/test-codex-plugin.sh`와 `scripts/hook-cases.txt`가 담당한다. Python 연결은 Claude 등록에 넣지 않으며 Codex 등록 파일에 실존 경로로 등록돼야 한다. 설치·활성화·훅 신뢰는 별개다. 차단·규칙·승인 사전 검사·후처리·기록·초기화 연결을 제공하며, 실제 신뢰 후 실행과 역할 도구 제한 검증은 별도로 확인한다.
 

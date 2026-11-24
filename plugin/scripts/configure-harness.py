@@ -135,7 +135,10 @@ def main():
                                    if l.startswith('description:'))
                 content = 'name = ' + json.dumps(role) + '\n'
                 content += 'description = ' + json.dumps(description, ensure_ascii=False) + '\n'
-                content += 'developer_instructions = ' + json.dumps(runtime + '\n\n' + body.strip(), ensure_ascii=False) + '\n'
+                guidance = runtime if role == 'test-writer' else (
+                    'Codex 읽기 전용 역할이다. 수정·외부 전송·승인이 필요한 작업은 호출자에게 돌려준다. '
+                    '공통 역할에서 참조하는 플러그인 도구 경로는 호출자가 현재 세션의 설치 경로를 전달한다.')
+                content += 'developer_instructions = ' + json.dumps(guidance + '\n\n' + body.strip(), ensure_ascii=False) + '\n'
                 if role == 'test-writer':
                     content += '\n[features]\nshell_tool = false\n'
                 tomllib.loads(content)

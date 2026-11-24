@@ -26,7 +26,7 @@ GitHub CLI(명령줄 도구) `gh`를 쓴다. 인증 상태는 `gh auth status`�
 
 ## 이슈 만들기·고치기·댓글
 
-- 만들기 전에 사용자에게 확인한다(`core-workflow.md` G4). 라벨·마일스톤은 붙이지 않는다(`core-guardrails.md` §1.8)
+- 만들기 전에 사용자에게 확인한다(`core-task-steps.md` G4). 라벨·마일스톤은 붙이지 않는다(`core-stop-conditions.md` §1.8)
 - 만들기: `gh issue create --title "<제목>" --body-file <본문 파일>`. 저장소에 `.github/ISSUE_TEMPLATE/`이 있으면 그 순서를 따른다
 - 댓글: `gh issue comment <번호> --body-file <본문 파일>`
 - 고치기: `gh issue edit <번호> --title … --body-file …`

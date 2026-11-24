@@ -411,7 +411,7 @@ auto-correction-queue.sh	-;STORE=/dev/null/q	0;out~systemMessage;out~정정 대�
 # auto-correction-notice.sh (SessionStart) — 세 값이 모두 0이면 출력 없음(매 세션 토큰이 들지 않게), 있으면 한 줄을 사용자 화면과 Claude에 함께
 auto-correction-notice.sh	-;STORE=$REPO/scripts/hook-fixtures/corrections/store-zero	0;out=	{"session_id":"cur","transcript_path":"$TMP/no-sessions/cur.jsonl","source":"startup"}
 auto-correction-notice.sh	-;STORE=$REPO/scripts/hook-fixtures/corrections/store-zero	0;out=	not json
-auto-correction-notice.sh	-;STORE=$REPO/scripts/hook-fixtures/corrections/store-pending	0;out~systemMessage;out~additionalContext;out~2026-10-20;out~세션 0개;out~정정 기억 2건;out~검토할 후보 1건	{"session_id":"cur","transcript_path":"$TMP/no-sessions/cur.jsonl","source":"startup"}
+auto-correction-notice.sh	-;STORE=$REPO/scripts/hook-fixtures/corrections/store-pending	0;out~systemMessage;out~additionalContext;out~2026-10-20;out~세션 0개;out~정정 기억 2건;out~검토할 후보 1건;out~review-harness-feedback	{"session_id":"cur","transcript_path":"$TMP/no-sessions/cur.jsonl","source":"startup"}
 # 상태 파일이 없으면(분석을 한 번도 안 돌림) 첫 실행 안내 — 위 대기열 케이스가 $TMP/q에 2줄을 남겼다
 auto-correction-notice.sh	-;STORE=$TMP/q	0;out~한 번도;out~세션 2개;out~정정 기억 2건;out~검토할 후보 0건	{"session_id":"cur","transcript_path":"$REPO/scripts/hook-fixtures/corrections/sessions/cur.jsonl","source":"startup"}
 # 주간 자동 분석 — 정기 분석을 한 번 이상 돌렸고(last-analysis 있음) INTERVAL_MIN이 지났고 새 세션이 있으면 뒤에서 띄운다. 분석기 자리에 가짜(fake-analyze.sh, 3초 머묾)

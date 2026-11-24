@@ -9,7 +9,7 @@ description: 기존 코드를 아키텍처 감사 후 G2에서 확정한 불변 
 
 새 기능 개발이 아니라 **기존 코드 품질 개선**이 목적일 때 쓴다. `write-spec`이 "구현 전 스펙"을 강제하듯, 이 스킬은 "감사 → 승인 → 구현 → 기계 검증" 순서를 강제한다.
 
-**이 스킬은 `core-workflow.md` 사이클의 B 트랙이다.** 1 Audit = 진입·G1 · 2 승인 = G2 · 3 Implement = 구현 · 4 Verify = G3(`verify-work`) · 5 Report = G4 · 6 = 다음 사이클. 게이트 내용은 `core-workflow.md`가 SSOT다.
+**이 스킬은 `core-task-steps.md` 사이클의 B 트랙이다.** 1 Audit = 진입·G1 · 2 승인 = G2 · 3 Implement = 구현 · 4 Verify = G3(`verify-work`) · 5 Report = G4 · 6 = 다음 사이클. 게이트 내용은 `core-task-steps.md`가 SSOT다.
 
 점검 항목은 [`references/audit-checklist.md`](references/audit-checklist.md)가, A/B/C/D 분류 기준과 산출물 포맷은 [`references/audit-template.md`](references/audit-template.md)가, 불변 조건은 이 파일이 SSOT다.
 
@@ -24,7 +24,7 @@ description: 기존 코드를 아키텍처 감사 후 G2에서 확정한 불변 
 
 사용자가 "계약을 바꿔도 된다"고 하면 두 번째 항목을 빼고 그 대신 무엇을 지킬지 적는다. 감사 항목마다 **`불변 조건 영향`** 을 표시해, 승인 때 항목별로 고를 수 있게 한다.
 
-`core-guardrails.md` ⛔ STOP은 이 스킬보다 항상 우선한다 — 특히 레거시 즉시 삭제(§2), 계약에 닿는 변경의 같은 턴 갱신(§1.7).
+`core-stop-conditions.md` ⛔ STOP은 이 스킬보다 항상 우선한다 — 특히 레거시 즉시 삭제(§2), 계약에 닿는 변경의 같은 턴 갱신(§1.7).
 
 ## When to Use
 
@@ -39,11 +39,13 @@ description: 기존 코드를 아키텍처 감사 후 G2에서 확정한 불변 
 
 ### 1. Audit — 읽기 전용, 신선한 서브에이전트
 
-- `Agent` 툴(`subagent_type: Explore` 또는 `general-purpose`, 읽기 전용)로 **새 서브에이전트**를 띄워 해당 작업 단위만 스캔한다. 방금 짠 코드를 같은 대화에서 스스로 평가하면 자기 판단을 재확인하게 된다(`core-workflow.md` G3).
+- `Agent` 툴(`subagent_type: Explore` 또는 `general-purpose`, 읽기 전용)로 **새 서브에이전트**를 띄워 해당 작업 단위만 스캔한다. 방금 짠 코드를 같은 대화에서 스스로 평가하면 자기 판단을 재확인하게 된다(`core-task-steps.md` G3).
 - 프롬프트에 반드시 포함: 대상 경로, `references/audit-checklist.md` 점검 항목 전체, A/B/C/D 분류 기준, `references/audit-template.md` 포맷, 기본 불변 조건, "코드 수정 금지 — 읽기·분석만".
 - **G1 하위 단계:** 감사 중 "더 나은 라이브러리·패턴이 있는가"가 판단에 필요하면 `researcher`를 부른다. 그 결과는 감사 문서의 `## 근거`와 **물리적으로 분리된 `## 참고 — 외부 사례`** 절에 둔다. A/B 판정 근거는 여전히 코드에서 확인한 사실만 인정한다.
 - **A 트랙 승격 신호:** 개선에 새 의존성·새 기술·계약 변경이 필요하다고 판단되면 항목을 "승격 후보"로 표시하고 멈춘다. 리팩터가 조용히 아키텍처 변경으로 번지는 것을 막으면서 길은 열어 둔다 — 승인되면 `write-spec`으로 넘어간다.
 - 산출물: `{{감사 로그}}/{unit}/{NNN}-{kebab-topic}.md` — 작업 단위 안에서 `001`부터 증가 (신규 작성, **코드는 건드리지 않음**). H1 아래 개요 한 문단 필수.
+
+점검만 요청한 경우 발견 사항과 근거를 보고하면 종료한다. 구현은 별도 요청이 있을 때 이어간다.
 
 ### 2. 승인 (G2)
 
@@ -55,7 +57,7 @@ description: 기존 코드를 아키텍처 감사 후 G2에서 확정한 불변 
 ### 3. Implement
 
 - 승인된 A/B 항목만, 우선순위(Critical → High → Medium → Low) 순으로 구현한다.
-- `core-workflow.md` "구현 — 코딩 중 지킬 것" 절 전체 준수 — 요청 범위만, drive-by 리팩터 금지, 레거시는 같은 변경에서 삭제.
+- `core-task-steps.md` "구현 — 코딩 중 지킬 것" 절 전체 준수 — 요청 범위만, drive-by 리팩터 금지, 레거시는 같은 변경에서 삭제.
 - 구현 중 불변 조건에 닿게 되면 **즉시 멈추고 사용자에게 확인** — 목록을 바꾸거나 항목을 미룬다.
 
 ### 4. Verify — 불변 조건을 기계로 증명
@@ -65,8 +67,8 @@ LLM의 "안 바꿨다"는 자기 보고를 신뢰하지 않는다. 절차 SSOT�
 ### 5. Report (G4)
 
 - 감사 문서 끝의 **`## 구현 결과 (YYYY-MM-DD)`** 절에 반영한 항목·검증 결과·미룬 항목을 적는다 (`audit-template.md`에 자리가 있다).
-- `{{감사 로그}}/{unit}/refactor-log.md`에 append — 날짜, 반영 항목, 변경 파일·라인 수, 불변 조건별 검증 결과, 남긴 C/D와 이유. H1 아래 개요 문단 유지.
-- 새로 만든 문서·50줄 이상 고친 문서는 `doc-reviewer`로 확인.
+- `{{감사 로그}}/{unit}/refactor-log.md`에는 날짜와 위 구현 결과 링크를 남긴다.
+- 문서 검토 기준은 `verify-work`를 따른다.
 - 사용자 보고는 `core-reporting.md` 문체로.
 
 ### 6. 다음 작업 단위

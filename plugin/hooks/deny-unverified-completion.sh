@@ -1,6 +1,6 @@
 #!/bin/bash
 # Blocks ending the turn with a "done/passed" claim when code was edited but the test command never ran (or failed).
-# Registered in plugin/hooks/hooks.json (Stop). core-workflow.md G3 "실행 없이 통과했을 것이라고 보고 금지"를
+# Registered in plugin/hooks/hooks.json (Stop). core-task-steps.md G3 "실행 없이 통과했을 것이라고 보고 금지"를
 # 결정론적으로 강제한다.
 #
 # TEST_CMD는 설정 키 TEST_CMD({{테스트 명령}}, .claude/harness.conf)다. 하네스 기본은 플러그인 scripts/dev.sh test이고, 프로젝트마다
@@ -160,7 +160,7 @@ case "$TEST_CMD" in scripts/dev.sh*) [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && show_cm
 
 case "$verdict" in
   BLOCK_NOT_RUN)
-    echo "[하네스 · G3] 이 턴에 코드 파일을 고쳤는데(도구 편집 또는 Bash의 sed -i·리다이렉션·tee) 그 뒤 \`$show_cmd\`를 실행한 기록이 없는 채로 완료·통과를 선언했습니다. 지금 \`$show_cmd\`를 실제로 돌리고 결과를 보고하세요. 돌릴 수 없는 환경이면 완료 선언 대신 \"검증하지 못한 것\"으로 남기세요 (core-workflow.md G3). Blocked by superchaeyeons 플러그인 hooks/deny-unverified-completion.sh." >&2
+    echo "[하네스 · G3] 이 턴에 코드 파일을 고쳤는데(도구 편집 또는 Bash의 sed -i·리다이렉션·tee) 그 뒤 \`$show_cmd\`를 실행한 기록이 없는 채로 완료·통과를 선언했습니다. 지금 \`$show_cmd\`를 실제로 돌리고 결과를 보고하세요. 돌릴 수 없는 환경이면 완료 선언 대신 \"검증하지 못한 것\"으로 남기세요 (core-task-steps.md G3). Blocked by superchaeyeons 플러그인 hooks/deny-unverified-completion.sh." >&2
     exit 2 ;;
   BLOCK_FAILED)
     echo "[하네스 · G3] \`$show_cmd\`를 돌렸지만 결과가 실패였는데 완료·통과를 선언했습니다. 실패 원인을 고치고 다시 돌리거나, 완료 선언 대신 실패 내용을 그대로 보고하세요 (verify-work 스킬 사후 모드 1단계). Blocked by superchaeyeons 플러그인 hooks/deny-unverified-completion.sh." >&2

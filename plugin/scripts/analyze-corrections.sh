@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 회고 루프의 "분석" 단계 — 마지막 분석 뒤 바뀐 이 프로젝트의 대화 기록을 세션마다 요약하고, 정정 대기열·장부와 묶어
 # `claude -p`로 하네스 개선 후보를 뽑는다. 근거 없는 후보는 버리고, 분석이 성공했을 때만 "마지막 분석" 시각을 옮긴다.
-# 스펙: docs/specs/cross-cutting/harness-retro-loop.md · 분석 지시문: plugin/skills/improve-harness/references/analyze.md
+# 스펙: docs/specs/cross-cutting/harness-retro-loop.md · 분석 지시문: plugin/skills/review-harness-feedback/references/analyze.md
 #
 # 사용:
 #   plugin/scripts/analyze-corrections.sh [run] [--model M] [--budget USD]   # 정기 실행 — 마지막 분석 뒤 바뀐 세션 전부
@@ -57,7 +57,7 @@ import datetime, json, os, re, subprocess, sys, time
 
 ENV = os.environ
 ROOT, STORE, TRANSCRIPTS, LEDGER = ENV["ROOT"], ENV["STORE"], ENV["TRANSCRIPTS"], ENV["LEDGER"]
-PROMPT = os.path.join(ENV["PLUGIN_ROOT"], "skills/improve-harness/references/analyze.md")
+PROMPT = os.path.join(ENV["PLUGIN_ROOT"], "skills/review-harness-feedback/references/analyze.md")
 CAP = 500  # 메시지마다 바이트 상한 — 긴 붙여넣기 하나가 입력을 다 먹지 않게 (스펙 실험: 상한이 없으면 세션 10개에 166KB)
 
 # ---- 요약 추출 ---------------------------------------------------------------------
@@ -418,7 +418,7 @@ def run(argv):
     new_file = not os.path.isfile(target)
     with open(target, "a", encoding="utf-8") as fh:
         if new_file:
-            fh.write("# 검토할 회고 후보\n\n`improve-harness` 스킬이 `### ` 후보를 하나씩 검토한다. 검토를 마친 후보는 이 파일에서 지운다.\n")
+            fh.write("# 검토할 회고 후보\n\n`review-harness-feedback` 스킬이 `### ` 후보를 하나씩 검토한다. 검토를 마친 후보는 이 파일에서 지운다.\n")
         fh.write(f"\n## {stamp} {kind} 분석 — {model} · 세션 {len(files)}개 · 후보 {len(kept)}건 · 버림 {len(dropped)}건\n\n")
         reflected = [rid for rid, r in rows.items() if r["상태"].startswith("반영")]
         if reflected:

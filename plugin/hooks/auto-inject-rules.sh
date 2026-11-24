@@ -14,7 +14,7 @@
 # 세션마다 도는 훅이라 bash 3.2 내장 기능만 쓴다(macOS 기본 bash는 3.2 — bash 4·5 기능은 조용히 빈 값이 된다).
 # Hook input: JSON with "hook_event_name", "session_id", "source"(SessionStart), "agent_type"(SubagentStart) on stdin.
 STATE_DIR="${TMPDIR:-/tmp}/superchaeyeons-inject"
-RULES="core-gates core-guardrails core-workflow core-reporting"
+RULES="core-approval-triggers core-stop-conditions core-task-steps core-reporting"
 WARN="하네스 규칙을 싣지 못했다 — 이 세션은 가드레일 없이 진행된다"
 
 event=""

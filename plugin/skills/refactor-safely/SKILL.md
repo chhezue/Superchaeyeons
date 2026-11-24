@@ -11,7 +11,7 @@ description: 기존 코드를 아키텍처 감사 후 G2에서 확정한 불변 
 
 **이 스킬은 `core-task-steps.md` 사이클의 B 트랙이다.** 1 Audit = 진입·G1 · 2 승인 = G2 · 3 Implement = 구현 · 4 Verify = G3(`verify-work`) · 5 Report = G4 · 6 = 다음 사이클. 게이트 내용은 `core-task-steps.md`가 SSOT다.
 
-점검 항목은 [`references/audit-checklist.md`](references/audit-checklist.md)가, A/B/C/D 분류 기준과 산출물 포맷은 [`references/audit-template.md`](references/audit-template.md)가, 불변 조건은 이 파일이 SSOT다.
+플러그인 기본값은 [감사 체크리스트](references/audit-checklist.md)와 [감사 결과 양식](references/audit-template.md)이다. Codex에서는 두 종류를 **각각** 고른다. 이 작업에 적용되는 `AGENTS.md`의 직접 지정, 거기서 연결한 등록부의 해당 항목, 플러그인 기본값 순서로 연다. 상대 링크는 링크를 적은 문서 위치에서 해석한다. 명시한 경로가 끊겼거나 같은 우선순위의 지정이 충돌하면 경로들을 알려주고 감사 문서 작성만 멈춘다.
 
 ## 불변 조건 (Invariant)
 
@@ -40,7 +40,7 @@ description: 기존 코드를 아키텍처 감사 후 G2에서 확정한 불변 
 ### 1. Audit — 읽기 전용, 신선한 서브에이전트
 
 - `Agent` 툴(`subagent_type: Explore` 또는 `general-purpose`, 읽기 전용)로 **새 서브에이전트**를 띄워 해당 작업 단위만 스캔한다. 방금 짠 코드를 같은 대화에서 스스로 평가하면 자기 판단을 재확인하게 된다(`core-task-steps.md` G3).
-- 프롬프트에 반드시 포함: 대상 경로, `references/audit-checklist.md` 점검 항목 전체, A/B/C/D 분류 기준, `references/audit-template.md` 포맷, 기본 불변 조건, "코드 수정 금지 — 읽기·분석만".
+- 감사 역할에 대상 경로, **선택한 체크리스트와 결과 양식의 실제 경로 두 개**, 분류 기준(A 필수 수정, B 유지보수 개선, C 이번에는 보류, D 현행 유지)과 불변 조건을 전달한다. 읽기·분석만 요청한다. 체크 항목마다 판정과 코드 근거를 남기고 결과 양식의 고유 절을 실제 발견으로 채운다. 양식에 자리가 없으면 해당 절이나 보충 절에 A/B/C/D 판정, 불변 조건 영향, 승인 대기와 승인 후 구현 결과를 담는다.
 - **G1 하위 단계:** 감사 중 "더 나은 라이브러리·패턴이 있는가"가 판단에 필요하면 `researcher`를 부른다. 그 결과는 감사 문서의 `## 근거`와 **물리적으로 분리된 `## 참고 — 외부 사례`** 절에 둔다. A/B 판정 근거는 여전히 코드에서 확인한 사실만 인정한다.
 - **A 트랙 승격 신호:** 개선에 새 의존성·새 기술·계약 변경이 필요하다고 판단되면 항목을 "승격 후보"로 표시하고 멈춘다. 리팩터가 조용히 아키텍처 변경으로 번지는 것을 막으면서 길은 열어 둔다 — 승인되면 `write-spec`으로 넘어간다.
 - 산출물: `{{감사 로그}}/{unit}/{NNN}-{kebab-topic}.md` — 작업 단위 안에서 `001`부터 증가 (신규 작성, **코드는 건드리지 않음**). H1 아래 개요 한 문단 필수.

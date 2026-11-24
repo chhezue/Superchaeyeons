@@ -35,6 +35,9 @@ mkdir -p "$tmpdir/codex-root"
 ln -s "$tmpdir" "$tmpdir/codex-root/outside"
 mkdir -p "$tmpdir/codex-unrelated/.claude"
 printf 'SCOPE=.\nHARNESS_SELF_EDIT=1\n' >"$tmpdir/codex-unrelated/.claude/harness.conf"
+mkdir -p "$tmpdir/codex-format/.claude"
+printf 'FORMAT_PATHS=*.py\nFORMAT_FILE_EXEC=missing-formatter\nFORMAT_CMD=touch whole-ran\n' >"$tmpdir/codex-format/.claude/harness.conf"
+printf 'new\n' >"$tmpdir/codex-format/app.py"
 pass=0; fail=0; n=0
 # conf_set <프로젝트> <키> <값> — 그 프로젝트 설정 파일의 키 줄을 바꾼다(없으면 더한다). 설정 파일이 없으면(conf:none) 그대로 둔다
 conf_set() {

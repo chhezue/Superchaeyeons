@@ -63,6 +63,12 @@ Stop 훅(`TEST_CMD`)은 훅 공통 규약의 예외라, 설정이 없거나 깨�
 8. `BLOCK_BULK_DELETE`(폴더 통째 삭제 막기)는 `init-harness`가 묻는다. 나머지 `BLOCK_*`는 묻지 않고 1(막기)로 둔다. 0으로 두면 그 묶음은 프로젝트 `settings.json`의 `permissions.deny`에 맡긴다
 9. `DEPS_FILES`·`DEPS_ADD_CMD`·`ASK_PATHS`·`CONTRACT_PATHS`는 `init-harness`가 저장소를 확인해 후보를 제안하고, 승인 전에는 비워 둔다
 
+## Codex 편집 후 포맷
+
+`FORMAT_PATHS`가 비어 있으면 자동 포맷은 꺼진다. 패턴에 맞고 `FORMAT_FILE_EXEC`가 있으면 Codex는 저장소 루트에서 해당 실행 파일에 편집 파일의 절대경로를 인자 하나로 넘긴다. 실행 파일은 저장소 안의 실행 가능한 파일이며 루트 기준 상대 경로만 적는다. 경로에 공백이 있어도 값에 따옴표를 덧붙이지 않는다.
+
+프로젝트 실행 파일이 받은 파일만 포맷하는지 다른 미커밋 파일을 둔 임시 사본에서 확인한다. 실패하면 원인을 알리고 편집을 유지한다. 키가 없거나 비어 있으면 기존 `FORMAT_CMD`가 적용된다. 수동 전체 포맷은 `dev.sh fmt`와 `dev.conf`의 `FMT_CMD`를 계속 쓴다.
+
 ## `harness-map.md`에서 옮기기
 
 복사 설치에서는 같은 값이 설정 표와 훅 상수에 나뉘어 있었다. 표의 `☑`·`❌`·`⬜`는 `1`·`0`·`{…}`(빈칸)에 대응한다. 옛 파일과 상수는 [이전 절차](migrate-copied-harness.md)에서 실제 사용처를 확인하고 승인받은 항목만 정리한다.

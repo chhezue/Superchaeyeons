@@ -17,13 +17,18 @@ while IFS= read -r line || [ -n "$line" ]; do
 	line="${line%$'\r'}"
 	case "$line" in FORMAT_CMD=*) cmd="${line#FORMAT_CMD=}" ;; FORMAT_PATHS=*) paths="${line#FORMAT_PATHS=}" ;; esac
 done <"$conf"
-case "$cmd" in '' | '(없음)'* | '{'*'}') exit 0 ;; esac
 [ -n "$paths" ] || exit 0
 
-input=""
-IFS= read -r -d '' input || :
-path=""
-[[ $input =~ \"(file_path|notebook_path)\"[[:space:]]*:[[:space:]]*\"([^\"]*)\" ]] && path="${BASH_REMATCH[2]}"
+# Codex의 파일별 실행도 기존 Bash 패턴과 같은 기준으로 대상을 고른다.
+if [ "${1:-}" = --matches-file ]; then
+	path="${2:-}"
+else
+	case "$cmd" in '' | '(없음)'* | '{'*'}') exit 0 ;; esac
+	input=""
+	IFS= read -r -d '' input || :
+	path=""
+	[[ $input =~ \"(file_path|notebook_path)\"[[:space:]]*:[[:space:]]*\"([^\"]*)\" ]] && path="${BASH_REMATCH[2]}"
+fi
 [ -n "$path" ] || exit 0
 case "$path" in "$proj"/*) rel="${path#"$proj"/}" ;; /*) exit 0 ;; *) rel="$path" ;; esac
 
@@ -37,6 +42,10 @@ for g in $paths; do
 done
 set +f
 [ "$hit" = 1 ] || exit 0
+if [ "${1:-}" = --matches-file ]; then
+	printf '%s\n' '{"matches":true}'
+	exit 0
+fi
 
 first="${cmd%% *}"
 if [[ $first != /* ]] && [ ! -e "$proj/$first" ] && [ -e "$root/$first" ]; then

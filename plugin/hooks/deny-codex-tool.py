@@ -7,8 +7,8 @@ import subprocess
 import sys
 
 
-def patch_paths(command):
-    """전체 패치를 먼저 읽어 삭제·이동 양쪽을 포함한 경로를 돌려준다."""
+def patch_entries(command):
+    """전체 입력을 검증하고 각 경로와 편집 후 파일이 남는지 돌려준다."""
     lines = command.splitlines()
     if not lines or lines[0] != '*** Begin Patch' or lines[-1] != '*** End Patch':
         raise ValueError('패치 시작·끝 표식이 잘못됐습니다')
@@ -23,16 +23,18 @@ def patch_paths(command):
         path = header[len('*** ' + kind + ' File: '):]
         if not path.strip() or path != path.strip() or '\x00' in path:
             raise ValueError('패치 경로가 비어 있거나 잘못됐습니다')
-        paths.append(path)
         index += 1
         if kind == 'Delete':
+            paths.append((path, False))
             continue
         if kind == 'Update' and index < end and lines[index].startswith('*** Move to: '):
             target = lines[index][len('*** Move to: '):]
             if not target.strip() or target != target.strip() or '\x00' in target:
                 raise ValueError('이동 대상이 잘못됐습니다')
-            paths.append(target)
+            paths.append((path, False))
+            path = target
             index += 1
+        paths.append((path, True))
         count, section = 0, False
         while index < end and not lines[index].startswith(('*** Add File: ', '*** Update File: ', '*** Delete File: ')):
             line = lines[index]
@@ -92,7 +94,7 @@ def main():
         return
     # Codex 상대 경로는 도구의 cwd 기준이다. 공통 판정에는 절대 경로를 넘긴다.
     paths = []
-    for raw in patch_paths(command):
+    for raw, _ in patch_entries(command):
         path = Path(raw)
         absolute = (cwd / path).absolute() if not path.is_absolute() else path
         real = absolute.resolve()

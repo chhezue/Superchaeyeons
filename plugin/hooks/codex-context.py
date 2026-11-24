@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Codex 이벤트를 공통 정책에 연결하고 현재 프로젝트의 사용자 메시지를 기록한다."""
-import fcntl
 import datetime
+import fcntl
 import hashlib
 import json
 import os
@@ -10,8 +10,10 @@ import re
 import runpy
 import secrets
 import shlex
+import stat
 import subprocess
 import sys
+import tempfile
 
 
 def merge(target, value):
@@ -21,6 +23,48 @@ def merge(target, value):
     if context:
         output = target.setdefault('hookSpecificOutput', {'hookEventName': 'PostToolUse'})
         output['additionalContext'] = '\n'.join(filter(None, (output.get('additionalContext'), context)))
+
+
+def restore_edit(root, path, content, mode):
+    if path.parent.resolve() != path.parent or not path.is_relative_to(root):
+        raise ValueError('편집 파일의 디렉터리가 바뀌었습니다')
+    if (not path.is_symlink() and path.is_file() and stat.S_IMODE(path.stat().st_mode) == mode
+            and path.read_bytes() == content):
+        return
+    with tempfile.TemporaryDirectory(dir=path.parent) as directory:
+        backup = Path(directory) / 'edit'
+        backup.write_bytes(content)
+        backup.chmod(mode)
+        backup.replace(path)
+
+
+def format_file(root, path, runner):
+    """파일별 포맷을 선택한 프로젝트의 실행 파일에 경로 인자 하나를 전달한다."""
+    rel = path.relative_to(root).as_posix()
+    runner = Path(runner)
+    try:
+        if runner.is_absolute():
+            raise ValueError('실행 파일은 프로젝트 기준 상대 경로여야 합니다')
+        executable = (root / runner).resolve()
+        if not executable.is_relative_to(root):
+            raise ValueError('실행 파일이 프로젝트 밖입니다')
+        mode = stat.S_IMODE(path.stat().st_mode)
+        content = path.read_bytes()
+        try:
+            subprocess.run([str(executable), str(path)], cwd=root, check=True,
+                           stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL, timeout=600)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as failure:
+            reason = (f'종료 코드 {failure.returncode}' if isinstance(failure, subprocess.CalledProcessError)
+                      else '실행 시간 초과')
+            try:
+                restore_edit(root, path, content, mode)
+            except (OSError, ValueError, RuntimeError) as error:
+                reason += f', 편집 복구 실패: {error}'
+            raise ValueError(reason) from failure
+    except (OSError, ValueError, RuntimeError) as error:
+        return {'systemMessage': f'파일 포맷 실패 — {rel} ({runner}): {error}'}
+    return {}
 
 
 def exit_status(response, tool):
@@ -75,8 +119,8 @@ def main():
     if normalized.get('agent_type') in ('researcher', 'test-writer', 'doc-reviewer'):
         normalized['agent_type'] = 'superchaeyeons:' + normalized['agent_type']
 
-    def common(script, event):
-        response = subprocess.run(['/bin/bash', str(plugin / 'hooks' / script)],
+    def common(script, event, *args):
+        response = subprocess.run(['/bin/bash', str(plugin / 'hooks' / script), *args],
                                   input=json.dumps(event), capture_output=True, text=True,
                                   cwd=root, env=env, timeout=600)
         if response.returncode:
@@ -188,20 +232,31 @@ def main():
             state_path.write_text(json.dumps(state))
             return out
         if tool == 'apply_patch':
-            paths = runpy.run_path(str(plugin / 'hooks/deny-codex-tool.py'))['patch_paths'](command)
+            entries = runpy.run_path(str(plugin / 'hooks/deny-codex-tool.py'))['patch_entries'](command)
             docs = runpy.run_path(str(plugin / 'scripts/completion-policy.py'))['DOC_EXT']
-            absolute = [(cwd / p).resolve() for p in paths]
-            if not all(p.resolve().is_relative_to(root) for p in absolute):
-                raise ValueError('후처리 대상이 프로젝트 밖입니다')
-            if status != 1 and any(p.suffix not in docs for p in absolute):
+            targets = {}
+            code_edited = False
+            for raw, remains in entries:
+                path = (cwd / raw).resolve()
+                if path.suffix not in docs or Path(raw).suffix not in docs:
+                    code_edited = True
+                if not path.is_relative_to(root):
+                    merge(out, {'systemMessage': f'후처리 대상이 프로젝트 밖입니다 — {raw}'})
+                    continue
+                targets[path] = remains
+            if status != 1 and code_edited:
                 state['edited'], state['tested'] = True, False
                 state['generation'] += 1
             if status == 0:
-                for path in dict.fromkeys(absolute):
+                for path, remains in targets.items():
                     event = dict(normalized, tool_input={'file_path': str(path)})
                     merge(out, common('auto-inject-path-rules.sh', event))
-                    if path.exists():
-                        merge(out, common('auto-format.sh', event))
+                    if remains and path.is_file():
+                        if conf.get('FORMAT_FILE_EXEC'):
+                            if common('auto-format.sh', event, '--matches-file', str(path)).get('matches'):
+                                merge(out, format_file(root, path, conf['FORMAT_FILE_EXEC']))
+                        else:
+                            merge(out, common('auto-format.sh', event))
                         feedback = root / '.codex/corrections/feedback'
                         if path.suffix == '.md' and path.is_relative_to(feedback):
                             text = path.read_text()

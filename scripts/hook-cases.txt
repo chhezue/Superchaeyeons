@@ -783,6 +783,9 @@ auto-format.sh	-;FORMAT_CMD=echo ran >$TMP/fmt-ran;FORMAT_PATHS=src/**/*.ts *.py
 auto-format.sh	-;FORMAT_CMD=;FORMAT_PATHS=src/**/*.ts	0;out=	{"tool_name":"Write","tool_input":{"file_path":"src/app/main.ts","content":"x"}}
 auto-format.sh	-;FORMAT_CMD=false;FORMAT_PATHS=*.py	0;out~포맷 실패	{"tool_name":"Write","tool_input":{"file_path":"a.py","content":"x"}}
 auto-format.sh	-;FORMAT_CMD=touch $TMP/fmt-ran;FORMAT_PATHS=src/**/*.ts	0;out=	not json
+# FORMAT_PATHS의 Bash 숫자 문자 클래스는 숫자 한 자리만 고른다.
+auto-format.sh	-;FORMAT_CMD=echo ran >$TMP/fmt-digit-skip;FORMAT_PATHS=src/test[[:digit:]].py	0;out=;nofile:$TMP/fmt-digit-skip	{"tool_name":"Edit","tool_input":{"file_path":"src/testA.py","old_string":"a","new_string":"b"}}
+auto-format.sh	-;FORMAT_CMD=echo ran >$TMP/fmt-digit-match;FORMAT_PATHS=src/test[[:digit:]].py	0;out=;file:$TMP/fmt-digit-match~^ran$	{"tool_name":"Edit","tool_input":{"file_path":"src/test7.py","old_string":"a","new_string":"b"}}
 
 # ---- deny-codex-tool.py (공동 지원 M4 — Codex 입력·전체 패치 경로를 기존 판정에 연결) ----
 # JSON cwd와 tool_input.command를 검사한다. 정상·위반·판정 불가를 실제 편집 없이 판정한다.
@@ -862,6 +865,9 @@ codex-context.py config	-	0;out~systemMessage	not json
 codex-context.py post	-	0;out~systemMessage	not json
 codex-context.py stop	-	0;out~systemMessage	not json
 codex-context.py prompt	-	0;out~systemMessage	not json
+
+# Codex 파일별 포매터가 없으면 편집 파일을 알리고 전체 포맷 명령을 실행하지 않는다.
+codex-context.py post	-	0;out~systemMessage;out~app\.py;nofile:$TMP/codex-format/whole-ran	{"cwd":"$TMP/codex-format","session_id":"missing-file-formatter","hook_event_name":"PostToolUse","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: app.py\n@@\n-old\n+new\n*** End Patch"},"tool_response":{"exit_code":0}}
 
 # M5 — 쓰기 내용이 빠진 입력을 일반 작업 허용으로 간주하지 않는다.
 check-codex-approval.py	-	3;out~"decision"[[:space:]]*:[[:space:]]*"confirm";out!~permissionDecision	{"tool_name": "Write", "tool_input": {"file_path": "src/missing-body.ts"}}

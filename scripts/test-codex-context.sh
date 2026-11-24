@@ -10,6 +10,7 @@ python3 -I - "$repo_root" <<'PY'
 import json
 import os
 from pathlib import Path
+import re
 import shlex
 import shutil
 import subprocess
@@ -308,6 +309,166 @@ def format_failure(f):
 case('포맷 명령이 실패하면 알리고 작업은 계속한다', format_failure)
 
 
+def file_formatter(f):
+    runner = f.root / 'tools' / '파일 formatter'
+    runner.parent.mkdir()
+    runner.write_text(
+        '#!/usr/bin/env python3\n'
+        'import json, os, sys\n'
+        'from pathlib import Path\n'
+        'with Path(os.environ["FORMAT_LOG"]).open("a") as log:\n'
+        '    print(json.dumps([os.getcwd(), sys.argv[1:]]), file=log)\n'
+        'if len(sys.argv) != 2:\n'
+        '    raise SystemExit(2)\n'
+        'with Path(sys.argv[1]).open("ab") as target:\n'
+        '    target.write(b"# formatted\\n")\n')
+    runner.chmod(0o755)
+    f.env['FORMAT_LOG'] = str(f.base / 'format.jsonl')
+    f.set_conf('FORMAT_FILE_EXEC', str(runner.relative_to(f.root)))
+    f.set_conf('FORMAT_PATHS', '*.py *.ts')
+    f.set_conf('FORMAT_CMD', 'touch whole-ran')
+    return runner
+
+
+def require_formatted(f, *paths):
+    log = Path(f.env['FORMAT_LOG'])
+    calls = [json.loads(line) for line in log.read_text().splitlines()] if log.exists() else []
+    expected = [[str(f.root), [str(f.root / path)]] for path in paths]
+    require(sorted(calls) == sorted(expected), '포매터 작업 폴더와 경로 인자 불일치: ' + repr(calls))
+
+
+def format_patch(f, patch, exit_code=0):
+    return f.call('post', {'hook_event_name': 'PostToolUse', 'tool_name': 'apply_patch',
+                           'tool_input': {'command': '*** Begin Patch\n' + patch + '\n*** End Patch'},
+                           'tool_response': {'exit_code': exit_code}})
+
+
+def format_multi_file(f):
+    file_formatter(f)
+    added = "한글 '따옴표'와 공백.ts"
+    moved = '새 이름 "둘".py'
+    other = f.root / 'unfinished.py'
+    other.write_bytes(b'staged bytes\n')
+    subprocess.run(['git', 'init', '-q'], cwd=f.root, check=True)
+    subprocess.run(['git', 'add', '--', 'app.py', other.name], cwd=f.root, check=True)
+    index = f.root / '.git/index'
+    original_index = index.read_bytes()
+    other.write_bytes(b'work in progress\r\n')
+    (f.root / 'app.py').write_text('answer=42\n')
+    (f.root / added).write_text('let n=1\n')
+    (f.root / moved).write_text('moved=1\n')
+    patch = (f'*** Add File: {added}\n+let n=1\n'
+             '*** Update File: app.py\n@@\n-old\n+intermediate\n'
+             '*** Update File: app.py\n@@\n-intermediate\n+answer=42\n'
+             f'*** Update File: old.py\n*** Move to: {moved}\n@@\n-old\n+moved=1\n'
+             '*** Delete File: deleted.ts\n'
+             '*** Update File: docs/note.md\n@@\n-old\n+Text.')
+    format_patch(f, patch)
+    require_formatted(f, added, 'app.py', moved)
+    for name in (added, 'app.py', moved):
+        require((f.root / name).read_bytes().endswith(b'# formatted\n'), '포맷 결과가 없음: ' + name)
+    require(other.read_bytes() == b'work in progress\r\n', '다른 작업 파일이 바뀜')
+    require(index.read_bytes() == original_index, 'Git 인덱스가 바뀜')
+    require(not (f.root / 'whole-ran').exists(), '여러 파일 편집에서 전체 포맷이 실행됨')
+
+
+case('여러 파일을 편집하면 추가·수정·이동된 대상만 한 번씩 포맷하고 다른 작업 및 인덱스를 보존한다',
+     format_multi_file)
+
+
+def format_without_whole(f):
+    file_formatter(f)
+    f.set_conf('FORMAT_CMD', '')
+    f.edit()
+    require_formatted(f, 'app.py')
+
+
+case('전체 명령이 비어 있어도 일치하는 파일은 파일별로 포맷한다', format_without_whole)
+
+
+def format_digit_pattern(f):
+    file_formatter(f)
+    f.set_conf('FORMAT_PATHS', 'src/test[[:digit:]].py')
+    (f.root / 'src').mkdir()
+    names = ('src/test7.py', 'src/testA.py', 'src/test77.py')
+    for name in names:
+        (f.root / name).write_text('edited\n')
+    format_patch(f, '\n'.join(f'*** Add File: {name}\n+edited' for name in names))
+    require_formatted(f, 'src/test7.py')
+    require(not (f.root / 'whole-ran').exists(), '숫자 패턴으로 편집한 뒤 전체 명령이 실행됨')
+
+
+case('FORMAT_PATHS의 Bash 숫자 문자 클래스에 맞는 한 자리 숫자 파일만 포맷한다', format_digit_pattern)
+
+
+def failed_format_patch(f):
+    file_formatter(f)
+    f.edit(response={'exit_code': 1})
+    require_formatted(f)
+    require(not (f.root / 'whole-ran').exists(), '실패한 패치에서 전체 포맷을 실행함')
+
+
+case('패치가 실패하면 파일별 포맷과 전체 포맷을 모두 건너뛴다', failed_format_patch)
+
+
+def non_file_format_targets(f):
+    file_formatter(f)
+    (f.root / 'directory.py').mkdir()
+    f.edit('directory.py')
+    f.edit('missing.ts')
+    require_formatted(f)
+    require(not (f.root / 'whole-ran').exists(), '일반 파일이 아닌 경로에서 전체 포맷을 실행함')
+
+
+case('패턴이 맞아도 디렉터리나 없는 파일이면 포맷을 건너뛴다', non_file_format_targets)
+
+
+def rejected_formatter(f, problem, reason):
+    runner = file_formatter(f)
+    target = f.root / 'app.py'
+    if problem == 'missing':
+        runner.unlink()
+    elif problem == 'not-executable':
+        runner.chmod(0o644)
+    elif problem == 'failure':
+        target.write_bytes(b'first edited line\r\nlast edited line')
+        runner.write_text('#!/bin/sh\nprintf partial > "$1" || exit 2\necho "invalid source" >&2\nexit 17\n')
+    elif problem == 'outside-runner':
+        external = runner.rename(f.base / 'external-formatter')
+        runner.symlink_to(external)
+    elif problem == 'outside-target':
+        external = target.rename(f.base / 'external-target.py')
+        target.symlink_to(external)
+    before = target.read_bytes()
+    result = f.edit()
+    warning = result.get('systemMessage', '')
+    require('app.py' in warning and re.search(reason, warning, re.I),
+            '편집한 파일 및 원인을 알리는 경고가 없음: ' + repr(warning))
+    require(not is_blocked(result), '파일별 포맷 오류가 편집을 차단함')
+    require(target.read_bytes() == before, '포맷 오류 후 편집 파일이 바뀜')
+    require_formatted(f)
+    require(not (f.root / 'whole-ran').exists(), '파일별 포맷 오류 후 전체 명령을 실행함')
+
+
+for problem, label, reason in (
+    ('missing', '실행 파일이 없으면', '없|찾|존재|missing|not found|no such'),
+    ('not-executable', '실행 권한이 없으면', '권한|실행.*(없|못|불가|않)|permission|executable|access'),
+    ('failure', '포매터가 편집 파일을 일부 덮어쓰고 exit 17로 끝나면', '17|invalid source'),
+    ('outside-runner', '실행 파일 링크가 저장소 밖을 가리키면', '밖|외부|벗어|경계|범위|outside|escape'),
+    ('outside-target', '대상 파일 링크가 저장소 밖을 가리키면', '밖|외부|벗어|경계|범위|outside|escape'),
+):
+    case(label + ' 대상과 원인을 알리고 편집을 유지하며 전체 포맷을 건너뛴다',
+         lambda f: rejected_formatter(f, problem, reason))
+
+
+def legacy_empty_file_key(f):
+    f.set_conf('FORMAT_FILE_EXEC', '')
+    formatting(f)
+
+
+case('파일별 실행 파일 설정이 빈 값이면 기존 전체 포맷 동작을 유지한다', legacy_empty_file_key)
+
+
 def unsafe_session(f):
     before = {path.resolve() for path in f.base.rglob('*') if path.is_file()}
     f.edit(sid='../../escaped-session')
@@ -487,7 +648,7 @@ def native_string_wrong_workdir(f):
 case('같은 테스트 문자열이어도 다른 물리 작업 디렉터리에서 실행한 성공은 인정하지 않는다', native_string_wrong_workdir)
 
 
-def configure_consumer(f, plugin):
+def configure_consumer(f, plugin, format_cmd='없음 — 사용하지 않음'):
     f.env.pop('DEV_CONF', None)
     subprocess.run([sys.executable, '-I', str(plugin / 'scripts/configure-harness.py'),
                     '--project', str(f.root), '--target', 'both', '--apply'],
@@ -500,7 +661,7 @@ def configure_consumer(f, plugin):
     f.set_conf('POLISH_ENABLED', '0')
 
     dev = f.root / 'scripts/dev.conf'
-    values = {'TEST_CMD': 'python3 scripts/check_answer.py', 'TEST_REPORT': 'last-line',
+    values = {'TEST_CMD': 'python3 scripts/check_answer.py', 'TEST_REPORT': 'last-line', 'FMT_CMD': format_cmd,
               'LOG_DIR': '.logs'}
     lines = []
     for line in dev.read_text().splitlines():
@@ -516,6 +677,27 @@ def configure_consumer(f, plugin):
         '    raise SystemExit("consumer answer incorrect")\n'
         'print("consumer answer correct")\n')
     require(not (f.root / 'scripts/dev.sh').exists(), '소비 프로젝트에 dev.sh가 복사됨')
+
+
+def manual_format(f):
+    plugin = REPO / 'plugin'
+    configure_consumer(f, plugin, format_cmd='touch whole-ran')
+    file_formatter(f)
+    dev = plugin / 'scripts/dev.sh'
+    f.set_conf('FORMAT_CMD', shlex.quote(str(dev)) + ' fmt')
+    f.set_conf('FORMAT_PATHS', '')
+    (f.root / 'app.py').write_text('answer=42\n')
+    f.edit()
+    marker = f.root / 'whole-ran'
+    require(not marker.exists(), '대상 패턴이 비었는데 전체 포맷이 실행됨')
+    require_formatted(f)
+    run = subprocess.run([str(dev), 'fmt'], cwd=f.root, env=f.env, text=True, capture_output=True)
+    require(run.returncode == 0 and marker.is_file(), '수동 전체 포맷 실패: ' + run.stdout + run.stderr)
+    require_formatted(f)
+
+
+case('대상 패턴이 비어 있으면 자동 포맷을 건너뛰고 수동 dev.sh fmt는 전체 명령을 실행한다',
+     manual_format, fresh=True)
 
 
 def consumer_command(f, host, plugin):

@@ -147,7 +147,7 @@ Claude 매니페스트와 `plugin/hooks/hooks.json`은 그대로 유지한다. C
 
 Codex 승인 사전 검사는 `plugin/scripts/check-codex-approval.py`가 기존 `ask-approval.sh` 판정을 재사용한다. allow/confirm/deny를 반환하며 confirm은 사용자 답을 기다리는 행동 절차다. 이 도구를 Codex PreToolUse 승인 훅으로 등록하거나 승인 표식·토큰으로 차단을 우회하지 않는다.
 
-Codex 세션 연결 `plugin/hooks/codex-context.py`는 SessionStart·SubagentStart의 공통 규칙·설정과 Codex 호출 안내(`plugin/codex/INSTRUCTIONS.md`)를 넣는다. PostToolUse는 경로 규칙·공통 포맷을 호출하고 `.codex/harness-state/`에 테스트 증거만 기록한다. 단독 `TEST_CMD`는 루트 실행의 호출별 종료 코드·작업 폴더를 확인하며 문자열 출력을 성공으로 추측하지 않는다. Stop은 last_assistant_message를 공통 완료 선언 정책 `plugin/scripts/completion-policy.py`로 판정한다. Claude Stop도 같은 완료 선언 정책 원본을 읽으며 기존 transcript 해석은 유지한다. 별도 회귀 검사는 `scripts/test-codex-context.sh`다.
+Codex 세션 연결 `plugin/hooks/codex-context.py`는 SessionStart·SubagentStart의 공통 규칙·설정과 Codex 호출 안내(`plugin/codex/INSTRUCTIONS.md`)를 넣는다. PostToolUse는 경로 규칙을 읽고, `FORMAT_FILE_EXEC`가 있으면 편집된 대상 파일만, 없으면 기존 명령으로 포맷한다. 이후 `.codex/harness-state/`에 테스트 증거만 기록한다. 단독 `TEST_CMD`는 루트 실행의 호출별 종료 코드·작업 폴더를 확인하며 문자열 출력을 성공으로 추측하지 않는다. Stop은 last_assistant_message를 공통 완료 선언 정책 `plugin/scripts/completion-policy.py`로 판정한다. Claude Stop도 같은 완료 선언 정책 원본을 읽으며 기존 transcript 해석은 유지한다. 별도 회귀 검사는 `scripts/test-codex-context.sh`다.
 
 초기 설정의 도구 선택은 `init-harness`가 `plugin/scripts/configure-harness.py`를 호출해 수행한다. 공통 값은 한 벌이며 Claude JSON과 Codex TOML·역할·명령 규칙만 도구별로 생성한다. 생성 역할 3개의 원본은 `plugin/agents/*.md`다. 사용자 수정·외부 심볼릭 링크는 덮어쓰지 않는다. `scripts/test-harness-config.sh`가 선택·합치기·충돌·멱등성을 검사한다.
 

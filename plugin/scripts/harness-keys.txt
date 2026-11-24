@@ -32,7 +32,8 @@ HARNESS_SELF_EDIT	flag	하네스 자기 수정	1이면 에이전트가 하네스
 POLISH_ENABLED	flag	Gemini 다듬기	1이면 스킬이 사람용 문서·메시지를 polish-with-gemini.sh로 다듬는다
 COMMIT_RE	hook	커밋 메시지 정규식	{{커밋 메시지 형식}}을 판정하는 확장 정규식(ERE). 비어 있으면 형식을 검사하지 않는다
 COMMIT_CHECK	hook	커밋 전 검사 명령	승인 창을 띄우기 전에 돌릴 검사 명령. 실패하면 커밋을 막는다. 비어 있으면 돌리지 않는다. 프로젝트 폴더에서 돌고, 첫 단어가 프로젝트에 없는 상대 경로인데 플러그인 폴더에 있으면 플러그인 쪽을 부른다(예: scripts/dev.sh test)
-FORMAT_PATHS	hook	포맷 대상 경로	FORMAT_CMD를 돌릴 파일 glob(공백 구분)
+FORMAT_PATHS	hook	포맷 대상 경로	편집 후 자동 포맷할 파일 glob(공백 구분). 빈 값이면 자동 실행하지 않는다
+FORMAT_FILE_EXEC	hook	Codex 파일별 포매터	Codex가 편집한 파일의 절대경로 하나를 받는 프로젝트 실행 파일(루트 기준 상대 경로). 누락·빈 값이면 기존 FORMAT_CMD를 쓴다
 CONTRACT_PATHS	hook	API 계약 파일	커밋 승인 창이 이유에 적을 계약 파일 glob(공백 구분)
 DEPS_FILES	hook	의존성 선언 파일	고치면 승인 창을 띄울 빌드 선언 파일 glob(공백 구분)
 DEPS_ADD_CMD	hook	의존성 추가 명령	실행하면 승인 창을 띄울 설치 명령 접두사(|로 구분)

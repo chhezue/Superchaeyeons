@@ -73,7 +73,7 @@
 | [`harness-slot-system-v2.md`](harness-slot-system-v2.md) "부품성 원칙" 1번 | "플러그인 매니페스트를 요구하는 장치는 채택하지 않는다" | 원칙의 목적(별도 런타임·무거운 장치 금지)은 유지하고, 플러그인 매니페스트는 금지 목록에서 뺀다. 매니페스트는 JSON 파일 하나이고 실행할 런타임이 없다 |
 | [`out-of-scope/README.md`](../../out-of-scope/README.md) "`inject-rules.sh`" 행 | 주입이 실패하면 규칙이 조용히 사라진다는 이유로 기각 | 기각 당시에 없던 이유(플러그인은 규칙 파일을 배달할 수 없음)가 생겼다. "조용히"를 Must Have의 실패 경고로 막고 채택으로 바꾼다 |
 | `harness-slot-system-v2.md` 리스크·미결정 "하네스 배달 방식" | [미정] | 이 스펙이 승인되면 "결정: 플러그인 + 세션 시작 훅"으로 고치고 이 스펙을 가리킨다 |
-| [`.claude/rules/README.md`](../../../.claude/rules/README.md) "훅 공통 규약"과 `deny-*` 훅 차단 메시지의 "훅은 구두 승인을 모릅니다"(2026-10-28 [`core-approval-triggers.md`](../../../plugin/rules/core-approval-triggers.md) §3에서 옮김) | 훅은 구두 승인을 모르므로 승인은 사용자가 설정을 바꾸는 것뿐이다 | 승인 창(`ask`)을 두 번째 통로로 더한다. 사용자가 창에서 직접 누르는 것이라 에이전트가 열 수 없다는 원칙은 그대로다. 환경 변수·마커 파일 통로를 금지한 [`out-of-scope/README.md`](../../out-of-scope/README.md) "훅 승인 우회 통로" 행과도 어긋나지 않는다 |
+| [`.claude/rules/README.md`](../../../.claude/rules/README.md) "훅 공통 규약"과 `deny-*` 훅 차단 메시지의 "훅은 구두 승인을 모릅니다"(2026-10-28 [`core-gates.md`](../../../plugin/rules/core-approval-triggers.md) §3에서 옮김) | 훅은 구두 승인을 모르므로 승인은 사용자가 설정을 바꾸는 것뿐이다 | 승인 창(`ask`)을 두 번째 통로로 더한다. 사용자가 창에서 직접 누르는 것이라 에이전트가 열 수 없다는 원칙은 그대로다. 환경 변수·마커 파일 통로를 금지한 [`out-of-scope/README.md`](../../out-of-scope/README.md) "훅 승인 우회 통로" 행과도 어긋나지 않는다 |
 
 `out-of-scope/README.md`의 "서드파티 워크플로 플러그인" 행은 Superpowers를 **설치해 쓰는 것**을 기각한 기록이다. 이 스펙은 방식만 참고하므로 그 행은 바꾸지 않는다.
 
@@ -93,7 +93,7 @@
 
 **규칙 주입**
 
-- [ ] core 규칙 4개(`core-approval-triggers`·`core-stop-conditions`·`core-task-steps`·`core-reporting`) 원문을 `plugin/rules/`로 옮긴다. Claude Code는 이 폴더를 직접 읽지 않는다
+- [ ] core 규칙 4개(`core-gates`·`core-guardrails`·`core-workflow`·`core-reporting`) 원문을 `plugin/rules/`로 옮긴다. Claude Code는 이 폴더를 직접 읽지 않는다
 - [ ] 아래 "행동 강제" 훅이 맡은 문장(승인 없는 커밋 금지·삭제와 의존성 추가 전 확인 등)은 규칙에서 "훅이 승인 창을 띄운다" 한 줄로 줄인다. 규칙에는 판단만 남긴다
 - [ ] `SessionStart`(시작·`/clear`·요약 뒤 — matcher `startup|clear|compact`, 이어 열기·분기는 대화에 이미 들어 있어 뺀다) 훅이 core 규칙을 `additionalContext`로 넣는다. 지금 네 파일의 합은 7,517자다(2026-11-05). 맨 앞에 플러그인 폴더의 실제 경로를 알리는 머리 줄을 붙인다 — Bash 도구에는 `CLAUDE_PLUGIN_ROOT`가 없어 규칙·스킬의 `scripts/…`를 부를 경로를 Claude가 알 수 없다
 - [ ] 같은 이벤트의 **두 번째 훅**이 프로젝트 설정 값(아래 "프로젝트 설정 파일")을 표로 넣는다. 훅 하나당 1만 자 상한을 나눠 쓰기 위해서다
@@ -111,7 +111,7 @@
 
 **행동 강제 — 승인 창**
 
-승인 창이 자주 뜨면 사람이 내용을 보지 않고 누르게 된다(`core-approval-triggers.md` 머리의 "모든 것에서 멈추면 멈춤은 무시된다"). 그래서 창을 띄우는 조건을 좁고 결정적으로 정하고, **띄우지 않아야 하는 경우도 테스트로 판정한다.**
+승인 창이 자주 뜨면 사람이 내용을 보지 않고 누르게 된다(`core-gates.md` 머리의 "모든 것에서 멈추면 멈춤은 무시된다"). 그래서 창을 띄우는 조건을 좁고 결정적으로 정하고, **띄우지 않아야 하는 경우도 테스트로 판정한다.**
 
 - [ ] `PreToolUse` 훅 `ask-*` 하나가 아래 범주에서만 `ask`를 낸다. 범주마다 설정 파일의 플래그로 켜고 끈다
 
@@ -134,13 +134,13 @@
 
 - [ ] 프로젝트 값은 `.claude/harness.conf`(`키=값`, `dev.conf`와 같은 형식)에 둔다. 경로 슬롯·형식 슬롯·능력 플래그·승인 창 범주 플래그·지금 훅 상수(`SCOPE`·`HARNESS_SELF_EDIT`·`TEST_CMD`·`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`)·`CONTRACT_PATHS`와 [Gemini 글 다듬기](gemini-text-polish.md)의 `POLISH_ENABLED`·`DOC_ROOT`가 대상이다. 플러그인은 모든 프로젝트가 같은 훅 파일을 쓰므로, 프로젝트마다 고르던 다른 훅 상수(`deny-dangerous-bash.sh`의 `BLOCK_*` 6개 · 회고 알림의 `AUTO_ANALYZE`)도 옮긴다. 키 목록·종류·뜻은 플러그인 `scripts/harness-keys.txt`가 SSOT다 (2026-11-05 사용자 결정) 빌드·실행 명령은 지금처럼 `dev.conf`에 남는다
 - [ ] 훅은 상수를 본문에 적지 않고 이 파일을 읽는다. 파일이 없거나 깨졌으면 지금 규약대로 `deny-*`는 차단한다. 단 파일이 **없을 때**(init 전)는 모두 막지 않고 가장 엄격한 기본값(`SCOPE=.`·`HARNESS_SELF_EDIT=0`·`BLOCK_*`=1)으로 판정하고, `.claude/harness.conf`·`.claude/settings.json` 쓰기는 허용한다 — 문자 그대로 막으면 `init-harness`가 설정을 쓸 수 없어 아래 "init 자동 시작"과 충돌한다. 쓰는 키가 없으면 그 키만 기본값, 깨짐(`키=값`이 아닌 줄·쓰는 키가 빈칸·허용 밖 값)은 차단. 빈칸은 값 전체가 중괄호 한 쌍(`{…}`)인 것이다 (2026-11-05 사용자 결정)
-- [ ] 설정이 채워진 뒤에는 Claude가 `harness.conf`를 고치려 하면 승인 창이 뜬다. 창의 이유에 바뀌는 키와 값을 적는다. 사용자가 누르면 반영되고, 에이전트가 설정을 바꿔 훅을 몰래 푸는 통로는 닫힌다(`core-approval-triggers.md` §3)
+- [ ] 설정이 채워진 뒤에는 Claude가 `harness.conf`를 고치려 하면 승인 창이 뜬다. 창의 이유에 바뀌는 키와 값을 적는다. 사용자가 누르면 반영되고, 에이전트가 설정을 바꿔 훅을 몰래 푸는 통로는 닫힌다(`core-gates.md` §3)
 - [ ] `harness-map.md`는 이 파일로 대체하고 지운다. 사람이 읽는 슬롯 설명은 플러그인 쪽 문서(주입 규칙이 가리키는 스킬 또는 참조 문서)로 옮긴다
 
 **init 자동 시작**
 
 - [ ] 설정 파일이 없거나 빈칸이 남아 있으면, 설정 값 훅이 규칙 대신 "하네스 설정이 비어 있다. 다른 작업 전에 `init-harness`를 제안하라"를 넣는다
-- [ ] `init-harness`는 확인으로 정해지지 않는 값만 한 번에 하나씩 묻는다(`clarify-requirements` 스킬의 라운드 방식). 권장 답을 함께 보인다
+- [ ] `init-harness`는 확인으로 정해지지 않는 값만 한 번에 하나씩 묻는다(`ask-decisions` 스킬의 라운드 방식). 권장 답을 함께 보인다
 - [ ] `init-harness`가 프로젝트 `.claude/settings.json`에 마켓플레이스(`extraKnownMarketplaces`, `autoUpdate: true`)·`enabledPlugins`·`permissions.deny`를 쓴다
 
 **이 저장소 자신**
@@ -151,14 +151,14 @@
 **Gemini 글 다듬기·트래커 안내 옮기기** (2026-10-28 추가 — 두 기능이 이 스펙보다 늦게 들어와 복사 배달 전제로 만들어졌다)
 
 - [ ] 다듬기 스크립트가 기준 글(`doc-writing.md` 3절·`core-reporting.md`·`doc-style-patterns.txt`)을 프로젝트 폴더가 아니라 플러그인 폴더(`plugin/rules/`·`plugin/scripts/`)에서 읽는다. 기준 글을 하나도 못 찾으면 기준 없이 보내지 않고 "다듬기 건너뜀(기준 글 없음)"으로 실패한다 — 지금은 조용히 빈 기준으로 보내 품질만 떨어진다
-- [ ] 스킬 본문(`write-spec`·`refactor-safely`·`verify-work`·`review-harness-feedback`)과 트래커 안내 골격(`init-harness/references/track-issues-skeleton.md`)이 부르는 `scripts/polish-with-gemini.sh`를 `${CLAUDE_PLUGIN_ROOT}/scripts/polish-with-gemini.sh`로 바꾼다
-- [ ] `POLISH_ENABLED`·`DOC_ROOT`를 스크립트 상수 대신 `.claude/harness.conf`에서 읽는다. 이 저장소 루트의 `harness.conf`는 `.claude/harness.conf`로 합치고 지운다(`core-stop-conditions.md` §2)
+- [ ] 스킬 본문(`write-spec`·`refactor-safely`·`verify-work`·`improve-harness`)과 트래커 안내 골격(`init-harness/references/track-issues-skeleton.md`)이 부르는 `scripts/polish-with-gemini.sh`를 `${CLAUDE_PLUGIN_ROOT}/scripts/polish-with-gemini.sh`로 바꾼다
+- [ ] `POLISH_ENABLED`·`DOC_ROOT`를 스크립트 상수 대신 `.claude/harness.conf`에서 읽는다. 이 저장소 루트의 `harness.conf`는 `.claude/harness.conf`로 합치고 지운다(`core-guardrails.md` §2)
 - [x] 씨앗은 싣지 않는다 — 리스크 12. [lang 팩·씨앗 제거](lang-pack-seed-removal.md)로 씨앗과 lang 팩을 지웠다. 트래커 안내·`dev.conf` 골격은 `init-harness` 스킬 폴더(`references/`)에 있어 스킬과 함께 옮겨진다
 
 **같은 변경에서 고칠 문서**
 
 - [ ] 위 "고쳐야 하는 기존 결정" 세 곳
-- [ ] `{{현재동작 요약}}`(`docs/harness/README.md`) — 규칙이 실리는 방식과 실패 경고를 쉬운 말로 (`core-stop-conditions.md` §3)
+- [ ] `{{현재동작 요약}}`(`docs/harness/README.md`) — 규칙이 실리는 방식과 실패 경고를 쉬운 말로 (`core-guardrails.md` §3)
 - [ ] `README.md` "빠른 시작" · `AGENTS.md` "무엇이 들어 있나" 표 · `.claude/rules/README.md` 목록 · `docs/harness-engineering.md` "숫자로 보는 현재"
 
 ### Nice to Have
@@ -168,7 +168,7 @@
 ### Out of Scope (이번 스펙에서 하지 않음)
 
 - 사람이 터미널에서 직접 하는 커밋 검사 — git 훅을 없애므로 Claude가 하는 커밋만 검사한다(2026-10-27 사용자 결정)
-- 질문 창 하나에 질문을 여러 개 넣지 못하게 막는 훅 — `clarify-requirements` 스킬 지침만 둔다. 지침이 생긴 뒤에도 묶어 묻는 일이 다시 생기면 `review-harness-feedback`로 기록하고 그때 추가한다. 추가하면 이 훅만 "판단 불가 = 통과"로 둬야 한다(막으면 모든 질문 창이 막힌다)
+- 질문 창 하나에 질문을 여러 개 넣지 못하게 막는 훅 — `ask-decisions` 스킬 지침만 둔다. 지침이 생긴 뒤에도 묶어 묻는 일이 다시 생기면 `improve-harness`로 기록하고 그때 추가한다. 추가하면 이 훅만 "판단 불가 = 통과"로 둬야 한다(막으면 모든 질문 창이 막힌다)
 - 클라우드 세션 지원 — 플랫폼이 저장소의 마켓플레이스를 추가하지 않는다
 - 공개 디렉터리(Anthropic 플러그인 목록) 등록
 - 이미 하네스를 복사해 쓰는 다른 프로젝트의 이전 — 이 스펙이 구현된 뒤 프로젝트마다 `init-harness` 재동기화로 한다
@@ -179,7 +179,7 @@
 |---|---|---|
 | 실패하면 사용자에게 알린다 | 테스트 먼저 | 기각 사유를 뒤집는 근거가 이 동작이다. `trap`이나 출력 형식이 바뀌면 바로 깨져야 한다 |
 | 훅이 설정 파일을 읽고, 없거나 깨지면 차단 | 테스트 먼저 | 판정 불가 = 차단 규약(통제 영역 — 장애 시 동작). 읽기 로직이 바뀌면 깨진다 |
-| 설정 파일 쓰기 승인 창 | 테스트 먼저 | 승인 통로를 지키는 장치다(`core-approval-triggers.md` §3). 경로 정규화가 바뀌면 깨진다 |
+| 설정 파일 쓰기 승인 창 | 테스트 먼저 | 승인 통로를 지키는 장치다(`core-gates.md` §3). 경로 정규화가 바뀌면 깨진다 |
 | 커밋 전 검사(메시지 형식·`verify.sh`) | 테스트 먼저 | git 훅을 대체한다. 검사 실패가 막히지 않으면 깨져야 한다 |
 | 승인 창 — 띄우는 조건 | 테스트 먼저 | 커밋·삭제·의존성은 통제 영역 변경의 마지막 관문이다. 명령 파싱이 바뀌면 깨져야 한다 |
 | 승인 창 — 띄우지 않는 경우 | 테스트 먼저 | 과잉 경보가 이 장치를 무력하게 만든다. 흔한 읽기·스테이징 명령이 창을 띄우기 시작하면 깨져야 한다 |
@@ -284,16 +284,16 @@ Superchaeyeons/
 | 날짜 | 변경 |
 |------|------|
 | 2026-10-28 | [회고 루프 스펙](harness-retro-loop.md) 구현에 맞춰 amend — 옮길 훅에 `auto-correction-queue.sh`·`auto-correction-notice.sh`, 도구 상자에 `analyze-corrections.sh`를 더했다 |
-| 2026-10-28 | **스킬 이름 변경 반영.** 사용자가 스킬 이름을 동사-목적어로 바꾸기로 정했다(`ask`→`clarify-requirements` · `specify`→`write-spec` · `tdd`→`test-first` · `safe-refactor`→`refactor-safely` · `debug`→`fix-bug` · `preflight`→`verify-work` · `retro`→`review-harness-feedback` · `harness-init`→`init-harness`). "스킬 이름은 그대로 둔다"를 새 이름으로 고쳤다 |
+| 2026-10-28 | **스킬 이름 변경 반영.** 사용자가 스킬 이름을 동사-목적어로 바꾸기로 정했다(`ask`→`ask-decisions` · `specify`→`write-spec` · `tdd`→`test-first` · `safe-refactor`→`refactor-safely` · `debug`→`fix-bug` · `preflight`→`verify-work` · `retro`→`improve-harness` · `harness-init`→`init-harness`). "스킬 이름은 그대로 둔다"를 새 이름으로 고쳤다 |
 | 2026-10-27 | 초안 — 공식 문서 확인 결과 · Superpowers 벤치마킹 · 기존 결정 개정 제안 |
-| 2026-10-27 | 행동 강제(승인 창 훅) 추가 — 범주 4개 · 띄우지 않는 경우 테스트 · 채팅 승인 대체 · `core-approval-triggers.md` §3 개정 제안 |
+| 2026-10-27 | 행동 강제(승인 창 훅) 추가 — 범주 4개 · 띄우지 않는 경우 테스트 · 채팅 승인 대체 · `core-gates.md` §3 개정 제안 |
 | 2026-10-27 | 승인 창 범주에 "스펙 승인·[미정] 확정" 추가 |
 | 2026-10-27 | 사용자 결정 반영 — [미정] 1·2·3·4·5·8 확정. 경로 조건부 규칙은 `paths` 스킬, 도구 상자는 플러그인 안, git 훅은 Claude 커밋 훅으로 대체, 설정 잠금은 승인 창. 질문 하나씩 막는 훅은 보류 |
 | 2026-10-27 | 승인 — 남은 [미정] 9·10은 구현 전 수동 검증에서 확인한다 |
 | 2026-10-27 | 실험 결과 반영 — 경로 조건부 규칙은 `PostToolUse` 훅, `--strict` 대신 `version` 경고만 허용하는 검사기(리스크 11), 주입 훅은 bash 3.2 기능만, 규칙 글자 수 8,513자, 자동 업데이트는 git 마켓플레이스로 검증. 리스크 9 확인, 리스크 10은 수동 모드만 남음 |
 | 2026-10-27 | 사용자 결정 — 경로 규칙 훅과 플러그인 검사기를 테스트 먼저 지점에 추가, 경로 훅 `hook-cases.txt` 케이스 추가 |
 | 2026-10-28 | 사용자 승인 — Gemini 글 다듬기·트래커 안내를 옮길 때 고칠 다섯 가지를 Must Have에 추가(스크립트 경로·기준 글 위치·스킬 경로·`harness.conf` 키 3개·씨앗). 씨앗을 플러그인에 실을지는 리스크 12 [미정] |
-| 2026-10-29 | 스킬 이름 변경 때 함께 바뀐 훅 판정 값을 `ask`로 되돌렸다 — `clarify-requirements`는 스킬 이름이고, Claude Code가 받는 판정 값은 `ask`다 |
+| 2026-10-29 | 스킬 이름 변경 때 함께 바뀐 훅 판정 값을 `ask`로 되돌렸다 — `ask-decisions`는 스킬 이름이고, Claude Code가 받는 판정 값은 `ask`다 |
 | 2026-10-28 | Gemini 다듬기 단순화에 맞춤 — 메시지 훅이 없어져 훅 개수·폴더 구성·옮길 항목에서 뺐다 |
 | 2026-11-05 | 승인 창 구현 중 사용자 결정 반영 — 훅 이름 `ask-approval.sh`, `verify.sh` 자리를 `COMMIT_CHECK` 키로, 설정이 없을 때 엄격한 기본값, 같은 명령의 `git add`·`mv` 새 이름·메시지 없는 커밋의 처리 |
 | 2026-11-05 | 설정 파일 구현 중 사용자 결정 반영 — 파일이 없을 때 엄격한 기본값과 init용 쓰기 허용, 빈칸 정의, `BLOCK_*`·`AUTO_ANALYZE`도 설정 키로, 키 목록 SSOT `harness-keys.txt` |

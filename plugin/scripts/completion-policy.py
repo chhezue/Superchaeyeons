@@ -1,5 +1,8 @@
 """두 도구가 공유하는 문서 확장자와 완료 선언 판정."""
-import re, os
+import os
+from pathlib import Path
+import re
+import shlex
 
 test_words = globals().get("test_words") or ["__no_test_configured__"]
 
@@ -189,7 +192,32 @@ def last_code_edit(cmd, mask):
             at = max(at, m.start())
     return at
 
+def installed_test_command():
+    """설정 표와 같은 셸 인용으로 현재 설치본의 전체 테스트 명령을 만든다."""
+    root = globals().get('plugin_root') or os.environ.get('CLAUDE_PLUGIN_ROOT') or Path(__file__).resolve().parents[1]
+    path = str(Path(root) / 'scripts/dev.sh')
+    return "'" + path.replace("'", "'\\''") + "' test"
+
+
+def is_installed_test(cmd):
+    if test_words != ['scripts/dev.sh', 'test']:
+        return False
+    expected = installed_test_command()
+    path, verb = shlex.split(expected)
+    # 셸이 실제로 같은 파일을 실행하는 단독 명령만 인정한다.
+    double_quoted = re.sub(r'([\\"$`])', r'\\\1', path)
+    return cmd.strip() in (expected, shlex.join([path, verb]), '"' + double_quoted + '" test')
+
+
 def last_test_run(cmd, mask):
+    if is_installed_test(cmd):
+        return 0
+    # 실행 파일 또는 인자에 공백이 있는 프로젝트 명령도 단독 리터럴 호출이면 인정한다.
+    configured = globals().get('test_cmd')
+    if configured and cmd.strip() == configured:
+        word = r"""(?:[\w./:@%+,=-]+|'[^'\n]+'|"[^"$`\\\n]+")"""
+        if re.fullmatch(word + '(?:[ \t]+' + word + ')*', configured):
+            return 0
     at = -1
     for m in TEST_RUN.finditer(cmd):
         if not mask[m.end(1)]:

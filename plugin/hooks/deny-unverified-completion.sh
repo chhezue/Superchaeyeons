@@ -71,7 +71,7 @@ test_cmd = os.environ["TEST_CMD"]
 test_words = test_cmd.split()
 import runpy
 try:
-    policy = runpy.run_path(os.environ["COMPLETION_POLICY"], init_globals={"test_words": test_words})
+    policy = runpy.run_path(os.environ["COMPLETION_POLICY"], init_globals={"test_words": test_words, "test_cmd": test_cmd})
     DOC_EXT, CLAIM = policy["DOC_EXT"], policy["CLAIM"]
     strip_heredocs, data_mask = policy["strip_heredocs"], policy["data_mask"]
     last_code_edit, last_test_run = policy["last_code_edit"], policy["last_test_run"]
@@ -156,7 +156,11 @@ else:
 # 안내할 명령 — TEST_CMD가 플러그인 도구(plugin/scripts/dev.sh)면 플러그인 경로를 붙인다. Bash 도구에는 CLAUDE_PLUGIN_ROOT가 없어
 # Claude가 경로를 알 수 없다. 판정은 TEST_CMD 그대로 한다 — 첫 단어는 파일 이름만 맞춰 보므로 경로가 붙어도 실행으로 인정된다
 show_cmd="$TEST_CMD"
-case "$TEST_CMD" in scripts/dev.sh*) [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && show_cmd="$CLAUDE_PLUGIN_ROOT/$TEST_CMD" ;; esac
+if [ "$TEST_CMD" = "scripts/dev.sh test" ] && [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+    engine="$CLAUDE_PLUGIN_ROOT/scripts/dev.sh"
+    quoted=${engine//\'/\'\\\'\'}
+    show_cmd="'$quoted' test"
+fi
 
 case "$verdict" in
   BLOCK_NOT_RUN)

@@ -345,7 +345,7 @@ deny-dangerous-bash.sh	-	0	{"tool_input":{"command":"cat <<'E' | python3 scripts
 # ---- deny-unverified-completion.sh (Stop) — 픽스처 transcript는 scripts/hook-fixtures/ ----
 deny-unverified-completion.sh	-	2	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}
 # 플러그인 배달 — Bash 도구에는 CLAUDE_PLUGIN_ROOT가 없어 Claude가 dev.sh 경로를 모른다. 안내 문장에 플러그인 경로를 붙인 명령을 준다
-deny-unverified-completion.sh	-;env:CLAUDE_PLUGIN_ROOT=/opt/plug	2;err~`/opt/plug/scripts/dev\.sh test`	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}
+deny-unverified-completion.sh	-;env:CLAUDE_PLUGIN_ROOT=/opt/plug	2;err~`'/opt/plug/scripts/dev\.sh' test`	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}
 deny-unverified-completion.sh	-;env:CLAUDE_PLUGIN_ROOT=	2;err~`scripts/dev\.sh test`	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-tested.jsonl","stop_hook_active":false}
 deny-unverified-completion.sh	-	0	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-docs-only.jsonl","stop_hook_active":false}
@@ -873,3 +873,16 @@ auto-correction-notice.sh	-;env:HARNESS_RUNTIME=invalid	0;out~systemMessage	{}
 
 # 연결이 남기는 검증 증거도 자기 수정 보호 대상이다.
 deny-codex-tool.py	.;self=0	2	{"cwd":"$REPO","tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\n*** Update File: .codex/harness-state/session.json\n@@\n-old\n+new\n*** End Patch"}}
+
+# 새 설치의 논리 테스트 명령은 실행 가능한 설치 경로로 표시한다.
+auto-inject-config.sh	-;conf:file=$REPO/scripts/hook-fixtures/conf/full.conf;test=scripts/dev.sh test	0;out~[/]plugin/scripts/dev.sh.* test;out!~systemMessage	{"session_id":"installed","hook_event_name":"SessionStart","source":"startup"}
+# 실제 Git 경로의 한글·공백·줄바꿈을 목록 모드와 직접 지정에서 똑같이 검사한다.
+hook-fixtures/doc-style-paths.sh $TMP/doc-paths --all	-	1;out~파일 3개 · 오류 2
+hook-fixtures/doc-style-paths.sh $TMP/doc-staged --staged	-	1;out~파일 2개 · 오류 1
+hook-fixtures/doc-style-paths.sh $TMP/doc-explicit explicit	-	1;out~파일 2개 · 오류 2
+# 커밋 전 문서 검사도 Git의 원래 파일 이름으로 같은 입력을 검사한다.
+hook-fixtures/doc-style-paths.sh $TMP/doc-commit prepare	-	0
+ask-approval.sh	-;env:CLAUDE_PROJECT_DIR=$TMP/doc-commit	0;out~"deny";out~문서 스타일 오류	{"tool_name":"Bash","tool_input":{"command":"git commit -m \"Docs: 안내\""}}
+
+# 기본 테스트가 아직 실행되지 않았으면 Claude가 현재 설치본의 실행 명령을 알려 준다.
+deny-unverified-completion.sh	.;test=scripts/dev.sh test;env:CLAUDE_PLUGIN_ROOT=/opt/team plugin	2;err~'/opt/team plugin/scripts/dev.sh' test	{"transcript_path":"$REPO/scripts/hook-fixtures/stop-code-no-test.jsonl","stop_hook_active":false}

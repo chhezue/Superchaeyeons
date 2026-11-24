@@ -1,8 +1,8 @@
 # 문서 산출물 등록부 (`docs/templates/`)
 
-이 저장소의 **모든 마크다운 문서가 어디에 쌓이고 어떤 형식을 따르는지**를 한 곳에 모은 표다. 스킬이 자동으로 만드는 산출물뿐 아니라 사람이 직접 쓰는 문서도 전부 포함한다 — 어느 쪽이든 `{{문서 루트}}` 밖에 두거나 등록부에 없는 형식으로 쓰지 않는다. 새 문서를 쓸 때는 여기서 유형을 찾아 해당 템플릿을 복사하고, 새 산출물을 만드는 스킬을 추가할 때는 여기에 행을 먼저 추가한다.
+이 표는 **하네스가 만드는 문서의 종류·저장 위치·템플릿**을 안내한다. 작업 보고서와 감사 기록은 문서 루트 아래에 둔다. 제품 범위 등 프로젝트가 이미 관리하는 문서는 설정에 적힌 위치를 따른다. 새 산출물을 만드는 스킬을 추가할 때는 이 표에 행을 먼저 추가한다.
 
-문서 루트는 `.claude/harness.conf`의 `{{문서 루트}}` 슬롯 하나다(기본 `docs/`). 모노레포처럼 저장소 루트 `docs/`를 하네스가 소유하지 않는 프로젝트는 슬롯을 하위 경로로 바꾸고, 그 밖으로의 쓰기는 `deny-out-of-scope-write.sh` 훅이 막는다.
+문서 루트는 `.claude/harness.conf`의 `{{문서 루트}}` 슬롯 하나다(기본 `docs/`). 모노레포처럼 저장소 루트 `docs/`를 하네스가 소유하지 않는 프로젝트는 슬롯을 하위 경로로 바꾸고, 파일 쓰기 허용 범위는 프로젝트 설정의 작업 범위와 훅 정책이 정한다.
 
 유형 판정 순서와 문장·구조 작성 기준은 하네스 플러그인의 `rules/doc-writing.md`가 SSOT다.
 
@@ -14,7 +14,7 @@
 
 ## 산출물 등록부
 
-위쪽은 하네스가 배달하는 산출물이라 **경로 패턴이 모든 프로젝트에 같다** — `{{슬롯}}`만 `.claude/harness.conf` 값으로 읽으면 된다. 아래쪽 "프로젝트 문서" 행은 **값 자체가 저장소마다 다르다** — `init-harness`가 채우며, 여기엔 이 저장소(하네스 템플릿 자체)의 `.claude/harness.conf` 값을 그대로 옮겨 적었다.
+위쪽은 하네스가 정한 작업 산출물이라 **경로 패턴이 모든 프로젝트에 같다** — `{{슬롯}}`만 `.claude/harness.conf` 값으로 읽으면 된다. 아래쪽 "프로젝트 문서" 행은 **값 자체가 저장소마다 다르다** — `init-harness`가 채우며, 여기엔 이 저장소(하네스 템플릿 자체)의 `.claude/harness.conf` 값을 그대로 옮겨 적었다.
 
 | 산출물 | 만드는 것 | 저장 경로 | 유형 | 템플릿 |
 |--------|-----------|-----------|------|--------|
@@ -24,7 +24,7 @@
 | 하네스 회고 백로그 | `review-harness-feedback` 스킬 | `{{문서 루트}}/audits/harness-retro.md`(Claude) · `{{문서 루트}}/audits/harness-retro-codex.md`(Codex) | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 아키텍처 결정 (ADR) | 사용자 승인 후 수동 작성 | `{{결정 기록}}/{번호}-{kebab-case}.md` | 설명 | [`explanation-doc.md`](explanation-doc.md) "작업 산출물로 쓸 때" |
 | 하네스 슬롯 값 | `init-harness` 스킬 | `.claude/harness.conf` | 참조 | 키 목록은 하네스 플러그인의 `scripts/harness-keys.txt` |
-| 작업 보고서 (`report.md`) | G4 — L 규모(3파일 이상·API·DB) 작업 끝에 | `{{문서 루트}}/reports/{YYYY-MM-DD}-{kebab-topic}.md` | 참조 | [`reference-doc.md`](reference-doc.md) "작업 보고서" |
+| 작업 보고서 (`report.md`) | G4 — L 작업의 검증 결과를 담을 기존 스펙·감사 문서가 없을 때 | `{{문서 루트}}/reports/{YYYY-MM-DD}-{kebab-topic}.md` | 참조 | [`reference-doc.md`](reference-doc.md) "작업 보고서" |
 | 안 하기로 한 것 | 검토 후 기각 결정이 날 때 (G4·`review-harness-feedback`) | `{{문서 루트}}/out-of-scope/README.md` — 이 저장소 이력, 배달 안 함 | 참조 | [`reference-doc.md`](reference-doc.md) |
 | 하네스 설계 배경 | 사용자 승인 후 수동 작성 | `{{문서 루트}}/harness/README.md` · `harness-engineering.md` — 이 저장소 이력, 배달 안 함 | 설명 | [`explanation-doc.md`](explanation-doc.md) |
 | 폴더 인덱스 | 사용자 승인 후 수동 작성 | `{{문서 루트}}/README.md` · 하위 `README.md` | 참조 | [`reference-doc.md`](reference-doc.md) |
@@ -35,7 +35,7 @@
 | 클라이언트 전제 | 사용자 승인 후 수동 작성 | `{{클라이언트 전제}}` — 이 저장소: (없음) | 설명 | [`explanation-doc.md`](explanation-doc.md) |
 | 현재동작 요약 | 보안·아키텍처 변경과 같은 턴 | `{{현재동작 요약}}` — 이 저장소: `docs/harness/README.md` | 설명 | [`explanation-doc.md`](explanation-doc.md) |
 
-**마크다운을 만들지 않는 것들.** 훅은 stderr 메시지만 내보내고 파일을 쓰지 않는다. 글 다듬기(하네스 플러그인의 `scripts/polish-with-gemini.sh`)는 이미 있는 문서의 문장만 고치고, 기준판과 차이는 git이 무시하는 `.claude/polish/`에만 둔다. `verify-work`·`fix-bug` 스킬과 `doc-reviewer`·`researcher`·프로젝트 리뷰어 에이전트는 결과를 채팅으로만 보고한다. 이들의 결과를 문서로 남겨야 한다고 판단되면 위 등록부에 행을 추가하는 것이 먼저다 — 임의 경로에 파일을 만들지 않는다.
+**마크다운을 만들지 않는 것들.** 회고 훅은 로컬 기록을 저장하고, Codex 완료 검증은 `.codex/harness-state/`에 테스트 증거를 남긴다. 글 다듬기(하네스 플러그인의 `scripts/polish-with-gemini.sh`)는 이미 있는 문서의 문장만 고치고, 기준판과 차이는 도구별 로컬 폴더(`.claude/polish/` 또는 `.codex/polish/`)에 둔다. `fix-bug` 스킬과 `doc-reviewer`·`researcher`·프로젝트 리뷰어 에이전트는 결과를 채팅으로만 보고한다. 이들의 결과를 문서로 남겨야 한다고 판단되면 위 등록부에 행을 추가하는 것이 먼저다 — 임의 경로에 파일을 만들지 않는다.
 
 ## 유형별 템플릿
 

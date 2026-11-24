@@ -8,7 +8,7 @@
 
 ## How We Build
 
-**계획 축**은 `{{우선순위 SSOT}}`, **기획**은 `{{제품 범위}}`, **기능 설계**는 `{{스펙 저장소}}`, **아키텍처 선택**은 `{{결정 기록}}`에 둡니다. 작업 순서는 `.claude/rules/core-task-steps.md`, 멈추는 조건은 `core-stop-conditions.md`·`core-approval-triggers.md`가 정합니다.
+**계획 축**은 `{{우선순위 SSOT}}`, **기획**은 `{{제품 범위}}`, **기능 설계**는 `{{스펙 저장소}}`, **아키텍처 선택**은 `{{결정 기록}}`에 둡니다. 작업 순서는 플러그인의 `rules/core-task-steps.md`, 멈추는 조건은 `core-stop-conditions.md`·`core-approval-triggers.md`가 정합니다.
 
 ## Tech Stack
 

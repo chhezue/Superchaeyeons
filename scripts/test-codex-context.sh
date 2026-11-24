@@ -10,12 +10,13 @@ python3 -I - "$repo_root" <<'PY'
 import json
 import os
 from pathlib import Path
+import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
 
 REPO = Path(sys.argv[1])
-HOOK = REPO / 'plugin/hooks/codex-context.py'
 TEST_CMD = 'scripts/dev.sh test'
 BASE_CONF = (REPO / 'scripts/hook-fixtures/conf/full.conf').read_text()
 CORE = ('core-approval-triggers', 'core-stop-conditions', 'core-task-steps', 'core-reporting')
@@ -40,11 +41,19 @@ def strings(value):
 
 
 class Fixture:
-    def __init__(self, base):
-        self.base = Path(base)
+    def __init__(self, base, fresh=False):
+        self.base = Path(base).resolve()
         self.root = self.base / 'project with spaces'
-        (self.root / '.claude').mkdir(parents=True)
+        self.root.mkdir()
         self.conf = self.root / '.claude/harness.conf'
+        self.env = dict(os.environ, PLUGIN_ROOT=str(REPO / 'plugin'),
+                        CLAUDE_PLUGIN_ROOT=str(REPO / 'plugin'))
+        # 다른 프로젝트의 설정을 실수로 물려받지 않게 이벤트 cwd를 판정의 기준으로 쓴다.
+        self.env.pop('CLAUDE_PROJECT_DIR', None)
+        self.test_sequence = 0
+        if fresh:
+            return
+        self.conf.parent.mkdir()
         self.conf.write_text(BASE_CONF)
         self.set_conf('TEST_CMD', TEST_CMD)
         self.set_conf('FORMAT_CMD', '(없음) — 포맷 안 함')
@@ -52,11 +61,6 @@ class Fixture:
         (self.root / 'app.py').write_text('after=2\n')
         (self.root / 'docs').mkdir()
         (self.root / 'docs/note.md').write_text('# Example\n\nText.\n')
-        self.env = dict(os.environ, PLUGIN_ROOT=str(REPO / 'plugin'),
-                        CLAUDE_PLUGIN_ROOT=str(REPO / 'plugin'))
-        # 다른 프로젝트의 설정을 실수로 물려받지 않게 이벤트 cwd를 판정의 기준으로 쓴다.
-        self.env.pop('CLAUDE_PROJECT_DIR', None)
-        self.test_sequence = 0
 
     def set_conf(self, key, value):
         lines = [line for line in self.conf.read_text().splitlines() if not line.startswith(key + '=')]
@@ -66,7 +70,8 @@ class Fixture:
         payload = {'cwd': str(self.root), 'session_id': sid}
         payload.update(fields or {})
         data = json.dumps(payload) if raw is None else raw
-        run = subprocess.run([sys.executable, '-I', str(HOOK), mode], input=data,
+        hook = Path(self.env['PLUGIN_ROOT']) / 'hooks/codex-context.py'
+        run = subprocess.run([sys.executable, '-I', str(hook), mode], input=data,
                              text=True, capture_output=True, cwd=self.root, env=self.env)
         require(run.returncode == 0,
                 mode + '는 비차단 exit 0이어야 함: ' + str(run.returncode) + ' ' + run.stderr[:250])
@@ -98,10 +103,10 @@ class Fixture:
                                  'stop_hook_active': active}, sid)
 
 
-def case(title, body):
+def case(title, body, fresh=False):
     global passed, failed
     with tempfile.TemporaryDirectory(prefix='codex-context-') as tmp:
-        fixture = Fixture(tmp)
+        fixture = Fixture(tmp, fresh=fresh)
         try:
             body(fixture)
             passed += 1
@@ -480,6 +485,139 @@ def native_string_wrong_workdir(f):
 
 
 case('같은 테스트 문자열이어도 다른 물리 작업 디렉터리에서 실행한 성공은 인정하지 않는다', native_string_wrong_workdir)
+
+
+def configure_consumer(f, plugin):
+    f.env.pop('DEV_CONF', None)
+    subprocess.run([sys.executable, '-I', str(plugin / 'scripts/configure-harness.py'),
+                    '--project', str(f.root), '--target', 'both', '--apply'],
+                   cwd=f.root, env=f.env, capture_output=True, check=True)
+    for line in BASE_CONF.splitlines():
+        if line and not line.startswith('#'):
+            f.set_conf(*line.split('=', 1))
+    f.set_conf('TEST_CMD', TEST_CMD)
+    f.set_conf('FORMAT_CMD', '(없음) — 포맷 안 함')
+    f.set_conf('POLISH_ENABLED', '0')
+
+    dev = f.root / 'scripts/dev.conf'
+    values = {'TEST_CMD': 'python3 scripts/check_answer.py', 'TEST_REPORT': 'last-line',
+              'LOG_DIR': '.logs'}
+    lines = []
+    for line in dev.read_text().splitlines():
+        if line and not line.startswith('#'):
+            key = line.split('=', 1)[0]
+            line = key + '=' + values.get(key, '없음 — 사용하지 않음')
+        lines.append(line)
+    dev.write_text('\n'.join(lines) + '\n')
+    (f.root / 'scripts/check_answer.py').write_text(
+        'from pathlib import Path\n'
+        'actual = Path("app.py").read_text().strip()\n'
+        'if actual != "answer = 42":\n'
+        '    raise SystemExit("consumer answer incorrect")\n'
+        'print("consumer answer correct")\n')
+    require(not (f.root / 'scripts/dev.sh').exists(), '소비 프로젝트에 dev.sh가 복사됨')
+
+
+def consumer_command(f, host, plugin):
+    event = {'hook_event_name': 'SessionStart', 'source': 'startup'}
+    if host == 'Codex':
+        result = f.call('config', event)
+    else:
+        run = subprocess.run([str(plugin / 'hooks/auto-inject-config.sh')], input=json.dumps(event),
+                             cwd=f.root, env=f.env, text=True, capture_output=True, check=True)
+        result = json.loads(run.stdout)
+    context = result['hookSpecificOutput']['additionalContext']
+    fields = [line.strip().strip('|').split('|') for line in context.splitlines()]
+    command = next((row[1].strip().strip('`') for row in fields
+                    if len(row) == 2 and row[0].strip().strip('`') == '{{테스트 명령}}'), '')
+    require(str(plugin / 'scripts/dev.sh') in shlex.split(command),
+            host + ' 세션의 테스트 명령이 현재 설치된 실행 파일을 가리키지 않음: ' + repr(command))
+    return command
+
+
+def claude_consumer_stop(f, plugin, edit, command=None, run=None):
+    turns = [('user', '코드를 고치고 테스트해 주세요.'),
+             ('assistant', [{'type': 'tool_use', 'id': 'edit', 'name': 'Bash',
+                             'input': {'command': edit}}]),
+             ('user', [{'type': 'tool_result', 'tool_use_id': 'edit', 'content': ''}])]
+    if run is not None:
+        turns.extend([('assistant', [{'type': 'tool_use', 'id': 'test', 'name': 'Bash',
+                                      'input': {'command': command}}]),
+                      ('user', [{'type': 'tool_result', 'tool_use_id': 'test',
+                                 'is_error': run.returncode != 0, 'content': run.stdout}])])
+    turns.append(('assistant', '구현 완료'))
+    transcript = f.base / 'claude-session.jsonl'
+    transcript.write_text(''.join(json.dumps({'type': kind, 'message': {'content': content}}) + '\n'
+                                  for kind, content in turns))
+    return subprocess.run([str(plugin / 'hooks/deny-unverified-completion.sh')], cwd=f.root,
+                          input=json.dumps({'transcript_path': str(transcript), 'stop_hook_active': False}),
+                          env=f.env, text=True, capture_output=True).returncode
+
+
+def installed_consumer(f, host):
+    plugin = f.base / 'plugin v1'
+    shutil.copytree(REPO / 'plugin', plugin)
+    configure_consumer(f, plugin)
+    for version in (1, 2):
+        if version == 2:
+            plugin = plugin.rename(f.base / "team's plugin v2")
+        f.env.update(PLUGIN_ROOT=str(plugin), CLAUDE_PLUGIN_ROOT=str(plugin))
+        command = consumer_command(f, host, plugin)
+        for answer, expected_exit in ((41, 1), (42, 0)):
+            edit = 'echo "answer = ' + str(answer) + '" > app.py'
+            subprocess.run(['/bin/bash', '-c', edit], cwd=f.root, check=True)
+            effective_command = command
+            if host == 'Codex':
+                f.call('post', {'hook_event_name': 'PostToolUse', 'tool_name': 'Bash',
+                                'tool_input': {'command': edit}, 'tool_response': {'exit_code': 0}})
+                require(is_blocked(f.stop()), '새 편집 직후 전체 테스트 전 완료가 허용됨')
+                tool_id = f'v{version}-answer-{answer}'
+                pre = f.call('pre', {'hook_event_name': 'PreToolUse', 'tool_name': 'Bash',
+                                     'tool_use_id': tool_id, 'tool_input': {'command': command}})
+                effective_command = pre.get('hookSpecificOutput', {}).get('updatedInput', {}).get('command', command)
+            else:
+                require(claude_consumer_stop(f, plugin, edit) == 2, 'Claude가 실행 전 완료를 허용함')
+            # Bash 도구에 설치 환경 변수가 없어도 세션에서 읽은 명령을 그대로 실행할 수 있어야 한다.
+            shell_env = {k: v for k, v in f.env.items() if k not in ('PLUGIN_ROOT', 'CLAUDE_PLUGIN_ROOT')}
+            run = subprocess.run(['/bin/bash', '-c', effective_command], cwd=f.root,
+                                 env=shell_env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            require(run.returncode == expected_exit and 'consumer answer' in run.stdout,
+                    f'{host} 실제 전체 테스트 exit {run.returncode}, 기대 {expected_exit}: ' + run.stdout)
+            if host == 'Codex':
+                native_bash_post(f, tool_id, effective_command, run.stdout)
+                result = f.stop()
+                require(is_blocked(result) if expected_exit else result == {},
+                        'Codex가 실제 전체 테스트 결과와 다르게 완료를 판정함: ' + repr(result))
+            else:
+                expected_stop = 2 if expected_exit else 0
+                require(claude_consumer_stop(f, plugin, edit, command, run) == expected_stop,
+                        'Claude가 실제 전체 테스트 결과와 다르게 완료를 판정함')
+
+
+for host in ('Claude', 'Codex'):
+    case(host + ' 설치 경로가 바뀌어도 세션의 전체 테스트 명령을 실행해 완료 여부를 판정한다',
+         lambda f: installed_consumer(f, host), fresh=True)
+
+def quoted_project_test(f):
+    script = f.root / "project tests.sh"
+    script.write_text("#!/bin/sh\nprintf 'OK\\n'\n")
+    script.chmod(0o755)
+    command = "'./project tests.sh'"
+    f.set_conf('TEST_CMD', command)
+    f.edit()
+    pre = f.call('pre', {'hook_event_name': 'PreToolUse', 'tool_name': 'Bash',
+                         'tool_use_id': 'custom-path', 'tool_input': {'command': command}})
+    wrapped = pre['hookSpecificOutput']['updatedInput']['command']
+    stdout = execute_native_wrapper(f, wrapped, 0)
+    native_bash_post(f, 'custom-path', wrapped, stdout)
+    require(f.stop() == {}, '공백이 있는 프로젝트 고유 테스트의 성공을 인정하지 않음')
+    run = subprocess.run(['/bin/bash', '-c', command], cwd=f.root, capture_output=True, text=True, check=True)
+    f.env['CLAUDE_PROJECT_DIR'] = str(f.root)
+    require(claude_consumer_stop(f, REPO / 'plugin', 'echo a > app.py', command, run) == 0,
+            'Claude가 인용된 프로젝트 고유 테스트의 성공을 인정하지 않음')
+
+
+case('프로젝트 고유 테스트 실행 파일 이름에 공백이 있어도 두 호스트가 결과를 확인한다', quoted_project_test)
 
 print('Codex 세션 연결 케이스 ' + str(passed + failed) + ' · 통과 ' + str(passed) + ' · 실패 ' + str(failed))
 sys.exit(1 if failed else 0)

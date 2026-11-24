@@ -79,6 +79,14 @@ while IFS=$'\t' read -r key kind label _; do
 		[ "$kind" = "info" ] || blank="$blank $key"
 		continue
 	fi
+	# 설정에는 이식 가능한 명령을 두고 모델에는 현재 설치본을 그대로 실행할 수 있게 보여 준다.
+	case "$key:$val" in
+	'TEST_CMD:scripts/dev.sh test'|'BUILD_CMD:scripts/dev.sh build'|'FORMAT_CMD:scripts/dev.sh fmt'|'DEPS_CMD:scripts/dev.sh deps')
+		engine="$root/scripts/dev.sh"
+		quoted=${engine//\'/\'\\\'\'}
+		val="'$quoted' ${val#* }"
+		;;
+	esac
 	case "$kind" in
 	slot) table="$table$nl| \`$label\` | $val |" ;;
 	flag) table="$table$nl| 플래그 $label | $val |" ;;

@@ -145,20 +145,23 @@ def main():
             message = data.get('last_assistant_message')
             if not isinstance(message, str):
                 raise ValueError('Stop 완료 문구를 읽지 못했습니다')
-            claim = runpy.run_path(str(plugin / 'scripts/completion-policy.py'))['CLAIM']
+            policy = runpy.run_path(str(plugin / 'scripts/completion-policy.py'), init_globals={'plugin_root': plugin})
             configured = conf.get('TEST_CMD', '')
-            if state['edited'] and not state['tested'] and configured and not configured.startswith(('(없음)', '{')) and claim.search(message):
-                return {'decision': 'block', 'reason': '마지막 코드 편집 뒤 전체 테스트 성공을 확인하지 못했습니다. ' + configured + '를 실행하고 결과를 확인하세요.'}
+            if state['edited'] and not state['tested'] and configured and not configured.startswith(('(없음)', '{')) and policy['CLAIM'].search(message):
+                display = policy['installed_test_command']() if configured == 'scripts/dev.sh test' else configured
+                return {'decision': 'block', 'reason': '마지막 코드 편집 뒤 전체 테스트 성공을 확인하지 못했습니다. ' + display + '를 실행하고 결과를 확인하세요.'}
             return {}
         tool = data.get('tool_name')
         command = data.get('tool_input', {}).get('command')
         if not isinstance(command, str):
             raise ValueError('도구 명령을 읽지 못했습니다')
         status = exit_status(data.get('tool_response'), tool)
+        if tool == 'Bash':
+            configured = conf.get('TEST_CMD', '').strip()
+            policy = runpy.run_path(str(plugin / 'scripts/completion-policy.py'),
+                                    init_globals={'test_words': configured.split(), 'test_cmd': configured, 'plugin_root': plugin})
         if mode == 'pre':
             if tool == 'Bash':
-                policy = runpy.run_path(str(plugin / 'scripts/completion-policy.py'),
-                                       init_globals={'test_words': conf.get('TEST_CMD', '').split()})
                 stripped = policy['strip_heredocs'](command)
                 mask = policy['data_mask'](stripped)
                 if policy['last_test_run'](stripped, mask) >= 0:
@@ -167,14 +170,16 @@ def main():
                         raise ValueError('전체 테스트 시작 ID를 읽지 못했습니다')
                     pending = {'generation': state['generation'], 'command': command}
                     state['pending'][tool_id] = pending
-                    configured = conf.get('TEST_CMD', '').strip()
-                    if configured and command.strip() == configured:
+                    if configured and (command.strip() == configured or policy['is_installed_test'](command)):
                         # native Bash는 stdout만 전달한다. 단독 전체 테스트의 실제 종료 코드를
                         # 별도 셸에서 받은 뒤 호출별 표식으로 돌려받는다. 출력의 OK를 추측하지 않는다.
                         nonce = secrets.token_hex(16)
                         reporter = ('import json,os,sys; print("\\n__HARNESS_TEST_' + nonce
                             + '__:" + json.dumps({"exit_code": int(sys.argv[1]), "cwd": os.getcwd()}))')
-                        wrapped = ('/bin/bash -c ' + shlex.quote(command)
+                        executable = command
+                        if command.strip() == configured == 'scripts/dev.sh test' and not (cwd / 'scripts/dev.sh').exists():
+                            executable = policy['installed_test_command']()
+                        wrapped = ('/bin/bash -c ' + shlex.quote(executable)
                             + '; harness_test_status=$?; python3 -I -c ' + shlex.quote(reporter)
                             + ' "$harness_test_status"; exit "$harness_test_status"')
                         pending.update(nonce=nonce, wrapped=wrapped)
@@ -237,8 +242,6 @@ def main():
                                 text = response[:proof.start()]
                         except (ValueError, OSError):
                             pass
-            policy = runpy.run_path(str(plugin / 'scripts/completion-policy.py'),
-                                   init_globals={'test_words': conf.get('TEST_CMD', '').split()})
             stripped = policy['strip_heredocs'](command)
             mask = policy['data_mask'](stripped)
             edit_at = policy['last_code_edit'](stripped, mask)

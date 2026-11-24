@@ -72,9 +72,9 @@ Codex는 프로젝트 `.codex/config.toml`의 marketplace·enabled, `.codex/agen
    - `extraKnownMarketplaces`: `"superchaeyeons": {"source": {"source": "github", "repo": "chhezue/Superchaeyeons"}, "autoUpdate": true}` — 하네스 원본 저장소에 커밋할 때마다 새 버전이 되고, 세션 시작 뒤 뒤에서 받아 다음 세션부터 실린다
    - `enabledPlugins`: `"superchaeyeons@superchaeyeons": true`
    - `permissions.deny`: `.env` 읽기·쓰기(`Read(./.env)`·`Read(./.env.*)`·`Read(**/.env)`·`Edit(./.env)`·`Write(./.env)`) · `Bash(git push --force:*)` · `Bash(git push -f:*)` · `Bash(git reset --hard:*)` · `Bash(git commit --no-verify:*)` · `BLOCK_BULK_DELETE=1`일 때만 `Bash(rm -rf:*)`
-3. **트래커 안내** — 이 스킬 폴더의 `references/track-issues-skeleton.md`를 `.claude/skills/local-track-issues/SKILL.md`로 복사해 실측값으로 채운다 — 확인하지 못한 항목은 지어내지 않고 "(확인 못 함 — 이유)"로 남긴다. `ISSUE_LINK`는 "트래커 이름 · 안내 `local-track-issues`"로 채운다. 플러그인 도구는 세션 시작에 들어오는 규칙 머리 줄의 플러그인 폴더 경로로 부른다고 적는다
+3. **트래커 안내** — 이 스킬 폴더의 `references/track-issues-skeleton.md`로 프로젝트 스킬을 채운다. Claude는 `.claude/skills/local-track-issues/SKILL.md`, Codex는 `.agents/skills/local-track-issues/SKILL.md`에서 발견한다. 양쪽이면 본문을 한 곳에서 관리하고 다른 경로에서도 같은 스킬이 발견되는지 확인한다 — 확인하지 못한 항목은 지어내지 않고 "(확인 못 함 — 이유)"로 남긴다. `ISSUE_LINK`는 "트래커 이름 · 안내 `track-issues`"로 채운다. 플러그인 도구는 세션 시작에 들어오는 규칙 머리 줄의 플러그인 폴더 경로로 부른다고 적는다
 4. **`local-*.md`** — 설정 키로 빠지지 않는 **그 저장소만의 사실**이 있을 때만. 기존 코드만 봐서는 알 수 없는 관례(표기·테스트 도구)도 여기에 적을 수 있다. 스택 규칙을 지어 쓰지는 않는다. `AGENTS.md`와 중복이면 만들지 않는다
-5. **`scripts/dev.conf`** — 이 스킬 폴더의 `references/dev.conf`(골격)를 복사해 1단계 CI 워크플로의 실제 명령으로 채운다. 실행 엔진(플러그인 `scripts/dev.sh`)은 고치지 않는다. 키를 채운 근거를 2단계 표에 붙이고, 실측으로 정해지지 않는 것(로컬에서 띄울 의존 서비스·헬스 판정 주소)만 묻는다. 값이 있는 명령 슬롯(`TEST_CMD` 등)은 `scripts/dev.sh <동사>`로 적는다 — 규칙 머리 줄이 이 `scripts/`가 플러그인 폴더라고 알린다
+5. **`scripts/dev.conf`** — 이 스킬 폴더의 `references/dev.conf`(골격)를 복사해 1단계 CI 워크플로의 실제 명령으로 채운다. 실행 엔진(플러그인 `scripts/dev.sh`)은 고치지 않는다. 키를 채운 근거를 2단계 표에 붙이고, 실측으로 정해지지 않는 것(로컬에서 띄울 의존 서비스·헬스 판정 주소)만 묻는다. 값이 있는 명령 슬롯(`TEST_CMD` 등)은 `scripts/dev.sh <동사>`로 적는다 — 시작 훅이 현재 설치 위치를 반영한 실행 명령을 표에 표시한다
 6. **`AGENTS.md`** — 플러그인의 견본이 없으면 하네스 원본 저장소의 `AGENTS.template.md`를 참고해 채운다
 Codex 연결은 0단계의 변경안을 승인받아 3단계에서 적용한 뒤 생성 파일을 검증한다. Codex만 고르면 Claude 전용 항목은 생략한다.
 

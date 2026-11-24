@@ -81,6 +81,10 @@ def glob_match(path, globs):
 def git(*args):
     return subprocess.run(["git", "-C", PROJ, *args], capture_output=True, text=True)
 
+def git_paths(*args):
+    r = subprocess.run(["git", "-C", PROJ, *args], capture_output=True)
+    return [os.fsdecode(path) for path in r.stdout.split(b"\0") if path]
+
 def tracked(path):
     r = git("ls-files", "--", path)
     return r.returncode == 0 and r.stdout.strip() != ""
@@ -229,8 +233,9 @@ for seg in map(strip_env, segs):
                     out("deny", f"커밋 막힘 — 메시지 첫 줄이 COMMIT_RE({pattern})와 맞지 않는다: `{first}`. 형식을 고쳐 다시 커밋한다")
             # 바뀐 마크다운의 문서 스타일 — 오류만 막는다
             style = os.path.join(ROOT, "scripts", "check-doc-style.sh")
-            changed = set(git("diff", "--name-only", "HEAD").stdout.split()) | set(git("diff", "--name-only", "--cached").stdout.split()) \
-                      | set(git("ls-files", "--others", "--exclude-standard").stdout.split())
+            staged = git_paths("diff", "--cached", "--name-only", "-z")
+            changed = set(staged) | set(git_paths("diff", "--name-only", "-z")) \
+                      | set(git_paths("ls-files", "-z", "--others", "--exclude-standard"))
             md = sorted(f for f in changed if f.endswith(".md") and os.path.isfile(os.path.join(PROJ, f)))
             if md and os.path.isfile(style):
                 r = subprocess.run([style, *md], cwd=PROJ, capture_output=True, text=True)
@@ -243,7 +248,6 @@ for seg in map(strip_env, segs):
                 if r.returncode != 0:
                     tail = " ".join((r.stdout + r.stderr).strip().splitlines()[-3:])[:300]
                     out("deny", f"커밋 막힘 — 커밋 전 검사 `{check}` 실패(exit {r.returncode}): {tail}")
-            staged = [f for f in git("diff", "--cached", "--name-only").stdout.split("\n") if f]
             note = [f"파일 {len(staged)}개", f"`{first}`" if known else "메시지 확인 못 함"]
             contract = [f for f in staged if value("CONTRACT_PATHS") and glob_match(f, value("CONTRACT_PATHS"))]
             if contract:

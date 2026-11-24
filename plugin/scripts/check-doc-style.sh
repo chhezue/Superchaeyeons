@@ -30,42 +30,33 @@ cd "$repo_root"
 patterns_file="$plugin_root/scripts/doc-style-patterns.txt"
 [ -f "$patterns_file" ] || { echo "FAIL: 패턴 파일이 없습니다 — $patterns_file" >&2; exit 2; }
 
-files=""
 case "${1:-}" in
---all)
-	# -co --exclude-standard: 추적 파일 + 아직 add 안 한 파일까지 (.gitignore 대상은 제외)
-	files="$(git ls-files -co --exclude-standard '*.md' 'docs/**/*.md' '.claude/**/*.md' 2>/dev/null | sort -u)"
-	;;
---staged)
-	files="$(git -c core.quotepath=false diff --cached --name-only --diff-filter=AM -- '*.md' 2>/dev/null)"
-	;;
-"" | -h | --help)
-	sed -n '2,20p' "$0"
-	exit 0
-	;;
-*)
-	# 지정한 파일이 없으면 무음 통과가 아니라 오류다 — 경로 오타가 "검사 통과"로 읽히지 않게 (2026-09-07 감사)
-	for f in "$@"; do
-		[ -f "$f" ] || { echo "FAIL: 파일이 없습니다 — $f" >&2; exit 2; }
-	done
-	files="$(printf '%s\n' "$@")"
-	;;
+"" | -h | --help) sed -n '2,20p' "$0"; exit 0 ;;
 esac
 
-# examples/는 견본이고 scripts/hook-fixtures/는 훅 테스트 입력(정정 기억 모양의 파일 등)이라 검사하지 않는다. 존재하는 파일만 남긴다.
-files="$(printf '%s\n' "$files" | grep -v -e '^examples/' -e '^scripts/hook-fixtures/' | while IFS= read -r f; do [ -n "$f" ] && [ -f "$f" ] && printf '%s\n' "$f"; done)"
-[ -z "$files" ] && { echo "검사할 마크다운 파일이 없습니다."; exit 0; }
+python3 -I - "$patterns_file" "$@" <<'PYTHON'
+import os, re, subprocess, sys
 
-# 파일 목록은 임시 파일로 넘긴다 — heredoc이 stdin을 차지하므로 파이프로는 전달할 수 없다
-list_file="$(mktemp "${TMPDIR:-/tmp}/doc-style.XXXXXX")"
-printf '%s\n' "$files" >"$list_file"
-trap 'rm -f "$list_file"' EXIT
+patterns_file, *args = sys.argv[1:]
+if args[0] in ('--all', '--staged'):
+    git_args = (['ls-files', '-co', '--exclude-standard'] if args[0] == '--all'
+                else ['diff', '--cached', '--name-only', '--diff-filter=ACMRT'])
+    listing = subprocess.run(['git', *git_args, '-z', '--', '*.md'], stdout=subprocess.PIPE)
+    if listing.returncode:
+        sys.exit(2)
+    paths = sorted({os.fsdecode(item) for item in listing.stdout.split(b'\0') if item})
+else:
+    paths = args
+    for path in paths:
+        if not os.path.isfile(path):
+            print(f"FAIL: 파일이 없습니다 — {path}", file=sys.stderr)
+            sys.exit(2)
 
-python3 - "$patterns_file" "$list_file" <<'PY'
-import os, re, sys
-
-patterns_file, list_file = sys.argv[1], sys.argv[2]
-files = [l.strip() for l in open(list_file, encoding="utf-8") if l.strip()]
+files = [path for path in paths if os.path.isfile(path)
+         and not path.startswith(('examples/', 'scripts/hook-fixtures/'))]
+if not files:
+    print("검사할 마크다운 파일이 없습니다.")
+    sys.exit(0)
 
 TITLE_MAX = 30
 rules, allow = [], set()
@@ -202,4 +193,4 @@ for path in files:
 print()
 print(f"파일 {len(files)}개 · 오류 {errors} · 경고 {warnings}")
 sys.exit(1 if errors else 0)
-PY
+PYTHON

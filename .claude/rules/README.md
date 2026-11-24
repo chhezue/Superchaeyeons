@@ -75,6 +75,7 @@ plugin/                               배달물 — 붙인 프로젝트는 플�
     ├── check-doc-style.sh            문서 스타일 (패턴 doc-style-patterns.txt)
     ├── harness-keys.txt              설정 파일 키 목록 — 키 · 종류(slot·flag·hook·info) · 이름 · 뜻 (SSOT. 값 규칙은 skills/init-harness/references/harness-conf.md)
     ├── init-harness-probe.sh         init-harness 1단계 실측
+    ├── inspect-copied-harness.py     --migration 실측에서 기존 훅·파일·참조 위치 조사
     ├── analyze-corrections.sh        회고 분석 (별도 실행)
     └── polish-with-gemini.sh         글 다듬기 (스킬 단계에서 부름)
 .claude/                              이 저장소 전용·프로젝트 층

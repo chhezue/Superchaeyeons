@@ -361,6 +361,15 @@ def non_boolean_enabled(f):
 
 case('Codex enabled가 정수나 실수면 bool과 구분해 전체 적용을 거절한다', non_boolean_enabled)
 
+
+def migration_probe(f):
+    result = subprocess.run([sys.executable, '-I', str(REPO / 'scripts/test-migration-rehearsal.py')],
+                            cwd=f.root, env=f.env, capture_output=True, text=True)
+    require(result.returncode == 0, result.stderr.strip() or result.stdout.strip())
+
+
+case('복사본 이전을 조사하면 훅과 옛 경로 참조를 찾고 기존 작업 상태를 보존한다', migration_probe)
+
 print('하네스 설정 케이스 ' + str(passed + failed) + ' · 통과 ' + str(passed) + ' · 실패 ' + str(failed))
 sys.exit(1 if failed else 0)
 PY

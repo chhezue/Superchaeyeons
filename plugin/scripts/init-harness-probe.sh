@@ -3,14 +3,21 @@
 #
 # 사용:
 #   plugin/scripts/init-harness-probe.sh [저장소 경로] [작업 범위]     # 기본: 현재 저장소 · 범위 "."
+#   plugin/scripts/init-harness-probe.sh <저장소 경로> <작업 범위> --migration  # 복사본과 참조는 저장소 전체에서 조사
 #
 # 출력은 마크다운이다 — init-harness 2단계(제안)의 입력으로 그대로 붙인다. (sed 규칙은 각각 `t`로 끝나 앞 규칙의 결과를 뒤 규칙이 덮어쓰지 않는다.) 판단은 하지 않는다: 값이 있으면 값을, 없으면 "없음"을
 # 근거 명령과 함께 적는다. 어느 스택에도 묶이지 않도록 흔한 흔적을 여러 개 나열한다 (다스택 예시).
-# (부품성 원칙: bash 하나. 데이터 파일 없음 — 스택 힌트 목록이 늘어나면 그때 파일로 뺀다.)
+# 일반 실측은 Bash로 실행한다. 복사본 이전을 선택한 경우에만 Python 조사기를 호출한다.
 
 set -u
 root="${1:-.}"
 scope="${2:-.}"
+if [ "${3:-}" = "--migration" ]; then
+    probe_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 2
+    cd -- "$root" || exit 2
+    export GIT_OPTIONAL_LOCKS=0
+    exec python3 -I "$probe_dir/inspect-copied-harness.py"
+fi
 cd "$root" || { echo "FAIL: 경로 없음 — $root" >&2; exit 2; }
 root="$(pwd)"
 target="$root/${scope#./}"; [ "$scope" = "." ] && target="$root"

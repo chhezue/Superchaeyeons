@@ -15,7 +15,7 @@ description: 저장소를 실측하고 Claude·Codex·양쪽 중 도구를 선�
 
 - **처음 붙일 때:** 프로젝트 `.claude/settings.json`에서 플러그인을 켠 뒤 세션을 열면 설정 값 훅이 "하네스 설정이 비어 있다"를 띄운다. 그때 다른 작업보다 먼저 이 스킬을 제안한다. 그린필드도 이 경로로 들어온다 — 확인할 기존 코드가 적다
 - **재동기화:** 문서 위치·빌드 명령·커밋 관례 등 프로젝트 사실이 바뀌어 `.claude/harness.conf` 값이 실제와 다를 때. 1단계를 다시 돌려 현재 값과 실측의 diff 표를 만들고 승인 후 갱신한다. 채워진 설정 파일을 고치면 훅이 바뀌는 키와 값을 적은 승인 창을 띄운다 — 그 창이 승인이다
-- **복사 배달에서 옮길 때:** 예전 방식(`.claude/`·`scripts/`를 복사)으로 붙인 프로젝트면 아래 "복사 배달에서 옮기기"를 함께 한다
+- **복사 설치에서 옮길 때:** [이전 절차](references/migrate-copied-harness.md)에 따라 훅·규칙·양식의 출처와 사용처를 조사한다. 변경 전에 파일별 보존·이동·대체·삭제 계획과 사라질 동작을 보여주고 승인받는다. Codex 전용 선택만으로 옛 파일 삭제에 동의했다고 해석하지 않는다.
 
 **생략 불가:** "앞의 프로젝트와 비슷하니 그 값을 쓰자"는 이 스킬을 깨뜨리는 것이다. 커밋 형식을 물려받았다가 963개 커밋을 세어보고서야 실제 관례가 다르다는 걸 안 사례가 계기다.
 
@@ -83,6 +83,7 @@ Codex 연결은 0단계의 변경안을 승인받아 3단계에서 적용한 뒤
 **산출물 체크리스트** — 선택한 도구에 해당하는 항목이 전부 통과해야 완료다.
 
 - [ ] 선택한 도구의 연결만 생성했고 공통 설정은 한 개다.
+- [ ] 복사 설치를 이전했다면 승인한 변경만 반영됐고 사람의 Git 훅과 문서 참조가 이전안의 검증 결과와 맞는다.
 - [ ] Codex 프로젝트 설정·역할 파일·명령 규칙이 유효하고 기존 사용자 값이 보존됐다(Codex 선택 시).
 - [ ] Codex 플러그인 설치·프로젝트 신뢰·훅 신뢰를 별도로 확인했다. 미확인은 생성 완료와 구분해 보고한다.
 - [ ] Codex 상태 `.codex/harness-state/`·`.codex/corrections/`·`.codex/polish/`가 git에서 제외된다(Codex 선택 시).
@@ -101,18 +102,6 @@ Codex 연결은 0단계의 변경안을 승인받아 3단계에서 적용한 뒤
 - [ ] Claude 선택 시 `git check-ignore -q .claude/corrections/x`가 성공한다
 
 기존 코드의 동작 문서화나 초기 백로그도 요청받으면 [기존 동작 기록](references/document-existing-behavior.md)을 연다.
-
-## 복사 배달에서 옮기기
-
-예전에는 하네스를 `.claude/`·`scripts/`에 복사해 붙였다. 재동기화 때 아래를 한 번에 제안하고, 승인 뒤 같은 변경에서 옮긴다. 옛 파일을 "호환용"으로 남기지 않는다(`core-stop-conditions.md` §2).
-
-| 옛 자리 | 옮길 곳 · 할 일 |
-|---|---|
-| `.claude/rules/harness-map.md`의 축·슬롯·플래그 표 | `.claude/harness.conf`의 키로 옮기고 파일을 지운다. `☑`·`❌`·`⬜`는 `1`·`0`·`{…}` |
-| 훅 상수(`deny-out-of-scope-write.sh`의 `SCOPE`·`HARNESS_SELF_EDIT` · `deny-unverified-completion.sh`의 `TEST_CMD` · `deny-dangerous-bash.sh`의 `BLOCK_*`) · git 훅 상수(`COMMIT_RE`·`FORMAT_CMD`·`FORMAT_PATHS`) · 루트 `harness.conf`(`POLISH_ENABLED`) | 같은 이름의 키로 옮긴다 |
-| 복사해 온 `.claude/rules/core-*.md`·`doc-writing.md`·`README.md` · `.claude/skills/`(`local-*` 빼고) · `.claude/agents/` · `.claude/hooks/`(`local-*` 빼고) · `scripts/`의 하네스 도구(`dev.sh`·`check-*.sh`·`*-patterns.txt`·`init-harness-probe.sh`·`analyze-corrections.sh`·`polish-with-gemini.sh`·`test-hooks.sh`·`hook-cases.txt`·`verify.sh`·`install-git-hooks.sh`·`git-hooks/`) | 지운다 — 플러그인이 싣는다. `.git/hooks/`에 설치된 `pre-commit`·`commit-msg`도 지운다(커밋 검사는 승인 창 훅이 한다) |
-| `.claude/settings.json`의 `hooks` 블록(복사한 훅 등록) | 지우고 3단계 2번의 마켓플레이스·플러그인 켜기로 바꾼다 — 남기면 같은 훅이 두 번 돈다 |
-| `scripts/dev.conf` · `local-*` | 그대로 둔다(프로젝트 값) |
 
 ## 보고
 
